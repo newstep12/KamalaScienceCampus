@@ -95,8 +95,10 @@ a photo exists. To add one, save a square-ish photo (400×400 px or larger) as
     assets/img/people/<slug>.jpg      (.jpeg, .png and .webp also work)
 
 and run `python3 build.py`. The slugs are `upendra-kumar-pokharel`,
-`bharat-malla`, `manoj-devkota`, `tej-bikram-thapa`, `shyamlal-mahato` and
-`chandu-yadav` — the `{{PHOTO:slug:XY}}` markers in the About page sources.
+`bharat-malla`, `manoj-devkota`, `tej-bikram-thapa`, `shyamlal-mahato`,
+`chandu-yadav` and `santosh-sapkota` — the `{{PHOTO:slug:XY}}` markers in the
+About page sources. Crop to a square centred on the face first; the frame is a
+circle, so a wide or tall photo loses the edges.
 - **Map pin** — `contact.html` embeds a Google Maps search for "Dhungrebas,
   Kamalamai, Sindhuli". Replace the `src` with a precise embed link for the
   actual campus location when you have one.

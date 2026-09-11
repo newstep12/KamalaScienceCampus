@@ -582,7 +582,14 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
   font-size: .86rem; color: var(--ink-soft);
 }
 
-.people { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+/* auto-fill, not auto-fit: a group with one card keeps a card-sized column
+   instead of one card stretched across the page */
+.people { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.people-group {
+  font-family: var(--sans); font-size: .8rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft);
+  margin: 48px 0 18px;
+}
 .person-card { text-align: center; }
 .person-card p:not(.person-role) { text-align: left; }
 
@@ -597,7 +604,7 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
 }
 
 body.lang-ne .person-name, body.lang-ne .message-sign { font-family: var(--deva); }
-body.lang-ne .person-role { text-transform: none; letter-spacing: .02em; }
+body.lang-ne .person-role, body.lang-ne .people-group { text-transform: none; letter-spacing: .02em; }
 
 /* The campus email is one long unbroken word; let it wrap in narrow columns */
 .site-footer li, table.table-kv td { overflow-wrap: anywhere; }
