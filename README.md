@@ -163,9 +163,9 @@ it works both at that path and on a custom domain later.
 
 | Role | Can do |
 | --- | --- |
-| **Student** | Registers themselves, edits their portfolio, opens the courses they are enrolled in — learning materials, lecturer notes, and their own private notes — and reads notices for their year |
-| **Lecturer** | Adds materials (file, link or written note) to the courses assigned to them, and sees who is enrolled |
-| **Admin** | Approves or rejects registrations, manages people, courses, enrolments and notices |
+| **Student** | Registers themselves, edits their portfolio, opens their enrolled courses (materials, lecturer notes, own private notes), sees published results and attendance, reads notices for their year |
+| **Lecturer** | Adds materials to their courses, creates assessments and enters marks, takes attendance, sees who is enrolled |
+| **Admin** | Approves or rejects registrations, manages people, courses, enrolments and notices, plus database updates and email settings under **System** |
 
 **Students cannot sign in until an admin approves them.** Registration creates
 the account with status `pending`; a sign-in attempt tells them they are still
@@ -189,6 +189,43 @@ one-click "enrol every active student of this year".
 
 `portal/inc/config.php` holds the database password and is git-ignored — it
 never enters this repository, and a redeploy does not overwrite it.
+
+### Results and attendance
+
+Lecturers create assessments per course (internal, assignment, practical,
+terminal) and enter marks for enrolled students. **Nothing reaches students
+until the assessment is published** — marks stay in draft while they are being
+entered and checked.
+
+Attendance is one session per course per day, marked present / absent / late /
+excused. Students see a percentage per course. `late` counts as attended;
+`excused` is removed from the denominator, so an approved absence does not
+count against a student.
+
+### Database updates
+
+**Admin → System → Run database updates** applies `sql/schema.sql`. Every
+statement is `CREATE TABLE IF NOT EXISTS`, so it only ever adds tables
+introduced by a newer version — it never alters or drops anything, and running
+it twice is harmless. Run it after any deploy that adds tables.
+
+The same page seeds the four-year B.Sc. course structure. **Those course codes
+are placeholders**, not official TU codes — edit each course and set the real
+one before students rely on them.
+
+### Email notifications
+
+Off by default. Turn them on in **Admin → System → Email notifications**, set a
+from-address on a domain this server is allowed to send for, and use the test
+button before relying on it. Sent via PHP `mail()` through the hosting MTA, so
+no SMTP password is stored. Failures are logged and ignored — a bounced
+notification never blocks a registration or an approval.
+
+### Public notices
+
+`/notices.php` shows published notices without a login, in both languages.
+Only notices marked for **all years** appear publicly; a notice aimed at one
+year stays inside the portal.
 
 ### Languages
 
