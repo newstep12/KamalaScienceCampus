@@ -367,3 +367,10 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
   animation: p-pulse .3s ease;
 }
 @keyframes p-pulse { from { transform: scale(.96); } to { transform: none; } }
+
+/* Notice categories added for the official reference links */
+.p-tag.ugc         { background: #eef0fb; color: #3b3f8f; }
+.p-tag.scholarship { background: #fdf0e3; color: #8a5a16; }
+
+/* An external reference notice reads better with its link obvious */
+.p-notice a[target="_blank"] { font-weight: 600; }

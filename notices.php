@@ -13,7 +13,7 @@ require_once __DIR__ . '/portal/inc/lang.php';
 $dbUp    = true;
 $notices = [];
 $cat     = (string) ($_GET['cat'] ?? '');
-$cats    = ['tu', 'exam', 'campus'];
+$cats    = ['tu', 'exam', 'scholarship', 'ugc', 'campus'];
 
 try {
     $sql = 'SELECT * FROM notices WHERE is_published = 1 AND year_level IS NULL';
@@ -104,8 +104,10 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
       </a>
       <?php
       $labels = $ne
-        ? ['tu' => 'त्रि.वि. आधिकारिक', 'exam' => 'परीक्षा', 'campus' => 'क्याम्पस']
-        : ['tu' => 'TU official', 'exam' => 'Examination', 'campus' => 'Campus'];
+        ? ['tu' => 'त्रि.वि. आधिकारिक', 'exam' => 'परीक्षा', 'scholarship' => 'छात्रवृत्ति',
+           'ugc' => 'यू.जी.सी.', 'campus' => 'क्याम्पस']
+        : ['tu' => 'TU official', 'exam' => 'Examination', 'scholarship' => 'Scholarship',
+           'ugc' => 'UGC', 'campus' => 'Campus'];
       foreach ($cats as $c): ?>
         <a href="?cat=<?= e($c) ?><?= $ne ? '&lang=ne' : '' ?>" <?= $cat === $c ? 'aria-current="true"' : '' ?>>
           <?= e($labels[$c]) ?>

@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'save_notice') {
         $id      = (int) ($_POST['notice_id'] ?? 0);
         $titleEn = trim((string) ($_POST['title_en'] ?? ''));
-        $cat     = in_array($_POST['category'] ?? '', ['tu', 'exam', 'campus'], true) ? $_POST['category'] : 'tu';
+        $cat     = in_array($_POST['category'] ?? '', ['tu', 'exam', 'scholarship', 'ugc', 'campus'], true) ? $_POST['category'] : 'tu';
         $year    = (int) ($_POST['year_level'] ?? 0);
         $url     = trim((string) ($_POST['source_url'] ?? ''));
 
@@ -101,7 +101,7 @@ layout_head(['title' => t('manage_notices'), 'active' => 'notices', 'wide' => tr
       <div class="p-field">
         <label for="category"><?= te('category') ?></label>
         <select id="category" name="category">
-          <?php foreach (['tu', 'exam', 'campus'] as $c): ?>
+          <?php foreach (['tu', 'exam', 'scholarship', 'ugc', 'campus'] as $c): ?>
             <option value="<?= $c ?>" <?= ($editing['category'] ?? '') === $c ? 'selected' : '' ?>><?= te('cat_' . $c) ?></option>
           <?php endforeach; ?>
         </select>

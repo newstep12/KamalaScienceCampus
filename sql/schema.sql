@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS student_notes (
 -- Notices. year_level NULL = shown to every year.
 CREATE TABLE IF NOT EXISTS notices (
   id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  category     ENUM('tu','exam','campus') NOT NULL DEFAULT 'tu',
+  category     ENUM('tu','exam','campus','ugc','scholarship') NOT NULL DEFAULT 'tu',
   title_en     VARCHAR(190) NOT NULL,
   title_ne     VARCHAR(190) NULL,
   body_en      MEDIUMTEXT NULL,

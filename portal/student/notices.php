@@ -5,7 +5,7 @@ require_once __DIR__ . '/../inc/layout.php';
 $user = require_login();
 $year = (int) ($user['year_level'] ?? 0);
 $cat  = (string) ($_GET['cat'] ?? '');
-$cats = ['tu', 'exam', 'campus'];
+$cats = ['tu', 'exam', 'scholarship', 'ugc', 'campus'];
 
 $sql    = 'SELECT n.*, u.full_name AS author FROM notices n
              LEFT JOIN users u ON u.id = n.created_by

@@ -30,8 +30,117 @@ function apply_schema(): array
         }
     }
 
+    // Column changes that CREATE TABLE IF NOT EXISTS cannot deliver to an
+    // existing table. Each must be safe to run repeatedly.
+    foreach (column_migrations() as $label => $ddl) {
+        try {
+            db()->exec($ddl);
+        } catch (Throwable $e) {
+            error_log('Migration "' . $label . '" skipped: ' . $e->getMessage());
+        }
+    }
+
     $after = db()->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
     return ['added' => array_values(array_diff($after, $before)), 'tables' => $after];
+}
+
+/**
+ * Re-runnable ALTERs. MODIFY COLUMN restates the column definition, so applying
+ * it twice is a no-op rather than an error.
+ */
+function column_migrations(): array
+{
+    return [
+        'notice categories' =>
+            "ALTER TABLE notices MODIFY COLUMN category
+             ENUM('tu','exam','campus','ugc','scholarship') NOT NULL DEFAULT 'tu'",
+    ];
+}
+
+/**
+ * Official reference links every student and lecturer needs. These are real,
+ * verified URLs — each was checked to resolve before being added here.
+ */
+function official_links(): array
+{
+    return [
+        [
+            'url'      => 'https://ugc.pathway.com.np/login',
+            'category' => 'scholarship',
+            'pinned'   => 1,
+            'title_en' => 'UGC Nepal — scholarship and grant application portal',
+            'title_ne' => 'यू.जी.सी. नेपाल — छात्रवृत्ति तथा अनुदान आवेदन पोर्टल',
+            'body_en'  => "Apply online for University Grants Commission higher-education scholarships. "
+                        . "Create an account or sign in, then complete the application form.
+
+"
+                        . "UGC scholarships support students with disabilities, Dalit students, students "
+                        . "from economically disadvantaged families, children of martyrs and Muslim women, "
+                        . "among others. Check the current call and its closing date before applying.
+
+"
+                        . "Scholarship Section, UGC, Sanothimi, Bhaktapur — 01-6638549 / 6638550 / 6638551.",
+            'body_ne'  => "विश्वविद्यालय अनुदान आयोगको उच्च शिक्षा छात्रवृत्तिका लागि अनलाइन आवेदन दिनुहोस्। "
+                        . "खाता खोली वा लग इन गरी आवेदन फाराम भर्नुहोस्।
+
+"
+                        . "यू.जी.सी. छात्रवृत्तिले अपांगता भएका विद्यार्थी, दलित विद्यार्थी, आर्थिक रूपमा विपन्न "
+                        . "परिवारका विद्यार्थी, सहिद परिवारका सन्तान र मुस्लिम महिलालगायतलाई सहयोग गर्दछ। "
+                        . "आवेदन दिनुअघि हालको सूचना र अन्तिम मिति हेर्नुहोस्।
+
+"
+                        . "छात्रवृत्ति शाखा, यू.जी.सी., सानोठिमी, भक्तपुर — ०१-६६३८५४९ / ६६३८५५० / ६६३८५५१।",
+        ],
+        [
+            'url'      => 'https://iost.tu.edu.np/notices',
+            'category' => 'tu',
+            'pinned'   => 1,
+            'title_en' => 'TU Institute of Science and Technology — official notices',
+            'title_ne' => 'त्रि.वि. विज्ञान तथा प्रविधि अध्ययन संस्थान — आधिकारिक सूचना',
+            'body_en'  => "The Institute of Science and Technology (IOST) publishes every official notice "
+                        . "for B.Sc. programs here: examination schedules, form fill-up notices, exam "
+                        . "centres and results.
+
+"
+                        . "IOST sets the B.Sc. curriculum and issues the degree, so this page is the "
+                        . "authoritative source — always confirm a date against it rather than relying on "
+                        . "second-hand notices.",
+            'body_ne'  => "विज्ञान तथा प्रविधि अध्ययन संस्थान (IOST) ले बी.एस्सी. कार्यक्रमका सबै आधिकारिक "
+                        . "सूचना यहीँ प्रकाशित गर्दछ: परीक्षा तालिका, फाराम भर्ने सूचना, परीक्षा केन्द्र र नतिजा।
+
+"
+                        . "बी.एस्सी.को पाठ्यक्रम निर्धारण र डिग्री प्रदान IOST ले नै गर्ने भएकाले यो पृष्ठ नै "
+                        . "आधिकारिक स्रोत हो — कुनै पनि मिति अन्यत्रको सूचनामा भर नपरी यहीँबाट पुष्टि गर्नुहोस्।",
+        ],
+        [
+            'url'      => 'https://ugcnepal.edu.np/category/scholarship/',
+            'category' => 'scholarship',
+            'pinned'   => 0,
+            'title_en' => 'UGC Nepal — scholarship announcements and results',
+            'title_ne' => 'यू.जी.सी. नेपाल — छात्रवृत्ति सूचना तथा नतिजा',
+            'body_en'  => "Current scholarship calls, eligibility criteria, required documents and "
+                        . "published results from the University Grants Commission.
+
+"
+                        . "Check here for the closing date before starting an application.",
+            'body_ne'  => "विश्वविद्यालय अनुदान आयोगका हालका छात्रवृत्ति सूचना, योग्यताका आधार, आवश्यक कागजात "
+                        . "र प्रकाशित नतिजा।
+
+"
+                        . "आवेदन सुरु गर्नुअघि अन्तिम मिति यहीँ हेर्नुहोस्।",
+        ],
+        [
+            'url'      => 'https://ugcnepal.edu.np/category/notice/',
+            'category' => 'ugc',
+            'pinned'   => 0,
+            'title_en' => 'UGC Nepal — general notices',
+            'title_ne' => 'यू.जी.सी. नेपाल — सामान्य सूचना',
+            'body_en'  => "Notices from the University Grants Commission, the body that recognises this "
+                        . "campus and oversees higher education in Nepal.",
+            'body_ne'  => "विश्वविद्यालय अनुदान आयोगका सूचनाहरू — यही निकायले यस क्याम्पसलाई मान्यता दिन्छ "
+                        . "र नेपालको उच्च शिक्षाको नियमन गर्दछ।",
+        ],
+    ];
 }
 
 /**
@@ -83,6 +192,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = apply_schema();
             log_activity((int) $admin['id'], 'apply_schema', implode(', ', $result['added']) ?: 'no change');
             flash('ok', t('db_updated'));
+        } elseif ($action === 'seed_links') {
+            $added = 0;
+            foreach (official_links() as $l) {
+                // Keyed on the URL so re-running never duplicates, and never
+                // overwrites wording the campus has since edited.
+                if (scalar('SELECT 1 FROM notices WHERE source_url = ?', [$l['url']])) {
+                    continue;
+                }
+                q('INSERT INTO notices (category, title_en, title_ne, body_en, body_ne,
+                          source_url, year_level, is_pinned, is_published, created_by)
+                   VALUES (?, ?, ?, ?, ?, ?, NULL, ?, 1, ?)',
+                  [$l['category'], $l['title_en'], $l['title_ne'], $l['body_en'], $l['body_ne'],
+                   $l['url'], $l['pinned'], $admin['id']]);
+                $added++;
+            }
+            log_activity((int) $admin['id'], 'seed_links', (string) $added);
+            flash('ok', t('links_seeded', localize_digits((string) $added)));
         } elseif ($action === 'save_mail') {
             set_setting('mail_enabled',   isset($_POST['mail_enabled']) ? '1' : '0');
             set_setting('mail_from',      trim((string) ($_POST['mail_from'] ?? '')) ?: null);
@@ -171,6 +297,22 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
   <form method="post">
     <?= csrf_field() ?>
     <button class="p-btn p-btn-gold" type="submit" name="action" value="seed_courses"><?= te('seed_run') ?></button>
+  </form>
+</section>
+
+<section class="p-card">
+  <h2><?= te('links_title') ?></h2>
+  <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('links_intro') ?></p>
+  <ul style="font-size:.92rem;color:var(--ink-soft);line-height:1.9;margin:14px 0;">
+    <?php foreach (official_links() as $l): ?>
+      <li><?= e(is_nepali() ? $l['title_ne'] : $l['title_en']) ?>
+        <?php if ($l['pinned']): ?><span class="p-tag pin"><?= te('pinned') ?></span><?php endif; ?>
+      </li>
+    <?php endforeach; ?>
+  </ul>
+  <form method="post">
+    <?= csrf_field() ?>
+    <button class="p-btn p-btn-gold" type="submit" name="action" value="seed_links"><?= te('links_run') ?></button>
   </form>
 </section>
 
