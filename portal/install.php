@@ -6,10 +6,54 @@ declare(strict_types=1);
  * it cannot be replayed by a visitor.
  */
 
+/**
+ * Execute sql/schema.sql.
+ *
+ * Comment lines are stripped BEFORE splitting. Skipping any chunk that merely
+ * began with '--' silently discarded the CREATE TABLE that followed a comment,
+ * which is how five tables came to be missing from the first install.
+ */
+function run_schema(PDO $pdo): array
+{
+    $sql = file_get_contents(__DIR__ . '/../sql/schema.sql');
+    if ($sql === false) {
+        throw new RuntimeException('sql/schema.sql is missing.');
+    }
+    $sql = preg_replace('/^\s*--.*$/m', '', $sql);
+
+    $ran = 0;
+    foreach (preg_split('/;\s*[\r\n]/', $sql) as $stmt) {
+        $stmt = trim($stmt);
+        if ($stmt !== '') {
+            $pdo->exec($stmt);
+            $ran++;
+        }
+    }
+
+    $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+    return ['ran' => $ran, 'tables' => $tables];
+}
+
 $configPath = __DIR__ . '/inc/config.php';
 $installed  = is_file($configPath);
 $errors     = [];
 $done       = false;
+$repair     = null;
+
+if ($installed && isset($_GET['repair'])) {
+    try {
+        $c = require $configPath;
+        $d = $c['db'];
+        $pdo = new PDO(
+            "mysql:host={$d['host']};dbname={$d['name']};charset=utf8mb4",
+            $d['user'], $d['password'],
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        );
+        $repair = run_schema($pdo);
+    } catch (Throwable $e) {
+        $errors[] = 'Repair failed: ' . $e->getMessage();
+    }
+}
 
 if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $dbHost = trim((string) ($_POST['db_host'] ?? 'localhost'));
@@ -48,18 +92,7 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors && $pdo) {
         try {
-            $sql = file_get_contents(__DIR__ . '/../sql/schema.sql');
-            if ($sql === false) {
-                throw new RuntimeException('sql/schema.sql is missing.');
-            }
-            // Split on semicolons at end of line — the schema has no routines,
-            // so this is safe and avoids needing the multi-statement driver.
-            foreach (preg_split('/;\s*[\r\n]/', $sql) as $stmt) {
-                $stmt = trim($stmt);
-                if ($stmt !== '' && !str_starts_with($stmt, '--')) {
-                    $pdo->exec($stmt);
-                }
-            }
+            run_schema($pdo);
 
             $exists = $pdo->prepare('SELECT id FROM users WHERE email = ?');
             $exists->execute([$adminEmail]);
@@ -109,7 +142,26 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="portal">
 <div class="p-auth" style="max-width:600px;">
   <div class="p-card">
-  <?php if ($installed): ?>
+  <?php if ($repair !== null): ?>
+    <h1>Tables checked</h1>
+    <p class="p-auth-intro">
+      Ran <?= (int) $repair['ran'] ?> statements. The database now holds these tables:
+    </p>
+    <ul style="font-size:.92rem;color:var(--ink-soft);line-height:1.9;">
+      <?php foreach ($repair['tables'] as $tbl): ?>
+        <li><code><?= htmlspecialchars((string) $tbl, ENT_QUOTES) ?></code></li>
+      <?php endforeach; ?>
+    </ul>
+    <p class="p-auth-intro"><strong>Now delete <code>portal/install.php</code> from the server.</strong></p>
+    <a class="p-btn p-btn-primary p-btn-block" href="index.php">Go to the portal</a>
+
+  <?php elseif ($errors && $installed): ?>
+    <h1>Repair failed</h1>
+    <?php foreach ($errors as $err): ?>
+      <div class="p-flash p-flash-error"><?= htmlspecialchars($err, ENT_QUOTES) ?></div>
+    <?php endforeach; ?>
+
+  <?php elseif ($installed): ?>
     <h1>Already set up</h1>
     <p class="p-auth-intro">
       The portal is configured. For safety, delete <code>portal/install.php</code>
