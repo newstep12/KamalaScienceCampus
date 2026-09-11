@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
+require_once __DIR__ . '/../inc/mail.php';
 
 $admin = require_role(ROLE_ADMIN);
 
@@ -14,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         q('UPDATE users SET status = \'active\', approved_at = NOW(), approved_by = ? WHERE id = ?',
           [$admin['id'], $id]);
         log_activity((int) $admin['id'], 'approve_user', $target['email']);
+        notify_student_approved($target);
         flash('ok', t('approved_ok', $target['full_name']));
     } elseif ($target && $action === 'delete') {
         // Only ever a pending registration, and never an admin account.
@@ -26,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         q('UPDATE users SET status = \'rejected\', rejection_note = ?, approved_by = ? WHERE id = ?',
           [trim((string) ($_POST['note'] ?? '')) ?: null, $admin['id'], $id]);
         log_activity((int) $admin['id'], 'reject_user', $target['email']);
+        notify_student_rejected($target, trim((string) ($_POST['note'] ?? '')) ?: null);
         flash('ok', t('rejected_ok', $target['full_name']));
     }
     header('Location: ' . portal_url('/admin/approvals.php'));

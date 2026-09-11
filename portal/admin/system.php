@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
+require_once __DIR__ . '/../inc/mail.php';
 
 $admin = require_role(ROLE_ADMIN);
 
@@ -82,6 +83,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $result = apply_schema();
             log_activity((int) $admin['id'], 'apply_schema', implode(', ', $result['added']) ?: 'no change');
             flash('ok', t('db_updated'));
+        } elseif ($action === 'save_mail') {
+            set_setting('mail_enabled',   isset($_POST['mail_enabled']) ? '1' : '0');
+            set_setting('mail_from',      trim((string) ($_POST['mail_from'] ?? '')) ?: null);
+            set_setting('mail_from_name', trim((string) ($_POST['mail_from_name'] ?? '')) ?: null);
+            flash('ok', t('mail_saved'));
+        } elseif ($action === 'test_mail') {
+            $to = trim((string) ($_POST['test_to'] ?? '')) ?: (string) $admin['email'];
+            $sent = send_notification(
+                $to,
+                'Test email from the Kamala Science Campus portal',
+                "This is a test message.\n\nIf you are reading it, notifications are working.\n"
+            );
+            flash($sent ? 'ok' : 'error', $sent ? t('mail_test_sent', $to) : t('mail_test_failed'));
         } elseif ($action === 'seed_courses') {
             $added = 0;
             foreach (starter_courses() as [$code, $year, $en, $ne, $cr]) {
@@ -157,6 +171,51 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
   <form method="post">
     <?= csrf_field() ?>
     <button class="p-btn p-btn-gold" type="submit" name="action" value="seed_courses"><?= te('seed_run') ?></button>
+  </form>
+</section>
+
+<section class="p-card">
+  <h2><?= te('mail_title') ?></h2>
+  <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('mail_intro') ?></p>
+
+  <form method="post">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="save_mail">
+    <div class="p-field">
+      <label style="display:flex;align-items:center;gap:9px;font-weight:500;">
+        <input type="checkbox" name="mail_enabled" value="1" style="width:auto;"
+               <?= setting_bool('mail_enabled') ? 'checked' : '' ?>>
+        <?= te('mail_enable') ?>
+      </label>
+    </div>
+    <div class="p-field-row">
+      <div class="p-field">
+        <label for="mail_from"><?= te('mail_from') ?></label>
+        <input type="email" id="mail_from" name="mail_from" value="<?= e(setting('mail_from')) ?>"
+               placeholder="noreply@kamalasciencecampus.edu.np">
+        <span class="hint"><?= te('mail_from_hint') ?></span>
+      </div>
+      <div class="p-field">
+        <label for="mail_from_name"><?= te('mail_from_name') ?></label>
+        <input type="text" id="mail_from_name" name="mail_from_name"
+               value="<?= e(setting('mail_from_name', 'Kamala Science Campus')) ?>">
+      </div>
+    </div>
+    <div class="p-form-actions">
+      <button class="p-btn p-btn-primary" type="submit"><?= te('save') ?></button>
+    </div>
+  </form>
+
+  <form method="post" style="margin-top:22px;padding-top:22px;border-top:1px solid var(--line);">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="test_mail">
+    <div class="p-field">
+      <label for="test_to"><?= te('mail_test') ?></label>
+      <input type="email" id="test_to" name="test_to" value="<?= e($admin['email']) ?>">
+    </div>
+    <div class="p-form-actions">
+      <button class="p-btn p-btn-ghost" type="submit"><?= te('mail_test_send') ?></button>
+    </div>
   </form>
 </section>
 

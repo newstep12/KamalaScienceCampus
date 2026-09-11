@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/inc/layout.php';
+require_once __DIR__ . '/inc/mail.php';
 
 if ($u = current_user()) {
     header('Location: ' . home_for($u));
@@ -57,6 +58,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]
         );
         log_activity(null, 'register', $email, 'Year ' . $year);
+
+        // Best-effort: a failed notification must not fail the registration.
+        notify_admins_of_registration([
+            'full_name'  => $in['full_name'],
+            'email'      => $email,
+            'year_level' => $year,
+            'symbol_no'  => $in['symbol_no'],
+        ]);
+
         $done = true;
     }
 }

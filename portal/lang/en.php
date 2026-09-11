@@ -224,6 +224,18 @@ return [
     'courses_seeded'    => '%s course(s) created.',
 
     // Results
+    'mail_title'        => 'Email notifications',
+    'mail_intro'        => 'Emails students when their registration is approved or rejected, and tells administrators when someone registers. Sent through the hosting mail service — no password is stored.',
+    'mail_enable'       => 'Send notification emails',
+    'mail_from'         => 'From address',
+    'mail_from_hint'    => 'Must be an address on a domain this server sends for, or messages will be rejected as spam.',
+    'mail_from_name'    => 'From name',
+    'mail_saved'        => 'Email settings saved.',
+    'mail_test'         => 'Send a test email to',
+    'mail_test_send'    => 'Send test email',
+    'mail_test_sent'    => 'Test email sent to %s. Check the inbox, and the spam folder.',
+    'mail_test_failed'  => 'The test email could not be sent. Check that notifications are switched on and the from address is set.',
+
     'nav_results'       => 'Results',
     'results_title'     => 'My results',
     'results_intro'     => 'Marks recorded for your courses. Only published assessments appear here.',

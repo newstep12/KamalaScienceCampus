@@ -199,3 +199,9 @@ CREATE TABLE IF NOT EXISTS attendance (
   CONSTRAINT fk_att_session FOREIGN KEY (session_id) REFERENCES attendance_sessions (id) ON DELETE CASCADE,
   CONSTRAINT fk_att_user    FOREIGN KEY (user_id)    REFERENCES users (id)                ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS settings (
+  k VARCHAR(64)  NOT NULL,
+  v TEXT         NULL,
+  PRIMARY KEY (k)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
