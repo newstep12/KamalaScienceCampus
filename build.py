@@ -11,10 +11,14 @@ directly, so there is no other build step.
 Placeholders substituted per language:
     {{BASE}}  '' for English, '../' for Nepali — prefixes shared assets
     {{ALT}}   link to the same page in the other language
+    {{V}}     a hash of styles.css + main.js, appended as ?v= so browsers
+              (which cache CSS and JS for 7 days) fetch the new files after
+              every change — run this script after editing CSS or JS too
     {{PHOTO:slug:XY}}  the portrait assets/img/people/<slug>.jpg (or .jpeg,
               .png, .webp) if that file exists, otherwise the initials XY —
               so adding a photo is: drop the file in, run this script
 """
+import hashlib
 import pathlib
 import re
 
@@ -72,6 +76,13 @@ def photo(slug, initials, base):
     return f'<span class="person-initials" aria-hidden="true">{initials}</span>'
 
 
+def asset_version():
+    h = hashlib.sha1()
+    for rel in ('assets/css/styles.css', 'assets/js/main.js'):
+        h.update((ROOT / rel).read_bytes())
+    return h.hexdigest()[:10]
+
+
 def meta(src, key, default=''):
     m = re.search(r'<!--\s*%s:\s*(.*?)\s*-->' % key, src)
     return m.group(1) if m else default
@@ -105,6 +116,7 @@ def build(lang, spec):
         )
         html = re.sub(r'\{\{PHOTO:([a-z0-9-]+):([^}]+)\}\}',
                       lambda m: photo(m.group(1), m.group(2), spec['base']), html)
+        html = html.replace('{{V}}', asset_version())
         html = html.replace('{{BASE}}', spec['base'])
         html = html.replace('{{ALT}}', spec['alt'](path.name))
         (spec['out'] / path.name).write_text(html)

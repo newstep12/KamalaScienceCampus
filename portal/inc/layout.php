@@ -33,8 +33,8 @@ function layout_head(array $opts = []): void
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="<?= e(portal_url('/../assets/css/styles.css')) ?>">
-<link rel="stylesheet" href="<?= e(portal_url('/../assets/css/portal.css')) ?>">
+<link rel="stylesheet" href="<?= e(portal_url('/../assets/css/styles.css?v=' . asset_version('styles.css'))) ?>">
+<link rel="stylesheet" href="<?= e(portal_url('/../assets/css/portal.css?v=' . asset_version('portal.css'))) ?>">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%230b2545'/><text x='16' y='22' font-size='15' font-family='Georgia,serif' font-weight='700' fill='%23d99a2b' text-anchor='middle'>K</text></svg>">
 </head>
 <body class="portal<?= is_nepali() ? ' lang-ne' : '' ?>">
@@ -142,6 +142,16 @@ function layout_foot(): void
 </body>
 </html>
 <?php
+}
+
+/**
+ * Cache-busting suffix for a stylesheet: its modification time, which a deploy
+ * updates. Browsers keep CSS for 7 days (.htaccess), so without it a change
+ * would not reach returning visitors for a week.
+ */
+function asset_version(string $file): string
+{
+    return (string) (@filemtime(__DIR__ . '/../../assets/css/' . $file) ?: 0);
 }
 
 function default_nav(?array $user): array

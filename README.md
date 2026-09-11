@@ -65,7 +65,10 @@ overwrites them. Content-only edits go in `src/pages/`; anything shared goes in
 
 Styling lives in `assets/css/styles.css` (colours are CSS variables at the top).
 Behaviour — mobile menu, active nav link, the enquiry form — is in
-`assets/js/main.js`.
+`assets/js/main.js`. Run `build.py` after editing either one too: it stamps a
+hash of both files onto their URLs (`styles.css?v=…`), because `.htaccess`
+lets browsers cache CSS and JS for 7 days and would otherwise keep the old
+ones. The portal and `notices.php` do the same from the files' timestamps.
 
 ## Before going live: fill in the placeholders
 
