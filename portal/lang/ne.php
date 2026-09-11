@@ -25,6 +25,8 @@ return [
     'required_field'   => 'अनिवार्य',
     'none_yet'         => 'अहिलेसम्म केही छैन।',
     'confirm_delete'   => 'यो स्थायी रूपमा हटाउने हो? यो फिर्ता गर्न मिल्दैन।',
+    'confirm_again'    => 'पक्का गर्न फेरि थिच्नुहोस्',
+    'deleted_ok'       => '%s हटाइयो।',
 
     'role_student'     => 'विद्यार्थी',
     'role_lecturer'    => 'प्राध्यापक',

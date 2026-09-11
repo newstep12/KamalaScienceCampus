@@ -157,7 +157,7 @@ layout_head(['title' => bilingual($course, 'title'), 'active' => 'home', 'wide' 
             </div>
           </div>
           <div class="p-item-actions">
-            <form method="post" data-confirm="<?= te('confirm_delete') ?>">
+            <form method="post" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="delete_material">
               <input type="hidden" name="material_id" value="<?= (int) $m['id'] ?>">

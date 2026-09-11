@@ -105,10 +105,28 @@ function layout_foot(): void
       t.textContent = open ? '✕' : '☰';
     });
   }
-  document.querySelectorAll('[data-confirm]').forEach(function (el) {
-    el.addEventListener('submit', function (e) {
-      if (!window.confirm(el.getAttribute('data-confirm'))) { e.preventDefault(); }
+  // Two-step confirm rather than window.confirm(): once a user ticks Chrome's
+  // "prevent this page from creating additional dialogs", confirm() returns
+  // false immediately and a dialog-gated button silently stops working.
+  document.querySelectorAll('[data-confirm]').forEach(function (form) {
+    var btn = form.querySelector('button[type="submit"], button:not([type])');
+    if (!btn) return;
+    var original = btn.textContent;
+    var armed = false;
+    var reset = function () {
+      armed = false;
+      btn.textContent = original;
+      btn.classList.remove('armed');
+    };
+    form.addEventListener('submit', function (e) {
+      if (armed) return;              // second click: let it through
+      e.preventDefault();
+      armed = true;
+      btn.textContent = form.getAttribute('data-confirm-label') || 'Click again to confirm';
+      btn.classList.add('armed');
+      setTimeout(reset, 5000);        // disarm if they walk away
     });
+    btn.addEventListener('blur', function () { if (armed) setTimeout(reset, 150); });
   });
   document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
     btn.addEventListener('click', function () {

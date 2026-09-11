@@ -136,7 +136,7 @@ layout_head(['title' => bilingual($course, 'title'), 'active' => 'courses']);
             <div class="p-item-meta"><?= e(format_date($n['updated_at'], true)) ?></div>
           </div>
           <div class="p-item-actions">
-            <form method="post" data-confirm="<?= te('confirm_delete') ?>">
+            <form method="post" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="delete_note">
               <input type="hidden" name="note_id" value="<?= (int) $n['id'] ?>">

@@ -147,7 +147,7 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
             <td><span class="p-tag <?= e($tagClass) ?>"><?= te('status_' . $u['status']) ?></span></td>
             <td class="nowrap">
               <?php if ($u['status'] === 'active' && (int) $u['id'] !== (int) $admin['id']): ?>
-                <form method="post" data-confirm="<?= te('confirm_delete') ?>">
+                <form method="post" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
                   <?= csrf_field() ?>
                   <input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
                   <button class="p-btn p-btn-danger p-btn-sm" name="action" value="suspend"><?= te('suspend') ?></button>

@@ -360,3 +360,10 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* Armed state for the two-step confirm */
+.p-btn.armed {
+  background: var(--err); border-color: var(--err); color: #fff;
+  animation: p-pulse .3s ease;
+}
+@keyframes p-pulse { from { transform: scale(.96); } to { transform: none; } }

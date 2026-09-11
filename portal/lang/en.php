@@ -26,6 +26,8 @@ return [
     'required_field'   => 'required',
     'none_yet'         => 'Nothing here yet.',
     'confirm_delete'   => 'Delete this permanently? This cannot be undone.',
+    'confirm_again'    => 'Click again to confirm',
+    'deleted_ok'       => '%s has been deleted.',
 
     // Roles & status
     'role_student'     => 'Student',

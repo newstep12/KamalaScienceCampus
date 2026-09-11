@@ -15,6 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           [$admin['id'], $id]);
         log_activity((int) $admin['id'], 'approve_user', $target['email']);
         flash('ok', t('approved_ok', $target['full_name']));
+    } elseif ($target && $action === 'delete') {
+        // Only ever a pending registration, and never an admin account.
+        if ($target['role'] !== ROLE_ADMIN && (int) $target['id'] !== (int) $admin['id']) {
+            q('DELETE FROM users WHERE id = ?', [$id]);
+            log_activity((int) $admin['id'], 'delete_user', $target['email']);
+            flash('ok', t('deleted_ok', $target['full_name']));
+        }
     } elseif ($target && $action === 'reject') {
         q('UPDATE users SET status = \'rejected\', rejection_note = ?, approved_by = ? WHERE id = ?',
           [trim((string) ($_POST['note'] ?? '')) ?: null, $admin['id'], $id]);
@@ -70,10 +77,15 @@ layout_head(['title' => t('pending_approvals'), 'active' => 'approvals', 'wide' 
                 <input type="hidden" name="user_id" value="<?= (int) $p['id'] ?>">
                 <button class="p-btn p-btn-primary p-btn-sm" type="submit" name="action" value="approve"><?= te('approve') ?></button>
               </form>
-              <form method="post" data-confirm="<?= te('confirm_delete') ?>">
+              <form method="post">
                 <?= csrf_field() ?>
                 <input type="hidden" name="user_id" value="<?= (int) $p['id'] ?>">
-                <button class="p-btn p-btn-danger p-btn-sm" type="submit" name="action" value="reject"><?= te('reject') ?></button>
+                <button class="p-btn p-btn-ghost p-btn-sm" type="submit" name="action" value="reject"><?= te('reject') ?></button>
+              </form>
+              <form method="post" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="user_id" value="<?= (int) $p['id'] ?>">
+                <button class="p-btn p-btn-danger p-btn-sm" type="submit" name="action" value="delete"><?= te('delete') ?></button>
               </form>
             </td>
           </tr>
