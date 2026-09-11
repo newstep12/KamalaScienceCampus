@@ -3,7 +3,10 @@
 Static website for **Kamala Science Campus** (कमला साइन्स क्याम्पस), a
 community-based campus in Dhungrebas, Kamalamai, Sindhuli, Bagmati Province,
 Nepal — established 2066 BS (2009 AD), affiliated to Tribhuvan University and
-the National Examinations Board, recognised by the UGC Nepal.
+recognised by the UGC Nepal.
+
+The site covers the campus's four-year **Bachelor of Science (B.Sc.) General**
+program only.
 
 No build tools, no dependencies. Plain HTML/CSS/JS that any static host serves.
 
@@ -11,9 +14,9 @@ No build tools, no dependencies. Plain HTML/CSS/JS that any static host serves.
 
 | File | Page |
 | --- | --- |
-| `index.html` | Home — highlights, about summary, programs, facilities |
+| `index.html` | Home — highlights, about summary, the B.Sc. program, facilities |
 | `about.html` | History, mission, affiliation & recognition, facilities |
-| `programs.html` | +2 Science (NEB) and B.Sc. General (TU) in detail |
+| `programs.html` | B.Sc. General in detail: subjects, four-year structure, eligibility |
 | `admissions.html` | Eligibility, application steps, documents, FAQ |
 | `scholarships.html` | Scholarship categories and how to claim |
 | `contact.html` | Address, phone, map, enquiry form |
@@ -63,8 +66,8 @@ verify and deliberately left blank rather than invent:
   actual campus location when you have one.
 
 Verified and already in place: phone `+977-47-520203`, established 2066 BS /
-2009 AD, TU + NEB affiliation, UGC recognition, B.Sc. General = 4 years /
-50 seats / English medium, and the scholarship categories.
+2009 AD, Tribhuvan University affiliation, UGC recognition, B.Sc. General =
+4 years / 50 seats / English medium, and the scholarship categories.
 
 ## Local preview
 
@@ -80,13 +83,13 @@ Then open <http://localhost:4321>.
 git add -A
 git commit -m "Kamala Science Campus website"
 git branch -M main
-git remote add origin https://github.com/<your-user>/kamala-science-campus.git
+git remote add origin git@github.com:newstep12/KamalaScienceCampus.git
 git push -u origin main
 ```
 
 Then in the repository: **Settings → Pages → Source: Deploy from a branch →
 `main` / `(root)`**. The site appears at
-`https://<your-user>.github.io/kamala-science-campus/`.
+<https://newstep12.github.io/KamalaScienceCampus/>.
 
 Because every link is relative and the site is served from the repository root,
 it works both at that path and on a custom domain later.
