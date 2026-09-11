@@ -1,0 +1,117 @@
+<!--title: Contact — Kamala Science Campus, Dhungrebas, Sindhuli -->
+<!--desc: Contact Kamala Science Campus in Dhungrebas, Kamalamai, Sindhuli, Bagmati Province, Nepal — phone, address, location map and enquiry form. -->
+<!--page: contact -->
+
+<section class="page-head">
+  <div class="wrap">
+    <p class="crumbs"><a href="index.html">Home</a> &rsaquo; Contact</p>
+    <h1>Contact the campus</h1>
+    <p>
+      Questions about programs, admission or scholarships? Reach the campus office
+      in Dhungrebas, or send an enquiry and we will get back to you.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap contact-grid">
+    <div>
+      <p class="kicker">Campus details</p>
+      <h2>Kamala Science Campus</h2>
+      <p class="deva" style="font-size:1.1rem;color:var(--ink-soft);">कमला साइन्स क्याम्पस</p>
+
+      <div class="table-scroll" style="margin:26px 0;">
+        <table class="table-kv">
+          <tbody>
+            <tr>
+              <th scope="row">Address</th>
+              <td>Dhungrebas, Kamalamai Municipality,<br>Sindhuli, Bagmati Province, Nepal</td>
+            </tr>
+            <tr>
+              <th scope="row">Phone</th>
+              <td><a href="tel:+97747520203">+977-47-520203</a></td>
+            </tr>
+            <tr>
+              <th scope="row">Email</th>
+              <!-- TODO: replace with the campus email address, and update
+                   data-mailto on the form below to match. -->
+              <td>[ add campus email ]</td>
+            </tr>
+            <tr>
+              <th scope="row">Office hours</th>
+              <!-- TODO: confirm the actual office hours. -->
+              <td>[ add office hours ]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Getting here</h3>
+      <p>
+        The campus is in Dhungrebas, within Kamalamai Municipality in Sindhuli
+        District, off the road corridor that links Sindhulimadi with the
+        surrounding settlements. Local buses and jeeps serving Dhungrebas are the
+        usual way in from Sindhulimadi.
+      </p>
+
+      <div class="map-embed">
+        <iframe
+          title="Map showing Dhungrebas, Kamalamai, Sindhuli"
+          src="https://www.google.com/maps?q=Dhungrebas,+Kamalamai,+Sindhuli,+Nepal&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+
+    <div>
+      <p class="kicker">Enquiry</p>
+      <h2>Send us a message</h2>
+      <p style="color:var(--ink-soft);">
+        Fill in the form and your email app will open with the enquiry ready to
+        send to the campus.
+      </p>
+
+      <!-- TODO: replace data-mailto with the campus email address. -->
+      <form data-enquiry-form data-mailto="" novalidate>
+        <div class="field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" name="name" autocomplete="name" required>
+        </div>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" name="email" autocomplete="email" required>
+        </div>
+
+        <div class="field">
+          <label for="phone">Phone number</label>
+          <input type="tel" id="phone" name="phone" autocomplete="tel">
+        </div>
+
+        <div class="field">
+          <label for="interest">I am asking about</label>
+          <select id="interest" name="interest">
+            <option>+2 Science admission</option>
+            <option>B.Sc. General admission</option>
+            <option>Scholarships</option>
+            <option>Fees</option>
+            <option>General enquiry</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="message">Your message</label>
+          <textarea id="message" name="message" required></textarea>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Send enquiry</button>
+        <p class="form-status" role="status"></p>
+        <p class="form-note">
+          For anything urgent &mdash; especially during the admission window &mdash;
+          calling <a href="tel:+97747520203">+977-47-520203</a> will be faster than
+          email.
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
