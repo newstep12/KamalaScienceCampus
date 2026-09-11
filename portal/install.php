@@ -1,0 +1,175 @@
+<?php
+declare(strict_types=1);
+/**
+ * One-time setup. Writes inc/config.php, creates the schema, and makes the
+ * first administrator account. Refuses to run once inc/config.php exists, so
+ * it cannot be replayed by a visitor.
+ */
+
+$configPath = __DIR__ . '/inc/config.php';
+$installed  = is_file($configPath);
+$errors     = [];
+$done       = false;
+
+if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $dbHost = trim((string) ($_POST['db_host'] ?? 'localhost'));
+    $dbName = trim((string) ($_POST['db_name'] ?? ''));
+    $dbUser = trim((string) ($_POST['db_user'] ?? ''));
+    $dbPass = (string) ($_POST['db_pass'] ?? '');
+
+    $adminName  = trim((string) ($_POST['admin_name'] ?? ''));
+    $adminEmail = strtolower(trim((string) ($_POST['admin_email'] ?? '')));
+    $adminPass  = (string) ($_POST['admin_pass'] ?? '');
+
+    if ($dbName === '' || $dbUser === '')                  { $errors[] = 'Enter the database name and user.'; }
+    if ($adminName === '')                                  { $errors[] = 'Enter the administrator name.'; }
+    if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL))    { $errors[] = 'Enter a valid administrator email.'; }
+    if (mb_strlen($adminPass) < 10)                         { $errors[] = 'The administrator password must be at least 10 characters.'; }
+
+    $pdo = null;
+    if (!$errors) {
+        try {
+            $pdo = new PDO(
+                "mysql:host={$dbHost};dbname={$dbName};charset=utf8mb4",
+                $dbUser,
+                $dbPass,
+                [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]
+            );
+        } catch (PDOException $e) {
+            $errors[] = 'Could not connect to the database: ' . $e->getMessage();
+        }
+    }
+
+    if (!$errors && $pdo) {
+        try {
+            $sql = file_get_contents(__DIR__ . '/../sql/schema.sql');
+            if ($sql === false) {
+                throw new RuntimeException('sql/schema.sql is missing.');
+            }
+            // Split on semicolons at end of line — the schema has no routines,
+            // so this is safe and avoids needing the multi-statement driver.
+            foreach (preg_split('/;\s*[\r\n]/', $sql) as $stmt) {
+                $stmt = trim($stmt);
+                if ($stmt !== '' && !str_starts_with($stmt, '--')) {
+                    $pdo->exec($stmt);
+                }
+            }
+
+            $exists = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+            $exists->execute([$adminEmail]);
+            if ($exists->fetchColumn()) {
+                $pdo->prepare('UPDATE users SET password_hash = ?, role = "admin", status = "active" WHERE email = ?')
+                    ->execute([password_hash($adminPass, PASSWORD_DEFAULT), $adminEmail]);
+            } else {
+                $pdo->prepare(
+                    'INSERT INTO users (full_name, email, password_hash, role, status, approved_at)
+                     VALUES (?, ?, ?, "admin", "active", NOW())'
+                )->execute([$adminName, $adminEmail, password_hash($adminPass, PASSWORD_DEFAULT)]);
+            }
+
+            $config = "<?php\n// Written by install.php. Keep this file out of version control.\nreturn "
+                . var_export([
+                    'db' => [
+                        'host' => $dbHost, 'name' => $dbName, 'user' => $dbUser,
+                        'password' => $dbPass, 'charset' => 'utf8mb4',
+                    ],
+                    'base_url'    => '/portal',
+                    'campus_name' => 'Kamala Science Campus',
+                    'max_upload'  => 20 * 1024 * 1024,
+                ], true) . ";\n";
+
+            if (file_put_contents($configPath, $config) === false) {
+                throw new RuntimeException('Could not write inc/config.php. Check the folder permissions.');
+            }
+            @chmod($configPath, 0640);
+            $done = true;
+        } catch (Throwable $e) {
+            $errors[] = 'Setup failed: ' . $e->getMessage();
+        }
+    }
+}
+?>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Set up the portal · Kamala Science Campus</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/portal.css">
+</head>
+<body class="portal">
+<div class="p-auth" style="max-width:600px;">
+  <div class="p-card">
+  <?php if ($installed): ?>
+    <h1>Already set up</h1>
+    <p class="p-auth-intro">
+      The portal is configured. For safety, delete <code>portal/install.php</code>
+      from the server — it will refuse to run again, but removing it is tidier.
+    </p>
+    <a class="p-btn p-btn-primary p-btn-block" href="index.php">Go to the portal</a>
+
+  <?php elseif ($done): ?>
+    <h1>Setup complete</h1>
+    <p class="p-auth-intro">
+      The database tables were created and your administrator account is ready.
+      Sign in with the email and password you just chose.
+    </p>
+    <p class="p-auth-intro"><strong>Now delete <code>portal/install.php</code> from the server.</strong></p>
+    <a class="p-btn p-btn-primary p-btn-block" href="index.php">Sign in</a>
+
+  <?php else: ?>
+    <h1>Set up the portal</h1>
+    <p class="p-auth-intro">
+      Create a MySQL database in hPanel first, then enter its details here.
+      Nothing you type on this page leaves your own server.
+    </p>
+
+    <?php foreach ($errors as $err): ?>
+      <div class="p-flash p-flash-error"><?= htmlspecialchars($err, ENT_QUOTES) ?></div>
+    <?php endforeach; ?>
+
+    <form method="post" autocomplete="off">
+      <h2 style="font-size:1.05rem;margin-top:6px;">Database</h2>
+      <div class="p-field">
+        <label for="db_host">Host</label>
+        <input type="text" id="db_host" name="db_host" value="<?= htmlspecialchars((string) ($_POST['db_host'] ?? 'localhost'), ENT_QUOTES) ?>">
+      </div>
+      <div class="p-field">
+        <label for="db_name">Database name</label>
+        <input type="text" id="db_name" name="db_name" value="<?= htmlspecialchars((string) ($_POST['db_name'] ?? ''), ENT_QUOTES) ?>" required placeholder="u849870167_…">
+      </div>
+      <div class="p-field">
+        <label for="db_user">Database user</label>
+        <input type="text" id="db_user" name="db_user" value="<?= htmlspecialchars((string) ($_POST['db_user'] ?? ''), ENT_QUOTES) ?>" required placeholder="u849870167_…">
+      </div>
+      <div class="p-field">
+        <label for="db_pass">Database password</label>
+        <input type="password" id="db_pass" name="db_pass">
+      </div>
+
+      <h2 style="font-size:1.05rem;margin-top:26px;">Administrator account</h2>
+      <div class="p-field">
+        <label for="admin_name">Full name</label>
+        <input type="text" id="admin_name" name="admin_name" value="<?= htmlspecialchars((string) ($_POST['admin_name'] ?? ''), ENT_QUOTES) ?>" required>
+      </div>
+      <div class="p-field">
+        <label for="admin_email">Email address</label>
+        <input type="email" id="admin_email" name="admin_email" value="<?= htmlspecialchars((string) ($_POST['admin_email'] ?? ''), ENT_QUOTES) ?>" required>
+      </div>
+      <div class="p-field">
+        <label for="admin_pass">Password <span class="hint">At least 10 characters. This is the account that approves students.</span></label>
+        <input type="password" id="admin_pass" name="admin_pass" required>
+      </div>
+
+      <div class="p-form-actions">
+        <button class="p-btn p-btn-primary p-btn-block" type="submit">Create the portal</button>
+      </div>
+    </form>
+  <?php endif; ?>
+  </div>
+</div>
+</body>
+</html>

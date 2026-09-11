@@ -4,7 +4,7 @@
 # otherwise serve the build sources alongside the real pages. Hide them:
 # /src/pages/*.html are headless duplicates of every page (bad for indexing),
 # and build.py / README.md / .claude are development files.
-RedirectMatch 404 ^/(src|\.claude)(/|$)
+RedirectMatch 404 ^/(src|sql|\.claude)(/|$)
 RedirectMatch 404 ^/(build\.py|README\.md)$
 
 # Never serve the repository metadata

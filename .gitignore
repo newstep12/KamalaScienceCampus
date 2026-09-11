@@ -1,2 +1,6 @@
 .DS_Store
 *.log
+portal/inc/config.php
+portal/uploads/*
+!portal/uploads/.gitkeep
+!portal/uploads/.htaccess
