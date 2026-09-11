@@ -6,6 +6,21 @@ declare(strict_types=1);
  * that prepared statements are genuinely prepared server-side.
  */
 
+// TEMPORARY DIAGNOSTIC — remove once the portal is verified.
+// Surfaces the real exception only when the exact token is supplied.
+set_exception_handler(function (Throwable $e) {
+    error_log('Portal error: ' . $e->getMessage());
+    if (($_GET['__diag'] ?? '') === '82db1b9943aa51fb9b4687b642c31031') {
+        http_response_code(500);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo get_class($e) . ":\n" . $e->getMessage() . "\n\n"
+           . $e->getFile() . ':' . $e->getLine() . "\n\n" . $e->getTraceAsString();
+        exit;
+    }
+    http_response_code(500);
+    exit('Something went wrong. Please try again.');
+});
+
 function config(): array
 {
     static $config = null;
