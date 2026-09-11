@@ -10,6 +10,10 @@ RedirectMatch 404 ^/(build\.py|README\.md)$
 # Never serve the repository metadata
 RedirectMatch 404 ^/\.git(/|$)
 
+# The installer has done its job. Hostinger's git deploy does not delete files
+# removed from the repository, so block it here as well as deleting it.
+RedirectMatch 404 ^/portal/install\.php$
+
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/css text/plain
   AddOutputFilterByType DEFLATE application/javascript application/json

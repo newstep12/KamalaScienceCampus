@@ -105,7 +105,10 @@ this repository:
 - hPanel → the `kamalasciencecampus.edu.np` website → **Advanced → GIT**
 - Repository `newstep12/KamalaScienceCampus`, branch `main`, root `public_html`
 - **Auto-deployment is on** — pushing to `main` redeploys automatically,
-  usually within a couple of seconds. No manual step needed.
+  usually within 10–20 seconds. No manual step needed.
+- **Deploys add and update files, but never delete them.** Removing a file
+  from the repository leaves it on the server. Delete it in hPanel's File
+  Manager as well, and block it in `.htaccess` if it matters.
 - Temporary URL while DNS propagates:
   <https://skyblue-wasp-386461.hostingersite.com/>
 
