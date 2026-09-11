@@ -155,6 +155,7 @@ function default_nav(?array $user): array
             ['key' => 'users',    'href' => portal_url('/admin/users.php'),    'label' => t('nav_users')],
             ['key' => 'courses',  'href' => portal_url('/admin/courses.php'),  'label' => t('nav_manage_courses')],
             ['key' => 'notices',  'href' => portal_url('/admin/notices.php'),  'label' => t('nav_manage_notices')],
+            ['key' => 'system',   'href' => portal_url('/admin/system.php'),   'label' => t('nav_system')],
         ];
     }
     if ($user['role'] === ROLE_LECTURER) {
@@ -166,10 +167,12 @@ function default_nav(?array $user): array
         ];
     }
     return [
-        ['key' => 'home',      'href' => portal_url('/student/index.php'),     'label' => t('nav_overview')],
-        ['key' => 'portfolio', 'href' => portal_url('/student/portfolio.php'), 'label' => t('nav_portfolio')],
-        ['key' => 'courses',   'href' => portal_url('/student/courses.php'),   'label' => t('nav_courses')],
-        ['key' => 'notices',   'href' => portal_url('/student/notices.php'),   'label' => t('nav_notices')],
+        ['key' => 'home',       'href' => portal_url('/student/index.php'),      'label' => t('nav_overview')],
+        ['key' => 'courses',    'href' => portal_url('/student/courses.php'),    'label' => t('nav_courses')],
+        ['key' => 'results',    'href' => portal_url('/student/results.php'),    'label' => t('nav_results')],
+        ['key' => 'attendance', 'href' => portal_url('/student/attendance.php'), 'label' => t('nav_attendance')],
+        ['key' => 'notices',    'href' => portal_url('/student/notices.php'),    'label' => t('nav_notices')],
+        ['key' => 'portfolio',  'href' => portal_url('/student/portfolio.php'),  'label' => t('nav_portfolio')],
     ];
 }
 

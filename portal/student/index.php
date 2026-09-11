@@ -18,6 +18,17 @@ $courses = all(
 
 $materialTotal = array_sum(array_column($courses, 'material_count'));
 
+$attendance = one(
+    'SELECT COUNT(*) AS held,
+            SUM(CASE WHEN a.status IN (\'present\', \'late\') THEN 1 ELSE 0 END) AS attended
+       FROM attendance a
+       JOIN attendance_sessions s ON s.id = a.session_id
+      WHERE a.user_id = ? AND a.status <> \'excused\'',
+    [$user['id']]
+);
+$attendancePct = ($attendance && (int) $attendance['held'] > 0)
+    ? ((int) $attendance['attended'] / (int) $attendance['held']) * 100 : null;
+
 $notices = all(
     'SELECT * FROM notices
       WHERE is_published = 1 AND (year_level IS NULL OR year_level = ?)
@@ -45,8 +56,8 @@ layout_head(['title' => t('nav_overview'), 'active' => 'home']);
     <dd><?= e(localize_digits((string) $materialTotal)) ?></dd>
   </dl>
   <dl class="p-stat">
-    <dt><?= te('year_of_study') ?></dt>
-    <dd><?= e($year ? year_label($year) : '—') ?></dd>
+    <dt><?= te('attendance_percent') ?></dt>
+    <dd><?= $attendancePct !== null ? e(localize_digits(number_format($attendancePct, 0))) . '%' : '—' ?></dd>
   </dl>
 </div>
 

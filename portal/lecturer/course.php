@@ -87,6 +87,10 @@ layout_head(['title' => bilingual($course, 'title'), 'active' => 'home', 'wide' 
   <div class="p-course-code"><?= e($course['code']) ?></div>
   <h1><?= e(bilingual($course, 'title')) ?></h1>
   <p><?= e(year_label((int) $course['year_level'])) ?></p>
+  <div class="p-form-actions" style="margin-top:16px;">
+    <a class="p-btn p-btn-primary" href="<?= e(portal_url('/lecturer/assessments.php?course=' . $courseId)) ?>"><?= te('assessments') ?></a>
+    <a class="p-btn p-btn-gold" href="<?= e(portal_url('/lecturer/attendance.php?course=' . $courseId)) ?>"><?= te('take_attendance') ?></a>
+  </div>
 </div>
 
 <section class="p-card">

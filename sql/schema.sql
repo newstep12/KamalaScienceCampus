@@ -141,3 +141,61 @@ CREATE TABLE IF NOT EXISTS activity_log (
   KEY idx_log_time (created_at),
   CONSTRAINT fk_log_actor FOREIGN KEY (actor_id) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS assessments (
+  id              INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  course_id       INT UNSIGNED NOT NULL,
+  title           VARCHAR(190) NOT NULL,
+  kind            ENUM('internal','assignment','practical','terminal','other') NOT NULL DEFAULT 'internal',
+  max_marks       DECIMAL(6,2) NOT NULL DEFAULT 100.00,
+  weight_percent  DECIMAL(5,2) NULL,
+  assessed_on     DATE NULL,
+  is_published    TINYINT(1) NOT NULL DEFAULT 0,
+  created_by      INT UNSIGNED NULL,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_assess_course (course_id, assessed_on),
+  CONSTRAINT fk_assess_course FOREIGN KEY (course_id) REFERENCES courses (id) ON DELETE CASCADE,
+  CONSTRAINT fk_assess_user   FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS marks (
+  id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  assessment_id  INT UNSIGNED NOT NULL,
+  user_id        INT UNSIGNED NOT NULL,
+  marks_obtained DECIMAL(6,2) NULL,
+  is_absent      TINYINT(1) NOT NULL DEFAULT 0,
+  remarks        VARCHAR(255) NULL,
+  recorded_by    INT UNSIGNED NULL,
+  recorded_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_mark (assessment_id, user_id),
+  KEY idx_mark_user (user_id),
+  CONSTRAINT fk_mark_assess FOREIGN KEY (assessment_id) REFERENCES assessments (id) ON DELETE CASCADE,
+  CONSTRAINT fk_mark_user   FOREIGN KEY (user_id)       REFERENCES users (id)       ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS attendance_sessions (
+  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  course_id    INT UNSIGNED NOT NULL,
+  held_on      DATE NOT NULL,
+  topic        VARCHAR(190) NULL,
+  created_by   INT UNSIGNED NULL,
+  created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_session (course_id, held_on),
+  CONSTRAINT fk_sess_course FOREIGN KEY (course_id)  REFERENCES courses (id) ON DELETE CASCADE,
+  CONSTRAINT fk_sess_user   FOREIGN KEY (created_by) REFERENCES users (id)   ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS attendance (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  session_id  INT UNSIGNED NOT NULL,
+  user_id     INT UNSIGNED NOT NULL,
+  status      ENUM('present','absent','late','excused') NOT NULL DEFAULT 'present',
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_attendance (session_id, user_id),
+  KEY idx_att_user (user_id),
+  CONSTRAINT fk_att_session FOREIGN KEY (session_id) REFERENCES attendance_sessions (id) ON DELETE CASCADE,
+  CONSTRAINT fk_att_user    FOREIGN KEY (user_id)    REFERENCES users (id)                ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
