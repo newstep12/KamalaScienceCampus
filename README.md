@@ -167,6 +167,22 @@ it works both at that path and on a custom domain later.
 | **Lecturer** | Adds materials to their courses, creates assessments and enters marks, takes attendance, sees who is enrolled |
 | **Admin** | Approves or rejects registrations, manages people, courses, enrolments and notices, plus database updates and email settings under **System** |
 
+### How people get accounts
+
+**Students self-register** at `/portal/register.php` — name, email, year of
+study, TU symbol number, password. The account is created `pending` and cannot
+sign in until an admin approves it in **Admin → Approvals**.
+
+**Lecturers and admins do not self-register.** An admin creates them in
+**Admin → People → Add a lecturer or administrator**. A temporary password is
+generated and shown to the admin once (and emailed to the new user if
+notifications are on). `must_change_password` then holds that person on the
+change-password page at first sign-in until they choose their own, so the
+temporary password stops working the moment it has served its purpose.
+
+**Reset password** on any row issues a fresh temporary password under the same
+flag — for a locked-out lecturer.
+
 **Students cannot sign in until an admin approves them.** Registration creates
 the account with status `pending`; a sign-in attempt tells them they are still
 waiting. Approve from **Admin → Approvals**.
