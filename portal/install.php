@@ -155,7 +155,7 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="p-field">
         <label for="db_pass">Database password</label>
-        <input type="password" id="db_pass" name="db_pass" autocomplete="new-password" required>
+        <input type="password" id="db_pass" name="db_pass" autocomplete="new-password" readonly required data-unlock>
       </div>
 
       <h2 style="font-size:1.05rem;margin-top:26px;">Administrator account</h2>
@@ -169,7 +169,7 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="p-field">
         <label for="admin_pass">Password <span class="hint">At least 10 characters. This is the account that approves students.</span></label>
-        <input type="password" id="admin_pass" name="admin_pass" autocomplete="new-password" required>
+        <input type="password" id="admin_pass" name="admin_pass" autocomplete="new-password" readonly required data-unlock>
       </div>
 
       <div class="p-form-actions">
@@ -179,5 +179,28 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php endif; ?>
   </div>
 </div>
+<script>
+// See the note on the password inputs: they start readonly so Chrome cannot
+// autofill them, and unlock the moment the user actually goes to type.
+document.querySelectorAll('[data-unlock]').forEach(function (el) {
+  var unlock = function () { el.removeAttribute('readonly'); };
+  el.addEventListener('focus', unlock);
+  el.addEventListener('mousedown', unlock);
+  el.addEventListener('touchstart', unlock);
+});
+// Refuse to submit a password field the browser filled but never showed us.
+var form = document.querySelector('form');
+if (form) {
+  form.addEventListener('submit', function (e) {
+    var pw = form.elements['db_pass'];
+    if (pw && pw.value.length === 0) {
+      e.preventDefault();
+      pw.removeAttribute('readonly');
+      pw.focus();
+      alert('Type the database password from hPanel into the password field.');
+    }
+  });
+}
+</script>
 </body>
 </html>
