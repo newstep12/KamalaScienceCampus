@@ -17,9 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($result['ok']) {
         flash('ok', t('welcome_back', display_name($result['user'])));
-        $next = (string) ($_GET['next'] ?? '');
-        // Only ever redirect within this site.
-        $safe = (str_starts_with($next, '/') && !str_starts_with($next, '//'))
+        $next = $_GET['next'] ?? '';
+        // Only ever redirect back into the portal. A leading "/" is not enough:
+        // browsers read "/\evil.example" as "//evil.example", another site.
+        $safe = (is_string($next) && str_starts_with($next, portal_url('/'))
+                 && !preg_match('/[\\\\\x00-\x1f]/', $next))
             ? $next : home_for($result['user']);
         header('Location: ' . $safe);
         exit;

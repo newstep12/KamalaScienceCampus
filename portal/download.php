@@ -48,7 +48,15 @@ if ($id = (int) ($_GET['id'] ?? 0)) {
 }
 
 if ($noticeId = (int) ($_GET['notice'] ?? 0)) {
-    $n = one('SELECT file_path, file_name FROM notices WHERE id = ? AND is_published = 1 LIMIT 1', [$noticeId]);
+    // Students get only attachments of notices meant for their year or for
+    // everyone — the same rule the notice list applies. Staff get all.
+    $n = one(
+        'SELECT file_path, file_name FROM notices
+          WHERE id = ? AND is_published = 1
+            AND (year_level IS NULL OR ? <> \'student\' OR year_level = ?)
+          LIMIT 1',
+        [$noticeId, $user['role'], $user['year_level']]
+    );
     stream_or_404($n['file_path'] ?? null, $n['file_name'] ?? null, $root);
 }
 

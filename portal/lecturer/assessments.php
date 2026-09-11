@@ -22,13 +22,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'save_assessment') {
-        $title = trim((string) ($_POST['title'] ?? ''));
+        $title = mb_substr(trim((string) ($_POST['title'] ?? '')), 0, 190);
         $max   = (float) ($_POST['max_marks'] ?? 0);
         $kind  = in_array($_POST['kind'] ?? '', ['internal','assignment','practical','terminal','other'], true)
             ? $_POST['kind'] : 'internal';
-        $date  = trim((string) ($_POST['assessed_on'] ?? '')) ?: null;
+        $date  = parse_date((string) ($_POST['assessed_on'] ?? ''));
 
-        if ($title === '' || $max <= 0) {
+        // max_marks is DECIMAL(6,2): anything from 10000 up would throw.
+        if ($title === '' || $max <= 0 || $max >= 10000) {
             flash('error', t('err_name_short'));
         } else {
             q('INSERT INTO assessments (course_id, title, kind, max_marks, assessed_on, created_by)
@@ -72,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                            remarks        = VALUES(remarks),
                                            recorded_by    = VALUES(recorded_by)',
                   [$aid, $uid, $score, $isAbsent,
-                   trim((string) ($remarks[$uid] ?? '')) ?: null, $user['id']]);
+                   mb_substr(trim((string) ($remarks[$uid] ?? '')), 0, 255) ?: null, $user['id']]);
             }
             flash('ok', t('marks_saved'));
         }

@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 flash('ok', t('course_saved'));
             } catch (PDOException $e) {
                 // Duplicate course code is the only realistic failure here.
-                flash('error', t('err_email_taken'));
+                flash('error', t('err_code_taken'));
             }
         }
     } elseif ($action === 'toggle_course') {

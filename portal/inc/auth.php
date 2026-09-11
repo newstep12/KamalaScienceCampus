@@ -176,10 +176,18 @@ function attempt_login(string $email, string $password): array
 
     $user = one('SELECT * FROM users WHERE email = ? LIMIT 1', [$email]);
 
-    // Always run a hash verification so a missing account and a wrong password
-    // take a comparable amount of time.
-    $hash = $user['password_hash'] ?? '$2y$12$usesomesillystringfaketohashagainstx.timingattackdummy00';
-    $valid = password_verify($password, $hash);
+    // Do the same hashing work whether or not the account exists, so response
+    // time cannot reveal which emails are registered. Hashing at the default
+    // cost takes as long as verifying a hash made at that cost; a hard-coded
+    // dummy hash does not (the old one was cost 12, PHP 8.3 hashes at cost 10).
+    if ($user) {
+        $hash  = (string) $user['password_hash'];
+        $valid = password_verify($password, $hash);
+    } else {
+        password_hash($password, PASSWORD_DEFAULT);
+        $hash  = '';
+        $valid = false;
+    }
 
     if (!$user || !$valid) {
         record_attempt($email, $ip, false);

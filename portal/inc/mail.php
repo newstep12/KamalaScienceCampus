@@ -27,6 +27,12 @@ function send_notification(string $to, string $subject, string $body): bool
 
     $from     = (string) setting('mail_from');
     $fromName = (string) setting('mail_from_name', 'Kamala Science Campus');
+    // The address goes into headers and onto sendmail's command line; an
+    // invalid one (say, with a line break in it) must never get that far.
+    if (!filter_var($from, FILTER_VALIDATE_EMAIL)) {
+        error_log('Portal mail skipped: the from-address is not a valid email');
+        return false;
+    }
 
     // Strip anything that could inject an extra header.
     $subject  = str_replace(["\r", "\n"], ' ', $subject);
@@ -42,7 +48,12 @@ function send_notification(string $to, string $subject, string $body): bool
     ];
 
     try {
-        $ok = @mail($to, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, implode("\r\n", $headers));
+        $encoded = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        // -f makes the campus address the envelope sender, so SPF checks see
+        // the domain rather than the hosting account's internal address. Some
+        // hosts refuse -f; fall back to a plain send rather than fail.
+        $ok = @mail($to, $encoded, $body, implode("\r\n", $headers), '-f' . $from)
+           || @mail($to, $encoded, $body, implode("\r\n", $headers));
         if (!$ok) {
             error_log('Portal mail failed to ' . $to . ': ' . $subject);
         }
@@ -59,6 +70,14 @@ function notify_admins_of_registration(array $student): void
     if (!mail_enabled()) {
         return;
     }
+    // At most one alert every ten minutes. The approval queue lists every
+    // pending registration anyway, and the form is public: unthrottled, it
+    // would let anyone flood the administrators' inboxes.
+    if (time() - (int) setting('reg_alert_sent_at', '0') < 600) {
+        return;
+    }
+    set_setting('reg_alert_sent_at', (string) time());
+
     $admins = all('SELECT email, full_name FROM users WHERE role = \'admin\' AND status = \'active\'');
     $body = "A new student registration is waiting for approval.\n\n"
         . "Name:   {$student['full_name']}\n"
@@ -66,7 +85,8 @@ function notify_admins_of_registration(array $student): void
         . "Year:   " . ($student['year_level'] ?? '—') . "\n"
         . "Symbol: " . ($student['symbol_no'] ?? '—') . "\n\n"
         . "Approve or reject it here:\n"
-        . portal_absolute_url('/admin/approvals.php') . "\n";
+        . portal_absolute_url('/admin/approvals.php') . "\n\n"
+        . "Registrations in the next 10 minutes join the same queue without another email.\n";
 
     foreach ($admins as $a) {
         send_notification($a['email'], 'New student registration — ' . $student['full_name'], $body);
@@ -97,8 +117,14 @@ function notify_student_rejected(array $student, ?string $note): void
 /** Absolute URL for links inside emails. */
 function portal_absolute_url(string $path): string
 {
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host   = $_SERVER['HTTP_HOST'] ?? 'kamalasciencecampus.edu.np';
-    $base   = rtrim(config()['base_url'] ?? '/portal', '/');
-    return $scheme . '://' . $host . $base . $path;
+    // Not from the Host header alone: the registration form is public, and a
+    // forged Host would turn the "approve here" link in the administrators'
+    // email into a link to someone else's site.
+    $known = ['kamalasciencecampus.edu.np', 'www.kamalasciencecampus.edu.np'];
+    $host  = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    if (!in_array($host, $known, true)) {
+        $host = $known[0];
+    }
+    $base = rtrim(config()['base_url'] ?? '/portal', '/');
+    return 'https://' . $host . $base . $path;
 }

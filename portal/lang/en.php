@@ -306,4 +306,6 @@ return [
     'notfound_title'   => 'Page not found',
     'notfound_body'    => 'The page you were looking for does not exist in the portal.',
     'go_back'          => 'Go to your dashboard',
+    'err_code_taken'   => 'A course with that code already exists.',
+    'err_date_bad'     => 'Please enter a valid date.',
 ];

@@ -6,6 +6,9 @@ declare(strict_types=1);
  * that prepared statements are genuinely prepared server-side.
  */
 
+// Don't advertise the exact PHP version in every response.
+header_remove('X-Powered-By');
+
 // Log the real error; never show it to a visitor.
 set_exception_handler(function (Throwable $e) {
     error_log('Portal error: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());

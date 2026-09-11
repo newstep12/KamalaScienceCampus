@@ -214,10 +214,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_activity((int) $admin['id'], 'seed_links', (string) $added);
             flash('ok', t('links_seeded', localize_digits((string) $added)));
         } elseif ($action === 'save_mail') {
-            set_setting('mail_enabled',   isset($_POST['mail_enabled']) ? '1' : '0');
-            set_setting('mail_from',      trim((string) ($_POST['mail_from'] ?? '')) ?: null);
-            set_setting('mail_from_name', trim((string) ($_POST['mail_from_name'] ?? '')) ?: null);
-            flash('ok', t('mail_saved'));
+            $from = trim((string) ($_POST['mail_from'] ?? ''));
+            if ($from !== '' && !filter_var($from, FILTER_VALIDATE_EMAIL)) {
+                flash('error', t('err_email_bad'));
+            } else {
+                $name = str_replace(["\r", "\n"], ' ', trim((string) ($_POST['mail_from_name'] ?? '')));
+                set_setting('mail_enabled',   isset($_POST['mail_enabled']) ? '1' : '0');
+                set_setting('mail_from',      $from ?: null);
+                set_setting('mail_from_name', $name ?: null);
+                flash('ok', t('mail_saved'));
+            }
         } elseif ($action === 'test_mail') {
             $to = trim((string) ($_POST['test_to'] ?? '')) ?: (string) $admin['email'];
             $sent = send_notification(
@@ -338,7 +344,7 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
       <div class="p-field">
         <label for="mail_from"><?= te('mail_from') ?></label>
         <input type="email" id="mail_from" name="mail_from" value="<?= e(setting('mail_from')) ?>"
-               placeholder="noreply@kamalasciencecampus.edu.np">
+               placeholder="admin@kamalasciencecampus.edu.np">
         <span class="hint"><?= te('mail_from_hint') ?></span>
       </div>
       <div class="p-field">

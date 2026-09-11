@@ -22,10 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'save_session') {
-        $date  = trim((string) ($_POST['held_on'] ?? ''));
-        $topic = trim((string) ($_POST['topic'] ?? '')) ?: null;
-        if ($date === '') {
-            flash('error', t('err_name_short'));
+        $date  = parse_date((string) ($_POST['held_on'] ?? ''));
+        $topic = mb_substr(trim((string) ($_POST['topic'] ?? '')), 0, 190) ?: null;
+        if ($date === null) {
+            flash('error', t('err_date_bad'));
         } else {
             // One session per course per day; re-saving the same date reopens it.
             q('INSERT INTO attendance_sessions (course_id, held_on, topic, created_by)

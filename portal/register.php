@@ -23,26 +23,38 @@ function password_is_strong(string $pw): bool
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
 
+    // Trim to the column widths in sql/schema.sql: MySQL runs in strict mode,
+    // so an over-long value would throw and show the visitor a bare error page.
+    $widths = ['full_name' => 120, 'full_name_ne' => 120, 'symbol_no' => 40, 'phone' => 30];
     foreach (array_keys($in) as $k) {
-        $in[$k] = trim((string) ($_POST[$k] ?? ''));
+        $v = $_POST[$k] ?? '';
+        $in[$k] = is_string($v) ? trim($v) : '';
+        if (isset($widths[$k])) {
+            $in[$k] = mb_substr($in[$k], 0, $widths[$k]);
+        }
     }
+    // A field people never see but form-filling bots complete. Such a
+    // submission gets the normal success page and nothing is stored.
+    $isBot = ($_POST['website'] ?? '') !== '';
     $password = (string) ($_POST['password'] ?? '');
     $confirm  = (string) ($_POST['password_confirm'] ?? '');
     $email    = strtolower($in['email']);
     $year     = (int) $in['year_level'];
 
     if (mb_strlen($in['full_name']) < 3)                      { $errors['full_name'] = t('err_name_short'); }
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL))           { $errors['email'] = t('err_email_bad'); }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 190) { $errors['email'] = t('err_email_bad'); }
     if ($year < 1 || $year > 4)                               { $errors['year_level'] = t('err_year_bad'); }
     if ($in['symbol_no'] === '')                              { $errors['symbol_no'] = t('err_symbol'); }
     if (!password_is_strong($password))                       { $errors['password'] = t('err_pw_weak'); }
     if ($password !== $confirm)                               { $errors['password_confirm'] = t('err_pw_match'); }
 
-    if (!$errors && one('SELECT id FROM users WHERE email = ?', [$email])) {
+    if (!$errors && !$isBot && one('SELECT id FROM users WHERE email = ?', [$email])) {
         $errors['email'] = t('err_email_taken');
     }
 
-    if (!$errors) {
+    if (!$errors && $isBot) {
+        $done = true;
+    } elseif (!$errors) {
         q(
             'INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
                                 year_level, symbol_no, phone)
@@ -147,6 +159,11 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
         <label for="password_confirm"><?= te('confirm_password') ?></label>
         <input type="password" id="password_confirm" name="password_confirm" autocomplete="new-password" required>
         <?php if (isset($errors['password_confirm'])): ?><span class="err"><?= e($errors['password_confirm']) ?></span><?php endif; ?>
+      </div>
+
+      <div style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+        <label for="website">Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
       </div>
 
       <div class="p-form-actions">

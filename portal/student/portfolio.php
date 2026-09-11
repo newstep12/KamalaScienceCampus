@@ -8,17 +8,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
 
     if (($_POST['form'] ?? '') === 'profile') {
+        // Trimmed to the column widths and the date checked, so bad input is
+        // dropped instead of making MySQL (strict mode) throw a 500.
+        $field = fn(string $k, int $max): string
+            => mb_substr(trim(is_string($_POST[$k] ?? null) ? $_POST[$k] : ''), 0, $max);
         q(
             'UPDATE users SET full_name = ?, full_name_ne = ?, phone = ?, address = ?,
                               date_of_birth = ?, bio = ?
               WHERE id = ?',
             [
-                trim((string) $_POST['full_name']) ?: $user['full_name'],
-                trim((string) $_POST['full_name_ne']) ?: null,
-                trim((string) $_POST['phone']) ?: null,
-                trim((string) $_POST['address']) ?: null,
-                trim((string) $_POST['date_of_birth']) ?: null,
-                trim((string) $_POST['bio']) ?: null,
+                $field('full_name', 120) ?: $user['full_name'],
+                $field('full_name_ne', 120) ?: null,
+                $field('phone', 30) ?: null,
+                $field('address', 190) ?: null,
+                parse_date($field('date_of_birth', 10)),
+                $field('bio', 5000) ?: null,
                 $user['id'],
             ]
         );

@@ -21,6 +21,7 @@ function layout_head(array $opts = []): void
     header('Content-Type: text/html; charset=utf-8');
     header('X-Content-Type-Options: nosniff');
     header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('X-Frame-Options: SAMEORIGIN');
     ?>
 <!doctype html>
 <html lang="<?= e($lang) ?>"<?= is_nepali() ? ' class="ne"' : '' ?>>

@@ -133,6 +133,18 @@ function format_date(?string $datetime, bool $withTime = false): string
     return $out;
 }
 
+/** $value as Y-m-d if it is a real calendar date, otherwise null. */
+function parse_date(?string $value): ?string
+{
+    $value = trim((string) $value);
+    $d = DateTime::createFromFormat('!Y-m-d', $value);
+    if (!$d || $d->format('Y-m-d') !== $value) {
+        return null;
+    }
+    $year = (int) $d->format('Y');
+    return ($year >= 1900 && $year <= 2100) ? $value : null;
+}
+
 function year_label(?int $year): string
 {
     if (!$year) {
