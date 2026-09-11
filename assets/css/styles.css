@@ -96,14 +96,11 @@ p:last-child { margin-bottom: 0; }
 
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand:hover { text-decoration: none; }
+/* The campus seal: assets/img/logo-192.png, drawn from src/logo.svg */
 .crest {
   width: 46px; height: 46px; flex: 0 0 46px;
+  display: block;
   border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, var(--teal), var(--navy) 78%);
-  color: #fff;
-  display: grid; place-items: center;
-  font-family: var(--serif); font-weight: 700; font-size: 1.02rem;
-  border: 2px solid var(--gold);
 }
 .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
 .brand-name {
@@ -457,7 +454,7 @@ textarea { min-height: 130px; resize: vertical; }
   body { font-size: 16px; }
   .brand-name { font-size: .98rem; }
   .brand-sub { font-size: .66rem; }
-  .crest { width: 38px; height: 38px; flex-basis: 38px; font-size: .84rem; }
+  .crest { width: 38px; height: 38px; flex-basis: 38px; }
   .site-header .wrap { min-height: 62px; gap: 10px; }
   .nav-toggle { padding: 7px 10px; font-size: .9rem; }
   .topbar { display: none; }

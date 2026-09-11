@@ -55,7 +55,7 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/css/styles.css?v=<?= (int) @filemtime(__DIR__ . '/assets/css/styles.css') ?>">
 <link rel="stylesheet" href="assets/css/portal.css?v=<?= (int) @filemtime(__DIR__ . '/assets/css/portal.css') ?>">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%230b2545'/><text x='16' y='22' font-size='15' font-family='Georgia,serif' font-weight='700' fill='%23d99a2b' text-anchor='middle'>K</text></svg>">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/img/logo-192.png">
 </head>
 <body<?= $ne ? ' class="lang-ne"' : '' ?>>
 <a class="skip" href="#main"><?= $ne ? 'मुख्य सामग्रीमा जानुहोस्' : 'Skip to main content' ?></a>
@@ -74,7 +74,7 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
 <header class="site-header">
   <div class="wrap">
     <a class="brand" href="<?= $ne ? 'ne/index.html' : 'index.html' ?>">
-      <span class="crest" aria-hidden="true">KSC</span>
+      <img class="crest" src="assets/img/logo-192.png" alt="" width="46" height="46">
       <span class="brand-text">
         <span class="brand-name"><?= $ne ? 'कमला साइन्स क्याम्पस' : 'Kamala Science Campus' ?></span>
         <span class="brand-sub"><?= $ne ? 'सिन्धुली, नेपाल' : 'Sindhuli, Nepal' ?></span>

@@ -109,6 +109,19 @@ form's `data-mailto`), established 2066 BS /
 2009 AD, Tribhuvan University affiliation, UGC recognition, B.Sc. General =
 4 years / 50 seats / English medium, and the scholarship categories.
 
+### Logo
+
+The campus seal is `assets/img/logo-192.png`: the header and footer crest,
+the notices page, the portal header and the favicon. It is a colour redraw of
+the black-and-white campus stamp, and its source is `src/logo.svg`. The SVG's
+text uses macOS system fonts, so don't serve it directly. After editing it,
+re-render the PNG with headless Chrome:
+
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+      --force-device-scale-factor=2 --default-background-color=00000000 \
+      --window-size=1000,1000 --screenshot=/tmp/logo.png "file://$PWD/src/logo.svg"
+    sips -z 192 192 /tmp/logo.png --out assets/img/logo-192.png
+
 ## Local preview
 
 ```bash

@@ -35,7 +35,7 @@ function layout_head(array $opts = []): void
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="<?= e(portal_url('/../assets/css/styles.css?v=' . asset_version('styles.css'))) ?>">
 <link rel="stylesheet" href="<?= e(portal_url('/../assets/css/portal.css?v=' . asset_version('portal.css'))) ?>">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%230b2545'/><text x='16' y='22' font-size='15' font-family='Georgia,serif' font-weight='700' fill='%23d99a2b' text-anchor='middle'>K</text></svg>">
+<link rel="icon" type="image/png" sizes="192x192" href="<?= e(portal_url('/../assets/img/logo-192.png')) ?>">
 </head>
 <body class="portal<?= is_nepali() ? ' lang-ne' : '' ?>">
 <a class="skip" href="#main"><?= te('nav_overview') ?></a>
@@ -43,7 +43,7 @@ function layout_head(array $opts = []): void
 <header class="p-header">
   <div class="p-header-inner">
     <a class="p-brand" href="<?= e($user ? home_for($user) : portal_url('/index.php')) ?>">
-      <span class="crest" aria-hidden="true">KSC</span>
+      <img class="crest" src="<?= e(portal_url('/../assets/img/logo-192.png')) ?>" alt="" width="38" height="38">
       <span class="p-brand-text">
         <span class="p-brand-name"><?= te('campus_name') ?></span>
         <span class="p-brand-sub"><?= te('portal') ?></span>

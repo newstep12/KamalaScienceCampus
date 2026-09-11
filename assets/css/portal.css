@@ -40,7 +40,7 @@ body.lang-ne h1, body.lang-ne h2, body.lang-ne h3, body.lang-ne .p-brand-name {
 
 .p-brand { display: flex; align-items: center; gap: 11px; flex: 0 0 auto; }
 .p-brand:hover { text-decoration: none; }
-.p-brand .crest { width: 38px; height: 38px; flex-basis: 38px; font-size: .8rem; }
+.p-brand .crest { width: 38px; height: 38px; flex-basis: 38px; }
 .p-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
 .p-brand-name { font-family: var(--serif); font-weight: 700; font-size: .98rem; color: #fff; }
 .p-brand-sub { font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; color: #8fb0cf; }

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <!--
+    Shree Kamala Science Campus, Dhungrebas, Sindhuli - colour seal.
+    A redraw of the black-and-white campus stamp, same content and layout.
+    Rendered to PNG with headless Chrome (see README); the text uses macOS
+    system fonts, so edit here and re-render rather than serving this file.
+  -->
+  <defs>
+    <path id="arc-name-ne" d="M 125 500 A 375 375 0 0 1 875 500"/>
+    <path id="arc-name-en" d="M 68 500 A 432 432 0 0 0 932 500"/>
+    <path id="arc-addr-ne" d="M 232 500 A 268 268 0 0 1 768 500"/>
+    <path id="arc-addr-en" d="M 204 500 A 296 296 0 0 0 796 500"/>
+    <radialGradient id="band" cx="42%" cy="36%" r="70%">
+      <stop offset="0" stop-color="#153f6b"/>
+      <stop offset="1" stop-color="#0b2545"/>
+    </radialGradient>
+    <radialGradient id="disc" cx="50%" cy="45%" r="60%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#fbf3df"/>
+    </radialGradient>
+  </defs>
+
+  <!-- rims and band -->
+  <circle cx="500" cy="500" r="494" fill="#d99a2b"/>
+  <circle cx="500" cy="500" r="482" fill="url(#band)"/>
+  <circle cx="500" cy="500" r="472" fill="none" stroke="#d99a2b" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round"/>
+  <circle cx="500" cy="500" r="338" fill="#d99a2b"/>
+  <circle cx="500" cy="500" r="326" fill="url(#disc)"/>
+
+  <!-- band text: name in Nepali (top) and English (bottom) -->
+  <text font-family="Kohinoor Devanagari, Devanagari Sangam MN, ITF Devanagari, sans-serif" font-weight="700" font-size="82" fill="#ffffff">
+    <textPath href="#arc-name-ne" startOffset="50%" text-anchor="middle">श्री कमला साइन्स क्याम्पस</textPath>
+  </text>
+  <text font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-weight="700" font-size="56" letter-spacing="2.5" fill="#f3c96b">
+    <textPath href="#arc-name-en" startOffset="50%" text-anchor="middle">SHREE KAMALA SCIENCE CAMPUS</textPath>
+  </text>
+
+  <!-- stars dividing the band -->
+  <g fill="#f3c96b">
+    <polygon points="92,482 97.3,492.7 109.1,494.4 100.6,502.8 102.6,514.6 92,509 81.4,514.6 83.4,502.8 74.9,494.4 86.7,492.7"/>
+    <polygon points="908,482 913.3,492.7 925.1,494.4 916.6,502.8 918.6,514.6 908,509 897.4,514.6 899.4,502.8 890.9,494.4 902.7,492.7"/>
+  </g>
+
+  <!-- inner disc: address in Nepali (top) and English (bottom) -->
+  <text font-family="Kohinoor Devanagari, Devanagari Sangam MN, ITF Devanagari, sans-serif" font-weight="600" font-size="44" fill="#0b2545">
+    <textPath href="#arc-addr-ne" startOffset="50%" text-anchor="middle">ढुंग्रेबास, सिन्धुली</textPath>
+  </text>
+  <text font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-weight="700" font-size="40" letter-spacing="1.5" fill="#0b2545">
+    <textPath href="#arc-addr-en" startOffset="50%" text-anchor="middle">Dhungrebas, Sindhuli</textPath>
+  </text>
+
+  <!-- established, either side of the star -->
+  <text x="283" y="486" text-anchor="middle" font-family="Kohinoor Devanagari, Devanagari Sangam MN, sans-serif" font-weight="600" font-size="31" fill="#9b2335">स्था. २०६६</text>
+  <text x="717" y="486" text-anchor="middle" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-weight="700" font-size="29" fill="#9b2335">Estd. 2009</text>
+
+  <!-- six-pointed star: two crimson triangles, white centre hexagon -->
+  <g stroke="#0b2545" stroke-width="6" stroke-linejoin="round">
+    <polygon points="500,340 638.6,580 361.4,580" fill="#c8102e"/>
+    <polygon points="500,660 361.4,420 638.6,420" fill="#c8102e"/>
+    <polygon points="592.4,500 546.2,580 453.8,580 407.6,500 453.8,420 546.2,420" fill="#ffffff" stroke-width="5"/>
+  </g>
+
+  <!-- motto in the points: विद्या नै धन हो -->
+  <g font-family="Kohinoor Devanagari, Devanagari Sangam MN, sans-serif" font-weight="700" font-size="40" fill="#ffffff" text-anchor="middle" dominant-baseline="central">
+    <text x="500" y="392">वि</text>
+    <text x="405.8" y="446">द्या</text>
+    <text x="594.2" y="446">नै</text>
+    <text x="405.8" y="554">ध</text>
+    <text x="594.2" y="554">न</text>
+    <text x="500" y="608">हो</text>
+  </g>
+
+  <!-- open book with a quill -->
+  <g stroke="#0b2545" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M 432 482 L 432 552 Q 468 545 500 560 Q 532 545 568 552 L 568 482" fill="#1d4e89" stroke-width="4"/>
+    <path d="M 500 488 Q 472 472 440 478 L 440 544 Q 472 538 500 552 Z" fill="#fffdf6" stroke-width="3.5"/>
+    <path d="M 500 488 Q 528 472 560 478 L 560 544 Q 528 538 500 552 Z" fill="#fffdf6" stroke-width="3.5"/>
+    <g fill="none" stroke="#1d4e89" stroke-width="2.4" opacity=".55">
+      <path d="M 449 491 Q 472 486 492 496"/><path d="M 449 501 Q 472 496 492 506"/>
+      <path d="M 449 511 Q 472 506 492 516"/><path d="M 449 521 Q 472 516 492 526"/>
+      <path d="M 449 531 Q 472 526 492 536"/>
+      <path d="M 508 496 Q 528 486 551 491"/><path d="M 508 506 Q 528 496 551 501"/>
+      <path d="M 508 516 Q 528 506 551 511"/><path d="M 508 526 Q 528 516 551 521"/>
+      <path d="M 508 536 Q 528 526 551 531"/>
+    </g>
+    <path d="M 533 498 Q 537 465 553 436 Q 557 470 541 499 Z" fill="#d99a2b" stroke-width="3"/>
+    <path d="M 537 497 L 552 444" fill="none" stroke-width="2"/>
+  </g>
+</svg>
