@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
+require_once __DIR__ . '/../inc/mail.php';
 
 $admin = require_role(ROLE_ADMIN);
 
@@ -12,6 +13,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // An admin must never be able to lock themselves out.
     if ($id === (int) $admin['id'] && in_array($action, ['suspend', 'set_role'], true)) {
         flash('error', t('forbidden_body'));
+        header('Location: ' . portal_url('/admin/users.php'));
+        exit;
+    }
+
+    if ($action === 'create_staff') {
+        $name  = trim((string) ($_POST['full_name'] ?? ''));
+        $nameNe= trim((string) ($_POST['full_name_ne'] ?? '')) ?: null;
+        $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+        $phone = trim((string) ($_POST['phone'] ?? '')) ?: null;
+        $role  = in_array($_POST['role'] ?? '', ['lecturer', 'admin'], true) ? $_POST['role'] : 'lecturer';
+
+        if (mb_strlen($name) < 3) {
+            flash('error', t('err_name_short'));
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('error', t('err_email_bad'));
+        } elseif (one('SELECT id FROM users WHERE email = ?', [$email])) {
+            flash('error', t('err_email_taken'));
+        } else {
+            // Generated here, shown to the admin once, and forced to be changed
+            // at first sign-in — so no one but the account holder ends up
+            // knowing the password they actually use.
+            $temp = temporary_password();
+            q('INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
+                      phone, approved_at, approved_by, must_change_password)
+               VALUES (?, ?, ?, ?, ?, \'active\', ?, NOW(), ?, 1)',
+              [$name, $nameNe, $email, password_hash($temp, PASSWORD_DEFAULT), $role, $phone, $admin['id']]);
+
+            log_activity((int) $admin['id'], 'create_staff', $email, $role);
+            send_notification(
+                $email,
+                'Your Kamala Science Campus portal account',
+                "Dear {$name},\n\nAn account has been created for you on the Kamala Science Campus portal.\n\n"
+                . "Sign in at: " . portal_absolute_url('/index.php') . "\n"
+                . "Email:    {$email}\n"
+                . "Password: {$temp}\n\n"
+                . "You will be asked to choose your own password the first time you sign in.\n\n"
+                . "Kamala Science Campus\n"
+            );
+            flash('ok', t('staff_created', $name, $temp));
+        }
         header('Location: ' . portal_url('/admin/users.php'));
         exit;
     }
@@ -30,6 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 q('UPDATE users SET role = ? WHERE id = ?', [$role, $id]);
                 log_activity((int) $admin['id'], 'set_role', $target['email'], $role);
             }
+        } elseif ($action === 'reset_password') {
+            $temp = temporary_password();
+            q('UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?',
+              [password_hash($temp, PASSWORD_DEFAULT), $id]);
+            log_activity((int) $admin['id'], 'reset_password', $target['email']);
+            flash('ok', t('password_reset_to', $target['full_name'], $temp));
         } elseif ($action === 'set_year') {
             $year = (int) ($_POST['year_level'] ?? 0);
             q('UPDATE users SET year_level = ? WHERE id = ?', [$year >= 1 && $year <= 4 ? $year : null, $id]);
@@ -64,6 +111,46 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
 <div class="p-page-head">
   <h1><?= te('manage_people') ?></h1>
 </div>
+
+<section class="p-card" style="margin-bottom:24px;">
+  <h2><?= te('add_staff') ?></h2>
+  <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('add_staff_intro') ?></p>
+
+  <form method="post">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="create_staff">
+    <div class="p-field-row">
+      <div class="p-field">
+        <label for="s_name"><?= te('full_name') ?></label>
+        <input type="text" id="s_name" name="full_name" required>
+      </div>
+      <div class="p-field">
+        <label for="s_name_ne"><?= te('full_name_ne') ?> <span class="hint"><?= te('optional') ?></span></label>
+        <input type="text" id="s_name_ne" name="full_name_ne" lang="ne">
+      </div>
+    </div>
+    <div class="p-field-row">
+      <div class="p-field">
+        <label for="s_email"><?= te('email') ?></label>
+        <input type="email" id="s_email" name="email" required autocomplete="off">
+      </div>
+      <div class="p-field">
+        <label for="s_phone"><?= te('phone') ?> <span class="hint"><?= te('optional') ?></span></label>
+        <input type="tel" id="s_phone" name="phone">
+      </div>
+    </div>
+    <div class="p-field" style="max-width:300px;">
+      <label for="s_role"><?= te('role_lecturer') ?> / <?= te('role_admin') ?></label>
+      <select id="s_role" name="role">
+        <option value="lecturer"><?= te('role_lecturer') ?></option>
+        <option value="admin"><?= te('role_admin') ?></option>
+      </select>
+    </div>
+    <div class="p-form-actions">
+      <button class="p-btn p-btn-primary" type="submit"><?= te('create_account') ?></button>
+    </div>
+  </form>
+</section>
 
 <form method="get" style="display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:20px;">
   <div class="p-field" style="margin:0;min-width:180px;">
@@ -146,6 +233,13 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
             </td>
             <td><span class="p-tag <?= e($tagClass) ?>"><?= te('status_' . $u['status']) ?></span></td>
             <td class="nowrap">
+              <?php if ((int) $u['id'] !== (int) $admin['id']): ?>
+                <form method="post" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
+                  <?= csrf_field() ?>
+                  <input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
+                  <button class="p-btn p-btn-ghost p-btn-sm" name="action" value="reset_password"><?= te('reset_password') ?></button>
+                </form>
+              <?php endif; ?>
               <?php if ($u['status'] === 'active' && (int) $u['id'] !== (int) $admin['id']): ?>
                 <form method="post" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
                   <?= csrf_field() ?>

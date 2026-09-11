@@ -51,6 +51,10 @@ function apply_schema(): array
 function column_migrations(): array
 {
     return [
+        // Duplicate-column errors are caught and logged by the caller, so this
+        // is safe to re-run on an install that already has the column.
+        'password reset flag' =>
+            'ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) NOT NULL DEFAULT 0',
         'notice categories' =>
             "ALTER TABLE notices MODIFY COLUMN category
              ENUM('tu','exam','campus','ugc','scholarship') NOT NULL DEFAULT 'tu'",

@@ -374,3 +374,6 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
 
 /* An external reference notice reads better with its link obvious */
 .p-notice a[target="_blank"] { font-weight: 600; }
+
+/* A one-time credential needs to be readable and obviously copyable */
+.p-flash strong, .p-flash code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }

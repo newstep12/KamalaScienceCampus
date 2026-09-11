@@ -85,7 +85,33 @@ function require_login(): array
         header('Location: ' . portal_url('/index.php') . '?next=' . urlencode($target));
         exit;
     }
+
+    // An account created by an admin carries a temporary password. Hold the
+    // user on the change-password page until they have chosen their own.
+    if (!empty($user['must_change_password'])) {
+        $here = basename($_SERVER['SCRIPT_NAME'] ?? '');
+        if (!in_array($here, ['change-password.php', 'logout.php'], true)) {
+            header('Location: ' . portal_url('/change-password.php'));
+            exit;
+        }
+    }
     return $user;
+}
+
+/**
+ * A temporary password an admin can read aloud or type into a message.
+ * Ambiguous characters (0/O, 1/l/I) are left out so it survives being
+ * written on paper and retyped.
+ */
+function temporary_password(int $length = 12): string
+{
+    $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    $out = '';
+    for ($i = 0; $i < $length; $i++) {
+        $out .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+    }
+    // Guarantee the mix the strength check expects.
+    return $out . random_int(2, 9);
 }
 
 /** Require one of the given roles. */

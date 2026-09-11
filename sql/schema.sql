@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
   bio             TEXT          NULL,
   avatar_path     VARCHAR(255)  NULL,
   rejection_note  VARCHAR(255)  NULL,
+  must_change_password TINYINT(1) NOT NULL DEFAULT 0,
   created_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   approved_at     DATETIME      NULL,
   approved_by     INT UNSIGNED  NULL,
