@@ -37,8 +37,8 @@ function stream_or_404(?string $relPath, ?string $downloadName, string $root): v
 if ($id = (int) ($_GET['id'] ?? 0)) {
     $m = one(
         'SELECT m.file_path, m.file_name FROM materials m
-          WHERE m.id = ? AND m.kind = "file"
-            AND (? IN ("admin")
+          WHERE m.id = ? AND m.kind = \'file\'
+            AND (? IN (\'admin\')
                  OR EXISTS (SELECT 1 FROM enrolments e WHERE e.course_id = m.course_id AND e.user_id = ?)
                  OR EXISTS (SELECT 1 FROM courses c WHERE c.id = m.course_id AND c.lecturer_id = ?))
           LIMIT 1',

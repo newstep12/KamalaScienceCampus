@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         q(
             'INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
                                 year_level, symbol_no, phone)
-             VALUES (?, ?, ?, ?, "student", "pending", ?, ?, ?)',
+             VALUES (?, ?, ?, ?, \'student\', \'pending\', ?, ?, ?)',
             [
                 $in['full_name'],
                 $in['full_name_ne'] !== '' ? $in['full_name_ne'] : null,

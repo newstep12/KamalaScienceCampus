@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $year = (int) ($_POST['year_level'] ?? 0);
         if ($cid && $year >= 1 && $year <= 4) {
             q('INSERT IGNORE INTO enrolments (user_id, course_id)
-               SELECT id, ? FROM users WHERE role = "student" AND status = "active" AND year_level = ?',
+               SELECT id, ? FROM users WHERE role = \'student\' AND status = \'active\' AND year_level = ?',
               [$cid, $year]);
             flash('ok', t('enrol_added'));
         }
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $editId   = (int) ($_GET['edit'] ?? 0);
 $editing  = $editId ? one('SELECT * FROM courses WHERE id = ?', [$editId]) : null;
-$lecturers= all('SELECT id, full_name FROM users WHERE role IN ("lecturer","admin") AND status = "active" ORDER BY full_name');
+$lecturers= all('SELECT id, full_name FROM users WHERE role IN (\'lecturer\',\'admin\') AND status = \'active\' ORDER BY full_name');
 $courses  = all(
     'SELECT c.*, u.full_name AS lecturer_name,
             (SELECT COUNT(*) FROM enrolments e WHERE e.course_id = c.id) AS student_count
@@ -92,7 +92,7 @@ $enrolled = $editing
     : [];
 $candidates = $editing
     ? all('SELECT id, full_name, symbol_no FROM users
-            WHERE role = "student" AND status = "active"
+            WHERE role = \'student\' AND status = \'active\'
               AND id NOT IN (SELECT user_id FROM enrolments WHERE course_id = ?)
             ORDER BY full_name LIMIT 300', [$editId])
     : [];

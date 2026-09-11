@@ -64,12 +64,12 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $exists = $pdo->prepare('SELECT id FROM users WHERE email = ?');
             $exists->execute([$adminEmail]);
             if ($exists->fetchColumn()) {
-                $pdo->prepare('UPDATE users SET password_hash = ?, role = "admin", status = "active" WHERE email = ?')
+                $pdo->prepare('UPDATE users SET password_hash = ?, role = \'admin\', status = \'active\' WHERE email = ?')
                     ->execute([password_hash($adminPass, PASSWORD_DEFAULT), $adminEmail]);
             } else {
                 $pdo->prepare(
                     'INSERT INTO users (full_name, email, password_hash, role, status, approved_at)
-                     VALUES (?, ?, ?, "admin", "active", NOW())'
+                     VALUES (?, ?, ?, \'admin\', \'active\', NOW())'
                 )->execute([$adminName, $adminEmail, password_hash($adminPass, PASSWORD_DEFAULT)]);
             }
 

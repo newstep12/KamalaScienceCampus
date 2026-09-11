@@ -9,7 +9,7 @@ $courses = all(
             (SELECT COUNT(*) FROM materials m  WHERE m.course_id  = c.id) AS material_count,
             (SELECT COUNT(*) FROM enrolments e WHERE e.course_id = c.id) AS student_count
        FROM courses c
-      WHERE (c.lecturer_id = ? OR ? = "admin") AND c.is_active = 1
+      WHERE (c.lecturer_id = ? OR ? = \'admin\') AND c.is_active = 1
       ORDER BY c.year_level, c.code',
     [$user['id'], $user['role']]
 );

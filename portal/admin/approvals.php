@@ -8,15 +8,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
     $id     = (int) ($_POST['user_id'] ?? 0);
     $action = $_POST['action'] ?? '';
-    $target = one('SELECT * FROM users WHERE id = ? AND status = "pending"', [$id]);
+    $target = one('SELECT * FROM users WHERE id = ? AND status = \'pending\'', [$id]);
 
     if ($target && $action === 'approve') {
-        q('UPDATE users SET status = "active", approved_at = NOW(), approved_by = ? WHERE id = ?',
+        q('UPDATE users SET status = \'active\', approved_at = NOW(), approved_by = ? WHERE id = ?',
           [$admin['id'], $id]);
         log_activity((int) $admin['id'], 'approve_user', $target['email']);
         flash('ok', t('approved_ok', $target['full_name']));
     } elseif ($target && $action === 'reject') {
-        q('UPDATE users SET status = "rejected", rejection_note = ?, approved_by = ? WHERE id = ?',
+        q('UPDATE users SET status = \'rejected\', rejection_note = ?, approved_by = ? WHERE id = ?',
           [trim((string) ($_POST['note'] ?? '')) ?: null, $admin['id'], $id]);
         log_activity((int) $admin['id'], 'reject_user', $target['email']);
         flash('ok', t('rejected_ok', $target['full_name']));
@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$pending = all('SELECT * FROM users WHERE status = "pending" ORDER BY created_at ASC');
+$pending = all('SELECT * FROM users WHERE status = \'pending\' ORDER BY created_at ASC');
 
 layout_head(['title' => t('pending_approvals'), 'active' => 'approvals', 'wide' => true]);
 ?>

@@ -111,10 +111,12 @@ function portal_url(string $path = ''): string
 function recent_failed_attempts(string $email, string $ip): int
 {
     return (int) scalar(
+        // LOGIN_WINDOW_MIN is interpolated, not bound: MySQL does not accept a
+        // placeholder inside INTERVAL. It is an integer constant, never input.
         'SELECT COUNT(*) FROM login_attempts
           WHERE email = ? AND ip_address = ? AND succeeded = 0
-            AND attempted_at > (NOW() - INTERVAL ? MINUTE)',
-        [$email, $ip, LOGIN_WINDOW_MIN]
+            AND attempted_at > (NOW() - INTERVAL ' . (int) LOGIN_WINDOW_MIN . ' MINUTE)',
+        [$email, $ip]
     );
 }
 

@@ -19,10 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $target = one('SELECT * FROM users WHERE id = ?', [$id]);
     if ($target) {
         if ($action === 'suspend') {
-            q('UPDATE users SET status = "suspended" WHERE id = ?', [$id]);
+            q('UPDATE users SET status = \'suspended\' WHERE id = ?', [$id]);
             log_activity((int) $admin['id'], 'suspend_user', $target['email']);
         } elseif ($action === 'reactivate') {
-            q('UPDATE users SET status = "active", approved_at = NOW(), approved_by = ? WHERE id = ?', [$admin['id'], $id]);
+            q('UPDATE users SET status = \'active\', approved_at = NOW(), approved_by = ? WHERE id = ?', [$admin['id'], $id]);
             log_activity((int) $admin['id'], 'reactivate_user', $target['email']);
         } elseif ($action === 'set_role') {
             $role = in_array($_POST['role'] ?? '', ['student', 'lecturer', 'admin'], true) ? $_POST['role'] : null;

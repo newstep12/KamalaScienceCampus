@@ -4,14 +4,14 @@ require_once __DIR__ . '/../inc/layout.php';
 
 require_role(ROLE_ADMIN);
 
-$pending   = (int) scalar('SELECT COUNT(*) FROM users WHERE status = "pending"');
-$students  = (int) scalar('SELECT COUNT(*) FROM users WHERE role = "student"  AND status = "active"');
-$lecturers = (int) scalar('SELECT COUNT(*) FROM users WHERE role = "lecturer" AND status = "active"');
+$pending   = (int) scalar('SELECT COUNT(*) FROM users WHERE status = \'pending\'');
+$students  = (int) scalar('SELECT COUNT(*) FROM users WHERE role = \'student\'  AND status = \'active\'');
+$lecturers = (int) scalar('SELECT COUNT(*) FROM users WHERE role = \'lecturer\' AND status = \'active\'');
 $courses   = (int) scalar('SELECT COUNT(*) FROM courses WHERE is_active = 1');
 
 $byYear = all(
     'SELECT year_level, COUNT(*) AS n FROM users
-      WHERE role = "student" AND status = "active" AND year_level IS NOT NULL
+      WHERE role = \'student\' AND status = \'active\' AND year_level IS NOT NULL
       GROUP BY year_level ORDER BY year_level'
 );
 

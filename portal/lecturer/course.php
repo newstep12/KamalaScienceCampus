@@ -7,7 +7,7 @@ $user     = require_role(ROLE_LECTURER, ROLE_ADMIN);
 $courseId = (int) ($_GET['id'] ?? 0);
 
 $course = one(
-    'SELECT * FROM courses WHERE id = ? AND (lecturer_id = ? OR ? = "admin") LIMIT 1',
+    'SELECT * FROM courses WHERE id = ? AND (lecturer_id = ? OR ? = \'admin\') LIMIT 1',
     [$courseId, $user['id'], $user['role']]
 );
 
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 flash('error', $res['error'] === 'type' ? t('err_file_type') : t('err_upload'));
             } else {
                 q('INSERT INTO materials (course_id, kind, title, description, file_path, file_name, file_size, uploaded_by)
-                   VALUES (?, "file", ?, ?, ?, ?, ?, ?)',
+                   VALUES (?, \'file\', ?, ?, ?, ?, ?, ?)',
                   [$courseId, $title, $desc, $res['path'], $res['name'], $res['size'], $user['id']]);
                 flash('ok', t('material_added'));
             }
@@ -47,13 +47,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 flash('error', t('err_upload'));
             } else {
                 q('INSERT INTO materials (course_id, kind, title, description, link_url, uploaded_by)
-                   VALUES (?, "link", ?, ?, ?, ?)',
+                   VALUES (?, \'link\', ?, ?, ?, ?)',
                   [$courseId, $title, $desc, $url, $user['id']]);
                 flash('ok', t('material_added'));
             }
         } else {
             q('INSERT INTO materials (course_id, kind, title, description, body, uploaded_by)
-               VALUES (?, "note", ?, ?, ?, ?)',
+               VALUES (?, \'note\', ?, ?, ?, ?)',
               [$courseId, $title, $desc, trim((string) ($_POST['body'] ?? '')), $user['id']]);
             flash('ok', t('material_added'));
         }
@@ -74,7 +74,7 @@ $materials = all('SELECT * FROM materials WHERE course_id = ? ORDER BY created_a
 $students  = all(
     'SELECT u.id, u.full_name, u.full_name_ne, u.symbol_no, u.email, u.year_level
        FROM enrolments e JOIN users u ON u.id = e.user_id
-      WHERE e.course_id = ? AND u.status = "active"
+      WHERE e.course_id = ? AND u.status = \'active\'
       ORDER BY u.full_name',
     [$courseId]
 );
