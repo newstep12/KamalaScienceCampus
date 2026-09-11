@@ -30,6 +30,13 @@ try {
     $dbUp = false;
 }
 
+// Never cached by the CDN or browsers: the page varies with the language
+// cookie (a cached copy could serve Nepali to an English visitor), and a new
+// notice must appear at once. Sending Expires ourselves also stops the
+// one-hour HTML rule in .htaccess from applying to this page.
+header('Cache-Control: no-cache, must-revalidate, max-age=0');
+header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+
 $ne   = is_nepali();
 $base = '';
 $alt  = $ne ? '?lang=en' : '?lang=ne';
