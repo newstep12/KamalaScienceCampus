@@ -36,7 +36,13 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]
             );
         } catch (PDOException $e) {
-            $errors[] = 'Could not connect to the database: ' . $e->getMessage();
+            if (str_contains($e->getMessage(), '1045')) {
+                $errors[] = 'The database rejected those credentials. Check the password, '
+                    . 'and make sure your browser has not autofilled a saved password over it — '
+                    . 'clear the field and type the password from hPanel by hand.';
+            } else {
+                $errors[] = 'Could not connect to the database: ' . $e->getMessage();
+            }
         }
     }
 
@@ -125,13 +131,15 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
     <p class="p-auth-intro">
       Create a MySQL database in hPanel first, then enter its details here.
       Nothing you type on this page leaves your own server.
+      If your browser offers to fill a saved password, dismiss it &mdash; type
+      the database password from hPanel yourself.
     </p>
 
     <?php foreach ($errors as $err): ?>
       <div class="p-flash p-flash-error"><?= htmlspecialchars($err, ENT_QUOTES) ?></div>
     <?php endforeach; ?>
 
-    <form method="post" autocomplete="off">
+    <form method="post" autocomplete="off" spellcheck="false">
       <h2 style="font-size:1.05rem;margin-top:6px;">Database</h2>
       <div class="p-field">
         <label for="db_host">Host</label>
@@ -147,7 +155,7 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="p-field">
         <label for="db_pass">Database password</label>
-        <input type="password" id="db_pass" name="db_pass">
+        <input type="password" id="db_pass" name="db_pass" autocomplete="new-password" required>
       </div>
 
       <h2 style="font-size:1.05rem;margin-top:26px;">Administrator account</h2>
@@ -161,7 +169,7 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="p-field">
         <label for="admin_pass">Password <span class="hint">At least 10 characters. This is the account that approves students.</span></label>
-        <input type="password" id="admin_pass" name="admin_pass" required>
+        <input type="password" id="admin_pass" name="admin_pass" autocomplete="new-password" required>
       </div>
 
       <div class="p-form-actions">
