@@ -72,20 +72,35 @@ Behaviour — mobile menu, active nav link, the enquiry form — is in
 Search the project for `TODO` and `[ add`. These are the details I could not
 verify and deliberately left blank rather than invent:
 
-- **Campus email address** — in `src/partials/footer.html`, and in
-  `src/pages/contact.html` (both the details table and the form's `data-mailto`
-  attribute, which is what makes the enquiry form work).
 - **Office hours** — `src/pages/contact.html`.
+- **Staff bios** — the About page's leadership and faculty section
+  (`src/pages/about.html`, `src/pages-ne/about.html`) carries only what was
+  known: names, roles, and Manoj Devkota's CV. Qualifications and subjects for
+  the others are marked `TODO`. The Chairman's and Campus Chief's messages
+  were drafted for them to approve — edit them to the wording they sign off.
 - **Fees** — intentionally not stated anywhere; the pages point people to the
   campus phone number instead, since community-campus fees change each session.
-- **Photographs** — there are no images yet. Drop real campus photos into
-  `assets/img/` and add them to the hero and About page; stock photos of a
+- **Photographs** — there are no campus images yet. Drop real campus photos
+  into `assets/img/` and add them to the hero and About page; stock photos of a
   different campus would misrepresent the institution.
+
+### Photos of people
+
+Each person on the About page shows a round portrait, or their initials until
+a photo exists. To add one, save a square-ish photo (400×400 px or larger) as
+
+    assets/img/people/<slug>.jpg      (.jpeg, .png and .webp also work)
+
+and run `python3 build.py`. The slugs are `upendra-kumar-pokharel`,
+`bharat-malla`, `manoj-devkota`, `tej-bikram-thapa`, `shyamlal-mahato` and
+`chandu-yadav` — the `{{PHOTO:slug:XY}}` markers in the About page sources.
 - **Map pin** — `contact.html` embeds a Google Maps search for "Dhungrebas,
   Kamalamai, Sindhuli". Replace the `src` with a precise embed link for the
   actual campus location when you have one.
 
-Verified and already in place: phone `+977-47-520203`, established 2066 BS /
+Verified and already in place: phone `+977-47-520203`, campus email
+`admin@kamalasciencecampus.edu.np` (the Hostinger mailbox; also the enquiry
+form's `data-mailto`), established 2066 BS /
 2009 AD, Tribhuvan University affiliation, UGC recognition, B.Sc. General =
 4 years / 50 seats / English medium, and the scholarship categories.
 
@@ -231,9 +246,12 @@ one before students rely on them.
 
 ### Email notifications
 
-Off by default. Turn them on in **Admin → System → Email notifications**, set a
-from-address on a domain this server is allowed to send for, and use the test
-button before relying on it. Sent via PHP `mail()` through the hosting MTA, so
+Off by default. Turn them on in **Admin → System → Email notifications**, set
+the from-address to `admin@kamalasciencecampus.edu.np` (Hostinger only relays
+mail from a mailbox that exists in hPanel), and use the test button before
+relying on it. The address is also passed as the envelope sender (`-f`) so SPF
+passes. Registration alerts to administrators are capped at one per ten
+minutes; the approval queue shows every pending registration regardless. Sent via PHP `mail()` through the hosting MTA, so
 no SMTP password is stored. Failures are logged and ignored — a bounced
 notification never blocks a registration or an approval.
 
@@ -265,3 +283,12 @@ Worth knowing before changing anything here:
   signed-in user is entitled to that file. `uploads/` denies direct access and
   has PHP execution turned off.
 - `portal/inc/` and `portal/lang/` deny web access entirely.
+- After sign-in, `?next=` only ever redirects to a path under `/portal/`
+  (a bare leading `/` let `/\evil.example` through).
+- A login for an unknown email does the same bcrypt work as one for a real
+  account, so timing does not reveal who is registered.
+- The public registration form has a hidden honeypot field; bot submissions
+  get the success page and are not stored.
+- Links in emails use the real domain, never the request's `Host` header.
+- `.htaccess` sends `X-Frame-Options: SAMEORIGIN` and HSTS, and hides the PHP
+  version.

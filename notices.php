@@ -73,7 +73,8 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
         <span class="brand-sub"><?= $ne ? 'सिन्धुली, नेपाल' : 'Sindhuli, Nepal' ?></span>
       </span>
     </a>
-    <nav class="nav" aria-label="<?= $ne ? 'मुख्य मेनु' : 'Primary' ?>">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">&#9776; <?= $ne ? 'मेनु' : 'Menu' ?></button>
+    <nav class="nav" id="primary-nav" aria-label="<?= $ne ? 'मुख्य मेनु' : 'Primary' ?>">
       <ul>
         <li><a href="<?= $ne ? 'ne/index.html' : 'index.html' ?>"><?= $ne ? 'गृहपृष्ठ' : 'Home' ?></a></li>
         <li><a href="<?= $ne ? 'ne/programs.html' : 'programs.html' ?>"><?= $ne ? 'बी.एस्सी.' : 'B.Sc. Program' ?></a></li>
@@ -172,5 +173,6 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
     </div>
   </div>
 </footer>
+<script src="assets/js/main.js"></script>
 </body>
 </html>

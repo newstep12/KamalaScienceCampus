@@ -8,14 +8,18 @@ Run `python3 build.py` after editing anything under src/. The generated files
 at the project root are what gets published; GitHub and Hostinger serve them
 directly, so there is no other build step.
 
-Two placeholders are substituted per language:
+Placeholders substituted per language:
     {{BASE}}  '' for English, '../' for Nepali — prefixes shared assets
     {{ALT}}   link to the same page in the other language
+    {{PHOTO:slug:XY}}  the portrait assets/img/people/<slug>.jpg (or .jpeg,
+              .png, .webp) if that file exists, otherwise the initials XY —
+              so adding a photo is: drop the file in, run this script
 """
 import pathlib
 import re
 
 ROOT = pathlib.Path(__file__).parent
+PEOPLE = ROOT / 'assets' / 'img' / 'people'
 
 LANGS = {
     'en': {
@@ -60,6 +64,14 @@ TEMPLATE = """<!doctype html>
 """
 
 
+def photo(slug, initials, base):
+    for ext in ('jpg', 'jpeg', 'png', 'webp'):
+        if (PEOPLE / f'{slug}.{ext}').is_file():
+            return (f'<img src="{base}assets/img/people/{slug}.{ext}" alt="" '
+                    f'width="320" height="320" loading="lazy" decoding="async">')
+    return f'<span class="person-initials" aria-hidden="true">{initials}</span>'
+
+
 def meta(src, key, default=''):
     m = re.search(r'<!--\s*%s:\s*(.*?)\s*-->' % key, src)
     return m.group(1) if m else default
@@ -91,6 +103,8 @@ def build(lang, spec):
             body=body,
             footer=footer,
         )
+        html = re.sub(r'\{\{PHOTO:([a-z0-9-]+):([^}]+)\}\}',
+                      lambda m: photo(m.group(1), m.group(2), spec['base']), html)
         html = html.replace('{{BASE}}', spec['base'])
         html = html.replace('{{ALT}}', spec['alt'](path.name))
         (spec['out'] / path.name).write_text(html)

@@ -23,7 +23,8 @@
     });
 
     nav.addEventListener("click", function (e) {
-      if (e.target.tagName === "A" && window.innerWidth <= 820) {
+      // Matches the menu-button breakpoint in styles.css
+      if (e.target.tagName === "A" && window.innerWidth <= 1120) {
         nav.classList.remove("open");
         toggle.setAttribute("aria-expanded", "false");
         toggle.textContent = "☰ Menu";
