@@ -77,7 +77,44 @@ python3 -m http.server 4321
 
 Then open <http://localhost:4321>.
 
-## Publishing on GitHub Pages
+## Hosting (live)
+
+The site is hosted on **Hostinger** (Business plan) and deploys straight from
+this repository:
+
+- hPanel → the `kamalasciencecampus.edu.np` website → **Advanced → GIT**
+- Repository `newstep12/KamalaScienceCampus`, branch `main`, root `public_html`
+- **Auto-deployment is on** — pushing to `main` redeploys automatically,
+  usually within a couple of seconds. No manual step needed.
+- Temporary URL while DNS propagates:
+  <https://skyblue-wasp-386461.hostingersite.com/>
+
+`.htaccess` keeps the build sources (`src/`, `build.py`, `README.md`,
+`.claude/`) from being served, since the repository root *is* the web root.
+
+### Pointing the domain
+
+`kamalasciencecampus.edu.np` is registered through Mercantile
+(register.com.np) and must be pointed at Hostinger from there. Either:
+
+**Nameservers (recommended)**
+
+```
+orbit.dns-parking.com
+horizon.dns-parking.com
+```
+
+**or DNS records**
+
+| Type | Name | Value | TTL |
+| --- | --- | --- | --- |
+| A | @ | 31.220.106.185 | 300 |
+| CNAME | www | kamalasciencecampus.edu.np | 300 |
+
+After that, confirm with **Continue setup** in hPanel. SSL is issued
+automatically once the domain resolves.
+
+## Alternative: GitHub Pages
 
 ```bash
 git add -A

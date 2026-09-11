@@ -1,0 +1,32 @@
+# Kamala Science Campus — server configuration
+
+# The repository root is deployed straight into public_html, which would
+# otherwise serve the build sources alongside the real pages. Hide them:
+# /src/pages/*.html are headless duplicates of every page (bad for indexing),
+# and build.py / README.md / .claude are development files.
+RedirectMatch 404 ^/(src|\.claude)(/|$)
+RedirectMatch 404 ^/(build\.py|README\.md)$
+
+# Never serve the repository metadata
+RedirectMatch 404 ^/\.git(/|$)
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain
+  AddOutputFilterByType DEFLATE application/javascript application/json
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresByType text/html "access plus 1 hour"
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
