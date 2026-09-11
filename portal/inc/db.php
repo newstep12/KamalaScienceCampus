@@ -12,8 +12,12 @@ function config(): array
     if ($config === null) {
         $path = __DIR__ . '/config.php';
         if (!is_file($path)) {
-            http_response_code(503);
-            exit('The portal is not configured yet. Run /portal/install.php to set it up.');
+            // Not set up yet: send the visitor to the installer rather than
+            // emitting a half-rendered page.
+            if (!headers_sent()) {
+                header('Location: /portal/install.php');
+            }
+            exit;
         }
         $config = require $path;
     }

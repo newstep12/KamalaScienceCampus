@@ -491,3 +491,30 @@ table.table-kv th[scope="row"] {
   table.table-kv th[scope="row"] { border-bottom: 0; padding-bottom: 4px; }
   table.table-kv td { padding-top: 0; }
 }
+
+/* Language switch in the main navigation */
+.nav .lang-switch {
+  font-weight: 600;
+  color: var(--teal-600);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 15px;
+  margin-inline-start: 6px;
+}
+.nav .lang-switch:hover { background: var(--bg-tint); text-decoration: none; }
+@media (max-width: 820px) {
+  .nav .lang-switch { margin: 8px 0 0; text-align: center; }
+}
+
+/* Nepali pages: Devanagari needs more leading and no letter-spacing tricks */
+body.lang-ne { font-family: var(--deva); line-height: 1.85; }
+body.lang-ne h1, body.lang-ne h2, body.lang-ne h3, body.lang-ne h4,
+body.lang-ne .brand-name, body.lang-ne .fact dd, body.lang-ne .steps h3 {
+  font-family: var(--deva); letter-spacing: 0; line-height: 1.5;
+}
+body.lang-ne .eyebrow, body.lang-ne .kicker, body.lang-ne .fact dt,
+body.lang-ne th, body.lang-ne .brand-sub, body.lang-ne .site-footer h4,
+body.lang-ne .program-card .tag {
+  text-transform: none; letter-spacing: .02em;
+}
+body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
