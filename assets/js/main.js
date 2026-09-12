@@ -16,10 +16,14 @@
   var nav = document.querySelector(".nav");
 
   if (toggle && nav) {
+    // Each header carries its own labels, so they stay in the page's language.
+    var labelOpen = toggle.getAttribute("data-label-open") || "✕ Close";
+    var labelClosed = toggle.getAttribute("data-label-closed") || "☰ Menu";
+
     toggle.addEventListener("click", function () {
       var open = nav.classList.toggle("open");
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
-      toggle.textContent = open ? "✕ Close" : "☰ Menu";
+      toggle.textContent = open ? labelOpen : labelClosed;
     });
 
     nav.addEventListener("click", function (e) {
@@ -27,7 +31,7 @@
       if (e.target.tagName === "A" && window.innerWidth <= 1120) {
         nav.classList.remove("open");
         toggle.setAttribute("aria-expanded", "false");
-        toggle.textContent = "☰ Menu";
+        toggle.textContent = labelClosed;
       }
     });
   }

@@ -81,7 +81,8 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
         <span class="brand-sub"><?= $ne ? 'सिन्धुली, नेपाल' : 'Sindhuli, Nepal' ?></span>
       </span>
     </a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">&#9776; <?= $ne ? 'मेनु' : 'Menu' ?></button>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav"
+            data-label-closed="&#9776; <?= $ne ? 'मेनु' : 'Menu' ?>" data-label-open="&#10005; <?= $ne ? 'बन्द' : 'Close' ?>">&#9776; <?= $ne ? 'मेनु' : 'Menu' ?></button>
     <nav class="nav" id="primary-nav" aria-label="<?= $ne ? 'मुख्य मेनु' : 'Primary' ?>">
       <ul>
         <li><a href="<?= $ne ? 'ne/index.html' : 'index.html' ?>"><?= $ne ? 'गृहपृष्ठ' : 'Home' ?></a></li>
