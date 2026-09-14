@@ -143,9 +143,10 @@ this repository:
   from the repository leaves it on the server. Delete it in hPanel's File
   Manager as well, and block it in `.htaccess` if it matters.
 - The site's one public address is <https://kamalasciencecampus.edu.np/>.
-  `www.` and Hostinger's temporary URL
-  (<https://skyblue-wasp-386461.hostingersite.com/>) redirect to it, keeping
-  the path (see `.htaccess`), so search engines only list that address.
+  `www.` redirects to it permanently, keeping the path (see `.htaccess`).
+  Hostinger's temporary URL (<https://skyblue-wasp-386461.hostingersite.com/>)
+  still serves a copy: it cannot be redirected, because its proxy rewrites
+  the redirect back to itself and the browser loops.
 - For search engines, `build.py` gives every page a canonical link and
   English/Nepali `hreflang` links on that address, adds structured data to the
   home page, and rewrites `sitemap.xml`; `robots.txt` points to the sitemap.
