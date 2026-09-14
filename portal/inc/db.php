@@ -9,8 +9,21 @@ declare(strict_types=1);
 // Don't advertise the exact PHP version in every response.
 header_remove('X-Powered-By');
 
+/**
+ * Thrown by db() when it cannot connect. A public page that must survive a
+ * database outage catches it; anywhere else it reaches the handler below.
+ */
+final class DatabaseUnavailable extends RuntimeException
+{
+}
+
 // Log the real error; never show it to a visitor.
 set_exception_handler(function (Throwable $e) {
+    if ($e instanceof DatabaseUnavailable) {
+        // db() has already logged the underlying error.
+        http_response_code(503);
+        exit('The portal is temporarily unavailable. Please try again shortly.');
+    }
     error_log('Portal error: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
     http_response_code(500);
     exit('Something went wrong. Please try again.');
@@ -48,8 +61,7 @@ function db(): PDO
             ]);
         } catch (PDOException $e) {
             error_log('DB connection failed: ' . $e->getMessage());
-            http_response_code(503);
-            exit('The portal is temporarily unavailable. Please try again shortly.');
+            throw new DatabaseUnavailable('Database connection failed', 0, $e);
         }
     }
     return $pdo;

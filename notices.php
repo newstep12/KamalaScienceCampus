@@ -10,6 +10,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/portal/inc/db.php';
 require_once __DIR__ . '/portal/inc/lang.php';
 
+// Never cached by the CDN or browsers: the page varies with the language
+// cookie (a cached copy could serve Nepali to an English visitor), and a new
+// notice must appear at once. Sending Expires ourselves also stops the
+// HTML rule in .htaccess from applying to this page. Sent before the query,
+// so they also go out when the database is down.
+header('Cache-Control: no-cache, must-revalidate, max-age=0');
+header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+
 $dbUp    = true;
 $notices = [];
 $cat     = (string) ($_GET['cat'] ?? '');
@@ -29,13 +37,6 @@ try {
     error_log('Public notices unavailable: ' . $e->getMessage());
     $dbUp = false;
 }
-
-// Never cached by the CDN or browsers: the page varies with the language
-// cookie (a cached copy could serve Nepali to an English visitor), and a new
-// notice must appear at once. Sending Expires ourselves also stops the
-// one-hour HTML rule in .htaccess from applying to this page.
-header('Cache-Control: no-cache, must-revalidate, max-age=0');
-header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
 
 $ne   = is_nepali();
 $base = '';

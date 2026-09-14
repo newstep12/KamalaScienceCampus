@@ -16,8 +16,10 @@ function settings(): array
             foreach (all('SELECT k, v FROM settings') as $row) {
                 $cache[$row['k']] = $row['v'];
             }
-        } catch (Throwable $e) {
+        } catch (PDOException $e) {
             // Table not created yet — fall back to defaults rather than failing.
+            // A DatabaseUnavailable is not a PDOException, so an outage still
+            // gets the 503 page.
             $cache = [];
         }
     }
