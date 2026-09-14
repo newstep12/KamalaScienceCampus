@@ -61,6 +61,16 @@ function db(): PDO
             ]);
         } catch (PDOException $e) {
             error_log('DB connection failed: ' . $e->getMessage());
+            // TEMPORARY (2026-09-14): shows only the MySQL error number, to
+            // diagnose the outage. Reverted as soon as it has been read.
+            if (($_GET['dbdiag'] ?? '') === 'b93740c985076c8d') {
+                http_response_code(503);
+                header('Content-Type: text/plain; charset=utf-8');
+                exit(preg_match('/\\] \\[(\\d+)\\]/', $e->getMessage(), $m)
+                    ? 'db error ' . $m[1]
+                    : 'db error: no number (mysql driver '
+                      . (in_array('mysql', PDO::getAvailableDrivers(), true) ? 'loaded' : 'missing') . ')');
+            }
             throw new DatabaseUnavailable('Database connection failed', 0, $e);
         }
     }
