@@ -142,8 +142,13 @@ this repository:
 - **Deploys add and update files, but never delete them.** Removing a file
   from the repository leaves it on the server. Delete it in hPanel's File
   Manager as well, and block it in `.htaccess` if it matters.
-- Temporary URL while DNS propagates:
-  <https://skyblue-wasp-386461.hostingersite.com/>
+- The site's one public address is <https://kamalasciencecampus.edu.np/>.
+  `www.` and Hostinger's temporary URL
+  (<https://skyblue-wasp-386461.hostingersite.com/>) redirect to it, keeping
+  the path (see `.htaccess`), so search engines only list that address.
+- For search engines, `build.py` gives every page a canonical link and
+  English/Nepali `hreflang` links on that address, adds structured data to the
+  home page, and rewrites `sitemap.xml`; `robots.txt` points to the sitemap.
 
 `.htaccess` keeps the build sources (`src/`, `build.py`, `README.md`,
 `.claude/`) from being served, since the repository root *is* the web root.

@@ -1,5 +1,15 @@
 # Kamala Science Campus — server configuration
 
+# One address for search engines. www and Hostinger's temporary domain serve
+# the same site, so Google could list it under either, or split it between
+# them; send both to the real domain, keeping the path and query string.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTP_HOST} ^www\.kamalasciencecampus\.edu\.np [NC,OR]
+  RewriteCond %{HTTP_HOST} \.hostingersite\.com [NC]
+  RewriteRule ^ https://kamalasciencecampus.edu.np%{REQUEST_URI} [R=302,L]
+</IfModule>
+
 # The repository root is deployed straight into public_html, which would
 # otherwise serve the build sources alongside the real pages. Hide them:
 # /src/pages/*.html are headless duplicates of every page (bad for indexing),
