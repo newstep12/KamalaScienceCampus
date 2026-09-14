@@ -51,6 +51,11 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
 <meta name="description" content="<?= $ne
   ? 'त्रिभुवन विश्वविद्यालयका आधिकारिक सूचना, परीक्षा सूचना र कमला साइन्स क्याम्पसका जानकारी।'
   : 'Official Tribhuvan University notices, examination notices and announcements from Kamala Science Campus.' ?>">
+<?php // One address per language for search engines; category filters count as the same page. ?>
+<link rel="canonical" href="https://kamalasciencecampus.edu.np/notices.php<?= $ne ? '?lang=ne' : '' ?>">
+<link rel="alternate" hreflang="en" href="https://kamalasciencecampus.edu.np/notices.php">
+<link rel="alternate" hreflang="ne" href="https://kamalasciencecampus.edu.np/notices.php?lang=ne">
+<link rel="alternate" hreflang="x-default" href="https://kamalasciencecampus.edu.np/notices.php">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap">

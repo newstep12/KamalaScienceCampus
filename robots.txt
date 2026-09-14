@@ -1,0 +1,5 @@
+# Kamala Science Campus: everything public may be crawled.
+User-agent: *
+Allow: /
+
+Sitemap: https://kamalasciencecampus.edu.np/sitemap.xml
