@@ -78,8 +78,8 @@ verify and deliberately left blank rather than invent:
 - **Office hours** — `src/pages/contact.html`.
 - **Staff bios** — the About page's leadership and faculty section
   (`src/pages/about.html`, `src/pages-ne/about.html`) carries only what was
-  known: names, roles, and Manoj Devkota's CV. Qualifications and subjects for
-  the others are marked `TODO`. The Chairman's and Campus Chief's messages
+  known: names, roles, Manoj Devkota's CV, and Shyamlal Mahato's degree and
+  subject. Qualifications and subjects for the others are marked `TODO`. The Chairman's and Campus Chief's messages
   were drafted for them to approve — edit them to the wording they sign off.
 - **Fees** — intentionally not stated anywhere; the pages point people to the
   campus phone number instead, since community-campus fees change each session.
