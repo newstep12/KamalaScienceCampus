@@ -109,12 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['file_name'] = null;
             }
 
-            // The replaced file is of no further use, and uploads/ is not
-            // somewhere a campus wants to accumulate forgotten copies.
-            if (($file || $drop) && $existing && $existing['file_path']) {
-                delete_upload($existing['file_path']);
-            }
-
             // Every column name here is one of our own literals, which is
             // what makes interpolating them safe; the values are all bound.
             if ($id) {
@@ -125,6 +119,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $cols = implode(', ', array_keys($data));
                 $marks = implode(', ', array_fill(0, count($data), '?'));
                 q("INSERT INTO notices ({$cols}) VALUES ({$marks})", array_values($data));
+            }
+
+            // Only once the row no longer refers to it. Deleting first would,
+            // on a failed write, leave the notice pointing at a file that is
+            // no longer there — a download that 404s for every visitor.
+            if (($file || $drop) && $existing && $existing['file_path']) {
+                delete_upload($existing['file_path']);
             }
 
             log_activity((int) $admin['id'], $id ? 'update_notice' : 'publish_notice', $titleEn);

@@ -35,12 +35,18 @@ function config(): array
     if ($config === null) {
         $path = __DIR__ . '/config.php';
         if (!is_file($path)) {
-            // Not set up yet: send the visitor to the installer rather than
-            // emitting a half-rendered page.
+            // This used to redirect to portal/install.php. The installer has
+            // since been deleted and .htaccess 404s that path, so the redirect
+            // presented a missing configuration as a missing page — every
+            // portal address, sign-in included, answering "Not Found" with
+            // nothing to say why. Name the real fault instead: config.php is
+            // git-ignored, so it is absent from any fresh checkout of this
+            // repository and has to be restored on the server.
+            error_log('Portal configuration missing: ' . $path);
             if (!headers_sent()) {
-                header('Location: /portal/install.php');
+                http_response_code(503);
             }
-            exit;
+            exit('The portal is not set up on this server yet. Please contact the campus administrator.');
         }
         $config = require $path;
     }

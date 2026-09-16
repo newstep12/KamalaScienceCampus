@@ -37,6 +37,13 @@ const TRANSLATE_PROVIDERS = ['glossary', 'mymemory', 'libretranslate', 'google']
 /** How long to stop calling a service that has just failed. */
 const TRANSLATE_BACKOFF_SECONDS = 900;
 
+/**
+ * How long one run of the System page's backfill may take. Comfortably inside
+ * the 30-second max_execution_time shared hosting usually sets, so the pass
+ * always ends with a count on screen rather than a dead page.
+ */
+const BACKFILL_SECONDS = 20;
+
 function translation_enabled(): bool
 {
     return setting_bool('translate_enabled', true);
@@ -377,20 +384,26 @@ function translation_back_off(string $why): void
  */
 function remote_translate(string $text): ?string
 {
-    if (translation_budget() < 1) {
-        return null;
-    }
-    translation_budget(translation_budget() - 1);
-
     $provider = translation_provider();
     $limit    = $provider === 'mymemory' ? 450 : 2000;
+    $chunks   = split_for_translation($text, $limit);
+
+    // The budget counts requests, not calls to this function: a long notice
+    // body splits into many chunks, and one page load must not fire them all.
+    // Checked up front so we never spend half a budget on a translation we
+    // cannot finish — a body half in Nepali is worse than one left in English.
+    $needed = count(array_filter($chunks, static fn(string $c): bool => trim($c) !== ''));
+    if ($needed < 1 || $needed > translation_budget()) {
+        return null;
+    }
 
     $out = [];
-    foreach (split_for_translation($text, $limit) as $chunk) {
+    foreach ($chunks as $chunk) {
         if (trim($chunk) === '') {
             $out[] = $chunk;
             continue;
         }
+        translation_budget(translation_budget() - 1);
         $piece = match ($provider) {
             'google'         => google_translate($chunk),
             'libretranslate' => libre_translate($chunk),
@@ -593,7 +606,11 @@ function notices_track_auto_translation(): bool
     static $has = null;
     if ($has === null) {
         try {
-            $has = one("SHOW COLUMNS FROM notices LIKE 'title_ne_auto'") !== null;
+            // Both columns, not just one. They arrive as two separate
+            // migrations, either of which can be skipped on its own — and
+            // writing to a column that is not there fails the whole save.
+            $has = one("SHOW COLUMNS FROM notices LIKE 'title_ne_auto'") !== null
+                && one("SHOW COLUMNS FROM notices LIKE 'body_ne_auto'") !== null;
         } catch (Throwable $e) {
             $has = false;
         }
@@ -695,7 +712,14 @@ function backfill_notice_translations(bool $redoAuto = false, int $limit = 200):
 {
     // Admin-initiated and not holding up a visitor, so the per-request budget
     // that protects page loads does not apply.
-    translation_budget(2 * $limit);
+    translation_budget(4 * $limit);
+
+    // It does have to finish, though. A translation service answering slowly
+    // could otherwise run past the host's max_execution_time and kill the
+    // page mid-pass, with nothing on screen to say how far it got. Stopping
+    // ourselves means the admin gets a count and can simply run it again —
+    // everything already translated is saved as it goes.
+    $deadline = microtime(true) + BACKFILL_SECONDS;
 
     $tracking = notices_track_auto_translation();
     $rows     = all('SELECT * FROM notices ORDER BY published_at DESC LIMIT ' . (int) $limit);
@@ -711,6 +735,10 @@ function backfill_notice_translations(bool $redoAuto = false, int $limit = 200):
             $nepali = trim((string) ($n[$field . '_ne'] ?? ''));
             $isAuto = $tracking && !empty($n[$field . '_ne_auto']);
             if ($nepali !== '' && !($redoAuto && $isAuto)) {
+                continue;
+            }
+            if (microtime(true) > $deadline) {
+                $left++;
                 continue;
             }
 
