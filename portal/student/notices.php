@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
+require_once __DIR__ . '/../inc/uploads.php';
+require_once __DIR__ . '/../inc/translate.php';
 
 $user = require_login();
 $year = (int) ($user['year_level'] ?? 0);
@@ -53,22 +55,50 @@ layout_head(['title' => t('notices_title'), 'active' => 'notices']);
         <span class="p-item-meta"><?= e(format_date($n['published_at'])) ?></span>
       </div>
 
-      <h3><?= e(bilingual($n, 'title')) ?></h3>
-      <?php if ($body = bilingual($n, 'body')): ?>
+      <h3><?= e(notice_bilingual($n, 'title')) ?></h3>
+      <?php if ($body = notice_bilingual($n, 'body')): ?>
         <div class="p-notice-body"><?= e($body) ?></div>
       <?php endif; ?>
 
+      <?php
+      $kind = $n['file_path'] ? upload_kind($n['file_path']) : '';
+      $file = portal_url('/download.php?notice=' . (int) $n['id']);
+      ?>
       <?php if ($n['source_url'] || $n['file_path']): ?>
         <div class="p-form-actions">
+          <?php if ($n['file_path']): ?>
+            <?php // An attached notice is meant to be read, so opening it comes
+                  // first and ?view= asks download.php to send it inline. ?>
+            <?php if ($kind !== 'file'): ?>
+              <a class="p-btn p-btn-primary p-btn-sm" href="<?= e($file) ?>&amp;view=1"
+                 target="_blank" rel="noopener"><?= te('open_attachment') ?> ↗</a>
+            <?php endif; ?>
+            <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e($file) ?>"><?= te('attachment') ?> ⤓</a>
+          <?php endif; ?>
           <?php if ($n['source_url']): ?>
             <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e($n['source_url']) ?>"
                target="_blank" rel="noopener noreferrer nofollow"><?= te('read_source') ?> ↗</a>
           <?php endif; ?>
-          <?php if ($n['file_path']): ?>
-            <a class="p-btn p-btn-ghost p-btn-sm"
-               href="<?= e(portal_url('/download.php?notice=' . (int) $n['id'])) ?>"><?= te('attachment') ?> ⤓</a>
-          <?php endif; ?>
         </div>
+      <?php endif; ?>
+
+      <?php if ($kind === 'pdf' || $kind === 'image'): ?>
+        <details class="p-preview" data-preview-src="<?= e($file) ?>&amp;view=1">
+          <summary><?= te('read_it_here') ?></summary>
+          <div class="p-preview-frame">
+            <?php if ($kind === 'image'): ?>
+              <img src="<?= e($file) ?>&amp;view=1" alt="<?= e(notice_bilingual($n, 'title')) ?>" loading="lazy">
+            <?php else: ?>
+              <iframe title="<?= e(notice_bilingual($n, 'title')) ?>" loading="lazy"></iframe>
+              <noscript><p><a href="<?= e($file) ?>&amp;view=1" target="_blank"
+                 rel="noopener"><?= te('open_attachment') ?> ↗</a></p></noscript>
+            <?php endif; ?>
+          </div>
+        </details>
+      <?php endif; ?>
+
+      <?php if (notice_is_machine_translated($n)): ?>
+        <p class="p-auto-note"><?= te('auto_translated_note') ?></p>
       <?php endif; ?>
     </article>
   <?php endforeach; ?>

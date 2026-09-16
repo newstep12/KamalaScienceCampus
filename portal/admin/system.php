@@ -4,6 +4,7 @@ require_once __DIR__ . '/../inc/layout.php';
 require_once __DIR__ . '/../inc/mail.php';
 require_once __DIR__ . '/../inc/uploads.php';
 require_once __DIR__ . '/../inc/idcard-view.php';
+require_once __DIR__ . '/../inc/translate.php';
 
 $admin = require_role(ROLE_ADMIN);
 
@@ -64,6 +65,12 @@ function column_migrations(): array
         // the rest. Students do not use it.
         'staff designation' =>
             'ALTER TABLE users ADD COLUMN designation VARCHAR(80) NULL',
+        // Marks Nepali text that automatic translation wrote, so a correction
+        // an admin makes by hand is never replaced by the machine again.
+        'notice translation flags' =>
+            'ALTER TABLE notices ADD COLUMN title_ne_auto TINYINT(1) NOT NULL DEFAULT 0',
+        'notice body translation flag' =>
+            'ALTER TABLE notices ADD COLUMN body_ne_auto TINYINT(1) NOT NULL DEFAULT 0',
     ];
 }
 
@@ -230,6 +237,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 set_setting('mail_from_name', $name ?: null);
                 flash('ok', t('mail_saved'));
             }
+        } elseif ($action === 'save_translation') {
+            $provider = (string) ($_POST['translate_provider'] ?? 'glossary');
+            $email    = trim((string) ($_POST['translate_contact_email'] ?? ''));
+            $endpoint = trim((string) ($_POST['translate_endpoint'] ?? ''));
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                flash('error', t('err_email_bad'));
+            } elseif ($endpoint !== '' && !preg_match('#^https?://#i', $endpoint)) {
+                flash('error', t('err_bad_url'));
+            } else {
+                set_setting('translate_enabled',  isset($_POST['translate_enabled']) ? '1' : '0');
+                set_setting('translate_provider', in_array($provider, TRANSLATE_PROVIDERS, true) ? $provider : 'glossary');
+                set_setting('translate_endpoint', $endpoint ?: null);
+                set_setting('translate_contact_email', $email ?: null);
+                // An empty key box leaves the stored key alone: it is never
+                // shown back, so blanking it would be the usual outcome of
+                // changing any other setting on this form.
+                $key = trim((string) ($_POST['translate_api_key'] ?? ''));
+                if ($key !== '') {
+                    set_setting('translate_api_key', $key);
+                } elseif (isset($_POST['clear_api_key'])) {
+                    set_setting('translate_api_key', null);
+                }
+                // A provider change deserves a fresh attempt rather than the
+                // rest of a backoff the previous one earned.
+                set_setting('translate_backoff_until', null);
+                flash('ok', t('translate_saved'));
+            }
+        } elseif ($action === 'translate_notices') {
+            set_setting('translate_backoff_until', null);
+            $done = backfill_notice_translations(isset($_POST['redo_auto']));
+            log_activity((int) $admin['id'], 'translate_notices', (string) $done['translated']);
+            flash(
+                $done['translated'] ? 'ok' : 'info',
+                t('translate_done', localize_digits((string) $done['translated']), localize_digits((string) $done['left']))
+            );
         } elseif ($action === 'test_mail') {
             $to = trim((string) ($_POST['test_to'] ?? '')) ?: (string) $admin['email'];
             $sent = send_notification(
@@ -553,6 +595,85 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
     </div>
     <div class="p-form-actions">
       <button class="p-btn p-btn-ghost" type="submit"><?= te('mail_test_send') ?></button>
+    </div>
+  </form>
+</section>
+
+<section class="p-card" id="translation">
+  <h2><?= te('translate_title') ?></h2>
+  <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('translate_intro') ?></p>
+
+  <form method="post">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="save_translation">
+
+    <div class="p-field">
+      <label style="display:flex;align-items:center;gap:9px;font-weight:500;">
+        <input type="checkbox" name="translate_enabled" value="1" style="width:auto;"
+               <?= translation_enabled() ? 'checked' : '' ?>>
+        <?= te('translate_enable') ?>
+      </label>
+    </div>
+
+    <div class="p-field">
+      <label><?= te('translate_provider') ?></label>
+      <?php foreach (TRANSLATE_PROVIDERS as $provider): ?>
+        <label style="display:flex;align-items:flex-start;gap:9px;font-weight:400;margin-bottom:8px;">
+          <input type="radio" name="translate_provider" value="<?= e($provider) ?>" style="width:auto;margin-top:4px;"
+                 <?= translation_provider() === $provider ? 'checked' : '' ?>>
+          <span>
+            <strong><?= te('translate_' . $provider) ?></strong><br>
+            <span class="hint"><?= te('translate_' . $provider . '_hint') ?></span>
+          </span>
+        </label>
+      <?php endforeach; ?>
+    </div>
+
+    <div class="p-field-row">
+      <div class="p-field">
+        <label for="translate_contact_email"><?= te('translate_contact') ?> <span class="hint"><?= te('optional') ?></span></label>
+        <input type="email" id="translate_contact_email" name="translate_contact_email"
+               value="<?= e(setting('translate_contact_email')) ?>" placeholder="<?= e($admin['email']) ?>">
+        <span class="hint"><?= te('translate_contact_hint') ?></span>
+      </div>
+      <div class="p-field">
+        <label for="translate_endpoint"><?= te('translate_endpoint') ?> <span class="hint"><?= te('optional') ?></span></label>
+        <input type="url" id="translate_endpoint" name="translate_endpoint"
+               value="<?= e(setting('translate_endpoint')) ?>" placeholder="https://libretranslate.example.org">
+        <span class="hint"><?= te('translate_endpoint_hint') ?></span>
+      </div>
+    </div>
+
+    <div class="p-field">
+      <label for="translate_api_key"><?= te('translate_key') ?> <span class="hint"><?= te('optional') ?></span></label>
+      <input type="password" id="translate_api_key" name="translate_api_key" value="" autocomplete="off"
+             placeholder="<?= setting('translate_api_key') ? e(t('translate_key_stored')) : '' ?>">
+      <span class="hint"><?= te('translate_key_hint') ?></span>
+      <?php if (setting('translate_api_key')): ?>
+        <label style="display:flex;align-items:center;gap:9px;font-weight:500;margin-top:8px;">
+          <input type="checkbox" name="clear_api_key" value="1" style="width:auto;">
+          <?= te('translate_key_clear') ?>
+        </label>
+      <?php endif; ?>
+    </div>
+
+    <div class="p-form-actions">
+      <button class="p-btn p-btn-primary" type="submit"><?= te('save') ?></button>
+    </div>
+  </form>
+
+  <form method="post" style="margin-top:22px;padding-top:22px;border-top:1px solid var(--line);">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="translate_notices">
+    <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('translate_backfill_intro') ?></p>
+    <div class="p-field">
+      <label style="display:flex;align-items:center;gap:9px;font-weight:500;">
+        <input type="checkbox" name="redo_auto" value="1" style="width:auto;">
+        <?= te('translate_redo') ?>
+      </label>
+    </div>
+    <div class="p-form-actions">
+      <button class="p-btn p-btn-gold" type="submit"><?= te('translate_backfill_run') ?></button>
     </div>
   </form>
 </section>

@@ -36,6 +36,21 @@
     });
   }
 
+  // Notice attachments: fill the preview frame the first time it is opened.
+  // A notice board can list sixty PDFs, and loading them all on arrival would
+  // cost a visitor on mobile data far more than the page is worth. The buttons
+  // beside the preview open the same file, so nothing here is load-bearing.
+  var previews = document.querySelectorAll("details.p-preview[data-preview-src]");
+  for (var p = 0; p < previews.length; p++) {
+    previews[p].addEventListener("toggle", function () {
+      if (!this.open) return;
+      var frame = this.querySelector("iframe");
+      if (frame && !frame.getAttribute("src")) {
+        frame.setAttribute("src", this.getAttribute("data-preview-src"));
+      }
+    });
+  }
+
   // Current year in the footer
   var year = document.querySelector("[data-year]");
   if (year) year.textContent = new Date().getFullYear();

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
+require_once __DIR__ . '/../inc/translate.php';
 
 $user = require_role(ROLE_STUDENT, ROLE_LECTURER);
 $year = (int) ($user['year_level'] ?? 0);
@@ -103,7 +104,7 @@ layout_head(['title' => t('nav_overview'), 'active' => 'home']);
           <?php if ($n['is_pinned']): ?><span class="p-tag pin"><?= te('pinned') ?></span><?php endif; ?>
           <span class="p-item-meta"><?= e(format_date($n['published_at'])) ?></span>
         </div>
-        <h3><?= e(bilingual($n, 'title')) ?></h3>
+        <h3><?= e(notice_bilingual($n, 'title')) ?></h3>
       </article>
     <?php endforeach; ?>
   <?php endif; ?>

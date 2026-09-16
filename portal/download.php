@@ -11,30 +11,14 @@ require_once __DIR__ . '/inc/idcard.php';
  */
 
 $user = require_login();
-$root = realpath(__DIR__ . '/uploads');
 
-function stream_or_404(?string $relPath, ?string $downloadName, string $root): void
-{
-    if (!$relPath) {
-        http_response_code(404);
-        exit('Not found.');
-    }
-    $full = realpath($root . '/' . $relPath);
-    // realpath + prefix check keeps a crafted ../ path inside the uploads tree.
-    if ($full === false || !is_file($full) || !str_starts_with($full, $root . DIRECTORY_SEPARATOR)) {
-        http_response_code(404);
-        exit('Not found.');
-    }
-
-    $name = $downloadName ?: basename($full);
-    header('Content-Type: application/octet-stream');
-    header('Content-Length: ' . filesize($full));
-    header('Content-Disposition: attachment; filename="' . preg_replace('/[^\w. \-]+/u', '_', $name) . '"');
-    header('X-Content-Type-Options: nosniff');
-    header('Cache-Control: private, max-age=0, must-revalidate');
-    readfile($full);
-    exit;
-}
+/**
+ * ?view=1 asks for the file to be shown in the browser rather than saved.
+ * serve_upload() grants that only for the handful of types a browser renders
+ * safely, sniffed from the file itself, so this flag cannot turn an arbitrary
+ * upload into something the browser will execute.
+ */
+$view = isset($_GET['view']);
 
 /**
  * Photographs and the signature go into an <img>, so they are sent inline
@@ -42,14 +26,10 @@ function stream_or_404(?string $relPath, ?string $downloadName, string $root): v
  * checked against the image allowlist, so only a real image is ever served
  * inline whatever the stored name says.
  */
-function inline_image_or_404(?string $relPath, string $root): void
+function inline_image_or_404(?string $relPath): void
 {
-    if (!$relPath) {
-        http_response_code(404);
-        exit('Not found.');
-    }
-    $full = realpath($root . '/' . $relPath);
-    if ($full === false || !is_file($full) || !str_starts_with($full, $root . DIRECTORY_SEPARATOR)) {
+    $full = resolve_upload($relPath);
+    if ($full === null) {
         http_response_code(404);
         exit('Not found.');
     }
@@ -76,13 +56,13 @@ if ($photoId = (int) ($_GET['photo'] ?? 0)) {
         exit('Not found.');
     }
     $person = one('SELECT avatar_path FROM users WHERE id = ? LIMIT 1', [$photoId]);
-    inline_image_or_404($person['avatar_path'] ?? null, $root);
+    inline_image_or_404($person['avatar_path'] ?? null);
 }
 
 if (isset($_GET['signature'])) {
     // The Campus Chief's signature is printed on every card, so anyone who
     // can sign in and print their own card can load it.
-    inline_image_or_404(setting('id_card_signature_path'), $root);
+    inline_image_or_404(setting('id_card_signature_path'));
 }
 
 if ($id = (int) ($_GET['id'] ?? 0)) {
@@ -95,7 +75,7 @@ if ($id = (int) ($_GET['id'] ?? 0)) {
           LIMIT 1',
         [$id, $user['role'], $user['id'], $user['id']]
     );
-    stream_or_404($m['file_path'] ?? null, $m['file_name'] ?? null, $root);
+    serve_upload($m['file_path'] ?? null, $m['file_name'] ?? null, $view);
 }
 
 if ($noticeId = (int) ($_GET['notice'] ?? 0)) {
@@ -108,7 +88,7 @@ if ($noticeId = (int) ($_GET['notice'] ?? 0)) {
           LIMIT 1',
         [$noticeId, $user['role'], $user['year_level']]
     );
-    stream_or_404($n['file_path'] ?? null, $n['file_name'] ?? null, $root);
+    serve_upload($n['file_path'] ?? null, $n['file_name'] ?? null, $view);
 }
 
 http_response_code(404);
