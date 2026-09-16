@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/inc/layout.php';
 require_once __DIR__ . '/inc/mail.php';
+require_once __DIR__ . '/inc/uploads.php';
 
 if ($u = current_user()) {
     header('Location: ' . home_for($u));
@@ -11,8 +12,9 @@ if ($u = current_user()) {
 $errors = [];
 $done   = false;
 $in = [
-    'full_name'    => '', 'full_name_ne' => '', 'email' => '',
-    'year_level'   => '', 'symbol_no'    => '', 'phone' => '',
+    'full_name'     => '', 'full_name_ne' => '', 'email' => '',
+    'year_level'    => '', 'symbol_no'    => '', 'phone' => '',
+    'date_of_birth' => '', 'address'      => '',
 ];
 
 function password_is_strong(string $pw): bool
@@ -20,12 +22,23 @@ function password_is_strong(string $pw): bool
     return mb_strlen($pw) >= 8 && preg_match('/\p{L}/u', $pw) && preg_match('/\d/', $pw);
 }
 
+/**
+ * A date of birth that could belong to a campus student: a real calendar
+ * date, in the past, and not so far back that it is plainly a typo.
+ */
+function birth_date_is_plausible(string $date): bool
+{
+    $age = (new DateTime('today'))->diff(new DateTime($date))->y;
+    return $date <= date('Y-m-d') && $age >= 10 && $age <= 90;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
 
     // Trim to the column widths in sql/schema.sql: MySQL runs in strict mode,
     // so an over-long value would throw and show the visitor a bare error page.
-    $widths = ['full_name' => 120, 'full_name_ne' => 120, 'symbol_no' => 40, 'phone' => 30];
+    $widths = ['full_name' => 120, 'full_name_ne' => 120, 'symbol_no' => 40,
+               'phone' => 30, 'address' => 190, 'date_of_birth' => 10];
     foreach (array_keys($in) as $k) {
         $v = $_POST[$k] ?? '';
         $in[$k] = is_string($v) ? trim($v) : '';
@@ -40,11 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirm  = (string) ($_POST['password_confirm'] ?? '');
     $email    = strtolower($in['email']);
     $year     = (int) $in['year_level'];
+    $dob      = parse_date($in['date_of_birth']);
+    $photoPath = null;
 
     if (mb_strlen($in['full_name']) < 3)                      { $errors['full_name'] = t('err_name_short'); }
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 190) { $errors['email'] = t('err_email_bad'); }
     if ($year < 1 || $year > 4)                               { $errors['year_level'] = t('err_year_bad'); }
     if ($in['symbol_no'] === '')                              { $errors['symbol_no'] = t('err_symbol'); }
+    if ($dob === null)                                        { $errors['date_of_birth'] = t('err_dob'); }
+    elseif (!birth_date_is_plausible($dob))                   { $errors['date_of_birth'] = t('err_dob_range'); }
+    if (mb_strlen($in['address']) < 3)                        { $errors['address'] = t('err_address'); }
     if (!password_is_strong($password))                       { $errors['password'] = t('err_pw_weak'); }
     if ($password !== $confirm)                               { $errors['password_confirm'] = t('err_pw_match'); }
 
@@ -52,13 +70,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['email'] = t('err_email_taken');
     }
 
+    // The photograph is optional — a student can add one later from their
+    // portfolio — but a file that was chosen and cannot be stored is an error
+    // rather than something to drop silently. Stored only once the rest of
+    // the form is good, so a rejected registration leaves no orphan file.
+    if (!$errors && !$isBot && upload_present($_FILES['photo'] ?? null)) {
+        $stored = store_image($_FILES['photo'], 'photos');
+        if ($stored['ok']) {
+            $photoPath = $stored['path'];
+        } else {
+            $errors['photo'] = image_error_message($stored['error']);
+        }
+    }
+
     if (!$errors && $isBot) {
         $done = true;
     } elseif (!$errors) {
         q(
             'INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
-                                year_level, symbol_no, phone)
-             VALUES (?, ?, ?, ?, \'student\', \'pending\', ?, ?, ?)',
+                                year_level, symbol_no, phone, date_of_birth, address, avatar_path)
+             VALUES (?, ?, ?, ?, \'student\', \'pending\', ?, ?, ?, ?, ?, ?)',
             [
                 $in['full_name'],
                 $in['full_name_ne'] !== '' ? $in['full_name_ne'] : null,
@@ -67,6 +98,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $year,
                 $in['symbol_no'],
                 $in['phone'] !== '' ? $in['phone'] : null,
+                $dob,
+                $in['address'],
+                $photoPath,
             ]
         );
         log_activity(null, 'register', $email, 'Year ' . $year);
@@ -99,7 +133,7 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
       <div class="p-flash p-flash-error" role="alert"><?= e(reset($errors)) ?></div>
     <?php endif; ?>
 
-    <form method="post" novalidate>
+    <form method="post" enctype="multipart/form-data" novalidate>
       <?= csrf_field() ?>
 
       <div class="p-field <?= isset($errors['full_name']) ? 'error' : '' ?>">
@@ -143,6 +177,29 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
         <label for="symbol_no"><?= te('symbol_no') ?></label>
         <input type="text" id="symbol_no" name="symbol_no" value="<?= e($in['symbol_no']) ?>" required>
         <?php if (isset($errors['symbol_no'])): ?><span class="err"><?= e($errors['symbol_no']) ?></span><?php endif; ?>
+      </div>
+
+      <div class="p-field-row">
+        <div class="p-field <?= isset($errors['date_of_birth']) ? 'error' : '' ?>">
+          <label for="date_of_birth"><?= te('date_of_birth') ?></label>
+          <input type="date" id="date_of_birth" name="date_of_birth" value="<?= e($in['date_of_birth']) ?>"
+                 max="<?= e(date('Y-m-d')) ?>" required>
+          <?php if (isset($errors['date_of_birth'])): ?><span class="err"><?= e($errors['date_of_birth']) ?></span><?php endif; ?>
+        </div>
+
+        <div class="p-field <?= isset($errors['address']) ? 'error' : '' ?>">
+          <label for="address"><?= te('address') ?></label>
+          <input type="text" id="address" name="address" value="<?= e($in['address']) ?>"
+                 autocomplete="street-address" placeholder="<?= te('address_placeholder') ?>" required>
+          <?php if (isset($errors['address'])): ?><span class="err"><?= e($errors['address']) ?></span><?php endif; ?>
+        </div>
+      </div>
+
+      <div class="p-field <?= isset($errors['photo']) ? 'error' : '' ?>">
+        <label for="photo"><?= te('photo') ?> <span class="hint"><?= te('photo_hint') ?></span></label>
+        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
+        <span class="hint"><?= te('photo_idcard_note') ?></span>
+        <?php if (isset($errors['photo'])): ?><span class="err"><?= e($errors['photo']) ?></span><?php endif; ?>
       </div>
 
       <div class="p-field <?= isset($errors['password']) ? 'error' : '' ?>">

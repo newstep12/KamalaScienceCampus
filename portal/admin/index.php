@@ -9,6 +9,11 @@ $students  = (int) scalar('SELECT COUNT(*) FROM users WHERE role = \'student\'  
 $lecturers = (int) scalar('SELECT COUNT(*) FROM users WHERE role = \'lecturer\' AND status = \'active\'');
 $courses   = (int) scalar('SELECT COUNT(*) FROM courses WHERE is_active = 1');
 
+// A deploy lands before anyone runs Admin → System → Run database updates, so
+// say plainly that the update is outstanding rather than letting People fail
+// the first time someone adds a lecturer.
+$needsDbUpdate = scalar('SHOW COLUMNS FROM users LIKE \'designation\'') === null;
+
 $byYear = all(
     'SELECT year_level, COUNT(*) AS n FROM users
       WHERE role = \'student\' AND status = \'active\' AND year_level IS NOT NULL
@@ -27,6 +32,13 @@ layout_head(['title' => t('admin_home'), 'active' => 'home', 'wide' => true]);
   <h1><?= te('admin_home') ?></h1>
   <p><?= te('campus_name') ?></p>
 </div>
+
+<?php if ($needsDbUpdate): ?>
+  <div class="p-flash p-flash-error" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;">
+    <span><?= te('db_update_needed') ?></span>
+    <a class="p-btn p-btn-primary p-btn-sm" href="<?= e(portal_url('/admin/system.php')) ?>"><?= te('db_update_run') ?> →</a>
+  </div>
+<?php endif; ?>
 
 <?php if ($pending > 0): ?>
   <div class="p-flash p-flash-info" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;">

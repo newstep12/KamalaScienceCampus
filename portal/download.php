@@ -2,6 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/lang.php';
+require_once __DIR__ . '/inc/uploads.php';
+require_once __DIR__ . '/inc/idcard.php';
 
 /**
  * Files are stored outside the document root's reach (uploads/ denies direct
@@ -32,6 +34,55 @@ function stream_or_404(?string $relPath, ?string $downloadName, string $root): v
     header('Cache-Control: private, max-age=0, must-revalidate');
     readfile($full);
     exit;
+}
+
+/**
+ * Photographs and the signature go into an <img>, so they are sent inline
+ * rather than as a download — with the type re-sniffed from the file and
+ * checked against the image allowlist, so only a real image is ever served
+ * inline whatever the stored name says.
+ */
+function inline_image_or_404(?string $relPath, string $root): void
+{
+    if (!$relPath) {
+        http_response_code(404);
+        exit('Not found.');
+    }
+    $full = realpath($root . '/' . $relPath);
+    if ($full === false || !is_file($full) || !str_starts_with($full, $root . DIRECTORY_SEPARATOR)) {
+        http_response_code(404);
+        exit('Not found.');
+    }
+    $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->file($full);
+    if (!isset(ALLOWED_IMAGES[$mime])) {
+        http_response_code(404);
+        exit('Not found.');
+    }
+
+    header('Content-Type: ' . $mime);
+    header('Content-Length: ' . filesize($full));
+    header('Content-Disposition: inline');
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    readfile($full);
+    exit;
+}
+
+if ($photoId = (int) ($_GET['photo'] ?? 0)) {
+    // A 404 rather than a 403 for a photo the viewer may not see: the reply
+    // is then the same whether or not that account exists.
+    if (!can_view_photo($user, $photoId)) {
+        http_response_code(404);
+        exit('Not found.');
+    }
+    $person = one('SELECT avatar_path FROM users WHERE id = ? LIMIT 1', [$photoId]);
+    inline_image_or_404($person['avatar_path'] ?? null, $root);
+}
+
+if (isset($_GET['signature'])) {
+    // The Campus Chief's signature is printed on every card, so anyone who
+    // can sign in and print their own card can load it.
+    inline_image_or_404(setting('id_card_signature_path'), $root);
 }
 
 if ($id = (int) ($_GET['id'] ?? 0)) {

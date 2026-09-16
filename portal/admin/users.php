@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
 require_once __DIR__ . '/../inc/mail.php';
+require_once __DIR__ . '/../inc/idcard.php';
 
 $admin = require_role(ROLE_ADMIN);
 
@@ -23,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = strtolower(trim((string) ($_POST['email'] ?? '')));
         $phone = trim((string) ($_POST['phone'] ?? '')) ?: null;
         $role  = in_array($_POST['role'] ?? '', ['lecturer', 'admin'], true) ? $_POST['role'] : 'lecturer';
+        $desig = in_array($_POST['designation'] ?? '', designations(), true) ? $_POST['designation'] : null;
 
         if (mb_strlen($name) < 3) {
             flash('error', t('err_name_short'));
@@ -36,9 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // knowing the password they actually use.
             $temp = temporary_password();
             q('INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
-                      phone, approved_at, approved_by, must_change_password)
-               VALUES (?, ?, ?, ?, ?, \'active\', ?, NOW(), ?, 1)',
-              [$name, $nameNe, $email, password_hash($temp, PASSWORD_DEFAULT), $role, $phone, $admin['id']]);
+                      phone, designation, approved_at, approved_by, must_change_password)
+               VALUES (?, ?, ?, ?, ?, \'active\', ?, ?, NOW(), ?, 1)',
+              [$name, $nameNe, $email, password_hash($temp, PASSWORD_DEFAULT), $role, $phone, $desig, $admin['id']]);
 
             log_activity((int) $admin['id'], 'create_staff', $email, $role);
             send_notification(
@@ -77,6 +79,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               [password_hash($temp, PASSWORD_DEFAULT), $id]);
             log_activity((int) $admin['id'], 'reset_password', $target['email']);
             flash('ok', t('password_reset_to', $target['full_name'], $temp));
+        } elseif ($action === 'set_designation') {
+            $desig = in_array($_POST['designation'] ?? '', designations(), true) ? $_POST['designation'] : null;
+            q('UPDATE users SET designation = ? WHERE id = ?', [$desig, $id]);
+            log_activity((int) $admin['id'], 'set_designation', $target['email'], (string) $desig);
         } elseif ($action === 'set_year') {
             $year = (int) ($_POST['year_level'] ?? 0);
             q('UPDATE users SET year_level = ? WHERE id = ?', [$year >= 1 && $year <= 4 ? $year : null, $id]);
@@ -139,12 +145,23 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
         <input type="tel" id="s_phone" name="phone">
       </div>
     </div>
-    <div class="p-field" style="max-width:300px;">
-      <label for="s_role"><?= te('role_lecturer') ?> / <?= te('role_admin') ?></label>
-      <select id="s_role" name="role">
-        <option value="lecturer"><?= te('role_lecturer') ?></option>
-        <option value="admin"><?= te('role_admin') ?></option>
-      </select>
+    <div class="p-field-row">
+      <div class="p-field">
+        <label for="s_role"><?= te('role') ?></label>
+        <select id="s_role" name="role">
+          <option value="lecturer"><?= te('role_lecturer') ?></option>
+          <option value="admin"><?= te('role_admin') ?></option>
+        </select>
+      </div>
+      <div class="p-field">
+        <label for="s_desig"><?= te('designation') ?> <span class="hint"><?= te('designation_hint') ?></span></label>
+        <select id="s_desig" name="designation">
+          <option value="">—</option>
+          <?php foreach (designations() as $d): ?>
+            <option value="<?= e($d) ?>"><?= e(designation_label($d)) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
     </div>
     <div class="p-form-actions">
       <button class="p-btn p-btn-primary" type="submit"><?= te('create_account') ?></button>
@@ -158,7 +175,7 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
     <input type="search" id="q" name="q" value="<?= e($search) ?>">
   </div>
   <div class="p-field" style="margin:0;min-width:150px;">
-    <label for="role"><?= te('actions') ?></label>
+    <label for="role"><?= te('role') ?></label>
     <select id="role" name="role">
       <option value=""><?= te('all_categories') ?></option>
       <?php foreach (['student', 'lecturer', 'admin'] as $r): ?>
@@ -187,8 +204,8 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
         <tr>
           <th><?= te('full_name') ?></th>
           <th><?= te('email') ?></th>
-          <th><?= te('actions') ?></th>
-          <th><?= te('year_of_study') ?></th>
+          <th><?= te('role') ?></th>
+          <th><?= te('year_or_title') ?></th>
           <th><?= te('status_active') ?></th>
           <th><?= te('actions') ?></th>
         </tr>
@@ -229,10 +246,29 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
                     <?php endforeach; ?>
                   </select>
                 </form>
-              <?php else: ?>—<?php endif; ?>
+              <?php else: ?>
+                <form method="post">
+                  <?= csrf_field() ?>
+                  <input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
+                  <input type="hidden" name="action" value="set_designation">
+                  <select name="designation" onchange="this.form.submit()">
+                    <option value="">—</option>
+                    <?php foreach (designations() as $d): ?>
+                      <option value="<?= e($d) ?>" <?= ($u['designation'] ?? '') === $d ? 'selected' : '' ?>>
+                        <?= e(designation_label($d)) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                </form>
+              <?php endif; ?>
             </td>
             <td><span class="p-tag <?= e($tagClass) ?>"><?= te('status_' . $u['status']) ?></span></td>
             <td class="nowrap">
+              <?php if ($u['status'] === 'active'): ?>
+                <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e(portal_url('/id-card.php?user=' . (int) $u['id'])) ?>">
+                  <?= te('print_id_card') ?>
+                </a>
+              <?php endif; ?>
               <?php if ((int) $u['id'] !== (int) $admin['id']): ?>
                 <form method="post" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
                   <?= csrf_field() ?>

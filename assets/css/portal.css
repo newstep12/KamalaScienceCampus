@@ -46,8 +46,14 @@ body.lang-ne h1, body.lang-ne h2, body.lang-ne h3, body.lang-ne .p-brand-name {
 .p-brand-sub { font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; color: #8fb0cf; }
 body.lang-ne .p-brand-sub { text-transform: none; letter-spacing: 0; font-size: .76rem; }
 
-.p-nav { margin-inline-start: auto; }
-.p-nav ul { display: flex; gap: 2px; list-style: none; margin: 0; padding: 0; }
+/* The nav wraps to a second row rather than pushing the header wider than the
+   window: with seven links it no longer fits beside the brand and the account
+   block on a laptop screen. */
+.p-nav { margin-inline-start: auto; min-width: 0; }
+.p-nav ul {
+  display: flex; flex-wrap: wrap; justify-content: flex-end;
+  gap: 2px; list-style: none; margin: 0; padding: 0;
+}
 .p-nav a {
   display: block; padding: 8px 14px; border-radius: 8px;
   color: #cfe0f0; font-size: .92rem; font-weight: 500;
@@ -298,6 +304,13 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
 .p-table tbody tr:last-child td { border-bottom: 0; }
 .p-table tbody tr:hover { background: var(--bg-soft); }
 .p-table .nowrap { white-space: nowrap; }
+/* A summary table in a narrow sidebar column. It escapes the card without
+   all three: the public stylesheet's `table { min-width: 520px }` (which the
+   scrolling .p-table-wrap hides everywhere else), the nowrap headers above,
+   and a long unbroken value. */
+.p-table-compact { table-layout: fixed; min-width: 0; }
+.p-table-compact th { white-space: normal; width: 42%; }
+.p-table-compact td { overflow-wrap: anywhere; }
 .p-table form { display: inline; }
 
 .p-empty {
@@ -331,7 +344,10 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
 
 /* ------------------------------------------------------------ responsive -- */
 
-@media (max-width: 900px) {
+/* The navigation folds into the menu button below the portal's own full
+   width: a student's seven links, the language switch, the account block and
+   Sign out need the whole 1240px to sit on one line. */
+@media (max-width: 1240px) {
   .p-nav-toggle { display: block; }
   .p-nav {
     display: none; position: absolute; top: 100%; inset-inline: 0;
@@ -339,9 +355,12 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
     box-shadow: 0 12px 24px rgba(0, 0, 0, .2);
   }
   .p-nav.open { display: block; }
-  .p-nav ul { flex-direction: column; gap: 2px; }
+  .p-nav ul { flex-direction: column; flex-wrap: nowrap; gap: 2px; }
   .p-nav a { padding: 12px 14px; }
   .p-header-inner { position: relative; flex-wrap: wrap; }
+}
+
+@media (max-width: 900px) {
   .p-user-meta { display: none; }
   .p-field-row { grid-template-columns: 1fr; }
 }
@@ -377,3 +396,241 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
 
 /* A one-time credential needs to be readable and obviously copyable */
 .p-flash strong, .p-flash code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* ======================================================== identity cards == */
+/* The card is drawn at true CR80 size (53.98 × 85.6 mm) when printed, and
+   larger on screen so it can be read. Every measurement inside it is in em,
+   so changing --card-w scales the whole card, type included. */
+
+.idc-sheet {
+  --card-w: 86mm;
+  display: flex; flex-wrap: wrap; gap: 26px;
+}
+.idc-holder { margin: 0; max-width: 100%; }
+.idc-holder figcaption {
+  margin-top: 8px; font-size: .78rem; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .idc-holder figcaption { text-transform: none; letter-spacing: 0; }
+
+.idc {
+  width: var(--card-w);
+  height: calc(var(--card-w) * 1.5858);          /* 85.6 / 53.98 */
+  font-size: calc(var(--card-w) * .046);
+  font-family: var(--sans);
+  line-height: 1.35;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: .9em;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+body.lang-ne .idc { font-family: var(--deva); line-height: 1.35; }
+
+/* ---- front: crest and campus name ---- */
+
+.idc-top {
+  display: flex; align-items: center; gap: .7em;
+  padding: .7em .9em .6em;
+  background: var(--navy); color: #fff;
+}
+.idc-crest { width: 3.4em; height: 3.4em; flex: 0 0 3.4em; }
+.idc-top-text { display: flex; flex-direction: column; min-width: 0; }
+.idc-campus-ne {
+  font-family: var(--deva); font-weight: 700; font-size: 1.05em; line-height: 1.25;
+}
+.idc-campus-en {
+  font-family: var(--serif); font-weight: 700; font-size: .92em;
+  line-height: 1.2; color: #e8eef6;
+}
+.idc-place { font-size: .68em; color: #a8c3dd; margin-top: .25em; line-height: 1.3; }
+
+.idc-band {
+  background: var(--gold); color: #2b1d02;
+  font-size: .76em; font-weight: 700;
+  letter-spacing: .22em; text-transform: uppercase;
+  text-align: center; padding: .45em .6em;
+}
+body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size: .82em; }
+
+/* ---- front: photo, name, details ---- */
+
+.idc-body {
+  flex: 1; min-height: 0;
+  padding: .75em .9em .4em;
+  display: flex; flex-direction: column; align-items: stretch;
+  overflow: hidden;
+}
+
+.idc-photo {
+  flex: 0 0 auto;
+  width: 7.8em; aspect-ratio: 25 / 32;
+  margin: 0 auto .5em;
+  border: 1px solid var(--line); border-radius: .3em;
+  overflow: hidden; background: var(--bg-soft);
+}
+.idc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Devanagari sets taller, so the Nepali card gives the type its room back. */
+body.lang-ne .idc-photo { width: 7.4em; }
+.idc-photo.empty {
+  border: 1px dashed #b9c4d1;
+  display: grid; place-items: center; text-align: center; padding: .5em;
+}
+.idc-photo.empty span { font-size: .6em; color: #8a97a6; line-height: 1.35; }
+
+.idc-body > * { flex: 0 0 auto; }
+.idc-name {
+  text-align: center; font-weight: 700; font-size: 1.15em;
+  line-height: 1.2; color: var(--navy);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.idc-name-ne {
+  text-align: center; font-family: var(--deva); font-size: .9em;
+  line-height: 1.3; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.idc-role {
+  text-align: center; font-size: .78em; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--teal-600); margin-top: .2em;
+}
+body.lang-ne .idc-role { letter-spacing: 0; text-transform: none; font-size: .84em; }
+
+.idc-rows {
+  margin: .55em 0 0; padding: .5em 0 0;
+  border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: .26em;
+}
+.idc-row { display: grid; grid-template-columns: 6.4em 1fr; gap: .4em; align-items: baseline; }
+/* The back's values are short, so its longer labels get room not to wrap. */
+.idc-back .idc-row { grid-template-columns: 7.4em 1fr; }
+.idc-row dt {
+  font-size: .68em; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--ink-soft); line-height: 1.5;
+}
+body.lang-ne .idc-row dt { text-transform: none; letter-spacing: 0; font-size: .74em; }
+.idc-row dd {
+  margin: 0; font-size: .8em; font-weight: 600; color: var(--ink);
+  line-height: 1.35; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+/* A detail nobody has filled in prints as a rule, so it can be written on. */
+.idc-row dd.blank { border-bottom: 1px dotted #9aa7b5; min-height: 1.1em; }
+
+/* ---- front: card number and the Campus Chief's signature ---- */
+
+.idc-foot {
+  padding: .45em .9em .7em;
+  border-top: 1px solid var(--line);
+  display: flex; align-items: flex-end; justify-content: space-between; gap: .6em;
+}
+.idc-cardno { display: flex; flex-direction: column; }
+.idc-cardno-label {
+  font-size: .64em; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .idc-cardno-label { text-transform: none; letter-spacing: 0; font-size: .72em; }
+.idc-cardno-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .82em; font-weight: 700; color: var(--navy); letter-spacing: .02em;
+}
+
+.idc-sig { display: flex; flex-direction: column; align-items: center; min-width: 8.5em; }
+.idc-sig-img { height: 2.4em; max-width: 9em; object-fit: contain; display: block; }
+span.idc-sig-img { width: 1px; }
+.idc-sig-rule { display: block; width: 8.5em; border-top: 1px solid var(--ink-soft); margin-top: .15em; }
+.idc-sig-name { font-size: .74em; font-weight: 700; color: var(--navy); line-height: 1.4; }
+.idc-sig-title {
+  font-size: .68em; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .idc-sig-title { text-transform: none; letter-spacing: 0; font-size: .76em; }
+
+/* ---- back ---- */
+
+.idc-affil {
+  padding: .5em .9em; background: var(--bg-tint);
+  font-size: .66em; line-height: 1.4; color: var(--navy); text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+.idc-back .idc-body { padding-top: .75em; }
+.idc-back .idc-rows { margin-top: 0; padding-top: 0; border-top: 0; }
+
+.idc-terms { margin-top: .9em; }
+.idc-terms h4 {
+  margin: 0 0 .3em; font-family: var(--sans); color: var(--navy);
+  font-size: .7em; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+body.lang-ne .idc-terms h4 { font-family: var(--deva); text-transform: none; letter-spacing: 0; font-size: .8em; }
+.idc-terms ul { margin: 0; padding-inline-start: 1.1em; }
+.idc-terms li { font-size: .7em; line-height: 1.45; color: var(--ink-soft); margin-bottom: .2em; }
+
+.idc-holder-sig {
+  margin-top: auto; padding-top: 1.2em;
+  display: flex; flex-direction: column; align-items: flex-start;
+}
+.idc-holder-sig .idc-sig-rule { width: 11em; }
+
+.idc-back-foot {
+  background: var(--bg-soft); border-top: 1px solid var(--line);
+  padding: .55em .9em .7em;
+  display: flex; flex-direction: column;
+}
+.idc-back-foot strong {
+  font-size: .64em; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--navy); margin-bottom: .15em;
+}
+body.lang-ne .idc-back-foot strong { text-transform: none; letter-spacing: 0; font-size: .74em; }
+.idc-back-foot span { font-size: .66em; color: var(--ink-soft); line-height: 1.45; }
+
+/* ---- the panel that sends people here from their portfolio ---- */
+
+.p-idcard-cta {
+  margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line);
+}
+.p-idcard-cta h3 { font-size: 1rem; margin-bottom: .35em; }
+.p-idcard-cta p { font-size: .9rem; color: var(--ink-soft); margin-bottom: 14px; }
+.p-idcard-missing { color: var(--warn); }
+
+.p-btn-link {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; font-size: .82rem; color: var(--err); text-decoration: underline;
+}
+
+img.p-avatar { object-fit: cover; }
+a.p-user:hover { text-decoration: none; }
+a.p-user:hover .p-user-name { text-decoration: underline; }
+
+/* On a narrow phone the card shrinks to fit the screen. Sized against the
+   viewport, never a percentage: the card's containing block is sized by the
+   card itself, so a percentage here would be circular. */
+@media (max-width: 420px) {
+  .idc-sheet { --card-w: min(86mm, calc(100vw - 42px)); }
+}
+
+/* ---- printing ---- */
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+
+  .p-header, .p-footer, .p-noprint, .skip, .p-flash { display: none !important; }
+  body.portal { background: #fff; }
+  .p-main, .p-main.wide { padding: 0; max-width: none; }
+
+  .idc-sheet { --card-w: 53.98mm; gap: 8mm; }
+  .idc {
+    box-shadow: none;
+    border: 1px solid #9aa7b5;      /* a cutting line that survives on paper */
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .idc-holder { break-inside: avoid; page-break-inside: avoid; }
+  .idc, .idc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* The stored signature, shown to an administrator before it goes on a card */
+.p-signature-preview {
+  display: inline-block; margin-bottom: 16px; padding: 12px 18px;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.p-signature-preview img { max-height: 70px; width: auto; }

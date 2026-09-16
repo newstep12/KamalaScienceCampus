@@ -2,6 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
 require_once __DIR__ . '/../inc/mail.php';
+require_once __DIR__ . '/../inc/uploads.php';
+require_once __DIR__ . '/../inc/idcard.php';
 
 $admin = require_role(ROLE_ADMIN);
 
@@ -20,6 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($target && $action === 'delete') {
         // Only ever a pending registration, and never an admin account.
         if ($target['role'] !== ROLE_ADMIN && (int) $target['id'] !== (int) $admin['id']) {
+            // Take the photograph with the account, rather than leaving it in
+            // the uploads directory with nothing pointing at it.
+            delete_upload($target['avatar_path']);
             q('DELETE FROM users WHERE id = ?', [$id]);
             log_activity((int) $admin['id'], 'delete_user', $target['email']);
             flash('ok', t('deleted_ok', $target['full_name']));
@@ -56,6 +61,8 @@ layout_head(['title' => t('pending_approvals'), 'active' => 'approvals', 'wide' 
           <th><?= te('year_of_study') ?></th>
           <th><?= te('symbol_no') ?></th>
           <th><?= te('phone') ?></th>
+          <th><?= te('date_of_birth') ?></th>
+          <th><?= te('address') ?></th>
           <th><?= te('registered_on') ?></th>
           <th><?= te('actions') ?></th>
         </tr>
@@ -64,15 +71,26 @@ layout_head(['title' => t('pending_approvals'), 'active' => 'approvals', 'wide' 
         <?php foreach ($pending as $p): ?>
           <tr>
             <td>
-              <strong><?= e($p['full_name']) ?></strong>
-              <?php if ($p['full_name_ne']): ?>
-                <div style="font-size:.85rem;color:var(--ink-soft);" class="deva"><?= e($p['full_name_ne']) ?></div>
-              <?php endif; ?>
+              <div style="display:flex;align-items:center;gap:11px;">
+                <?php if ($src = photo_src($p)): ?>
+                  <img class="p-avatar" src="<?= e($src) ?>" alt="" width="34" height="34">
+                <?php else: ?>
+                  <span class="p-avatar" aria-hidden="true"><?= e(initials($p['full_name'])) ?></span>
+                <?php endif; ?>
+                <div>
+                  <strong><?= e($p['full_name']) ?></strong>
+                  <?php if ($p['full_name_ne']): ?>
+                    <div style="font-size:.85rem;color:var(--ink-soft);" class="deva"><?= e($p['full_name_ne']) ?></div>
+                  <?php endif; ?>
+                </div>
+              </div>
             </td>
             <td><?= e($p['email']) ?></td>
             <td class="nowrap"><?= e($p['year_level'] ? year_label((int) $p['year_level']) : '—') ?></td>
             <td class="nowrap"><?= e($p['symbol_no'] ?: '—') ?></td>
             <td class="nowrap"><?= e($p['phone'] ?: '—') ?></td>
+            <td class="nowrap"><?= e($p['date_of_birth'] ? format_date($p['date_of_birth']) : '—') ?></td>
+            <td><?= e($p['address'] ?: '—') ?></td>
             <td class="nowrap"><?= e(format_date($p['created_at'])) ?></td>
             <td class="nowrap">
               <form method="post">

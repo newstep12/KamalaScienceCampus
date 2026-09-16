@@ -202,15 +202,20 @@ it works both at that path and on a custom domain later.
 
 | Role | Can do |
 | --- | --- |
-| **Student** | Registers themselves, edits their portfolio, opens their enrolled courses (materials, lecturer notes, own private notes), sees published results and attendance, reads notices for their year |
-| **Lecturer** | Adds materials to their courses, creates assessments and enters marks, takes attendance, sees who is enrolled |
-| **Admin** | Approves or rejects registrations, manages people, courses, enrolments and notices, plus database updates and email settings under **System** |
+| **Student** | Registers themselves, edits their portfolio, prints their identity card, opens their enrolled courses (materials, lecturer notes, own private notes), sees published results and attendance, reads notices for their year |
+| **Lecturer** | Adds materials to their courses, creates assessments and enters marks, takes attendance, sees who is enrolled, prints their own identity card |
+| **Admin** | Approves or rejects registrations, manages people, courses, enrolments and notices, prints anyone's identity card, plus database updates, identity-card and email settings under **System** |
 
 ### How people get accounts
 
 **Students self-register** at `/portal/register.php` — name, email, year of
-study, TU symbol number, password. The account is created `pending` and cannot
-sign in until an admin approves it in **Admin → Approvals**.
+study, TU symbol number, date of birth, address, a photograph and a password.
+The account is created `pending` and cannot sign in until an admin approves it
+in **Admin → Approvals**, which shows the photograph alongside the details.
+
+Date of birth and address are required because the identity card prints them;
+the photograph is optional at this point and can be added later from the
+portfolio, and a card printed without one carries a box to paste a photo into.
 
 **Lecturers and admins do not self-register.** An admin creates them in
 **Admin → People → Add a lecturer or administrator**. A temporary password is
@@ -244,6 +249,51 @@ one-click "enrol every active student of this year".
 
 `portal/inc/config.php` holds the database password and is git-ignored — it
 never enters this repository, and a redeploy does not overwrite it.
+
+### Identity cards
+
+Every active account can print a campus identity card at `/portal/id-card.php`
+— **ID card** in the navigation, and a panel on the portfolio page. It is one
+page for all three roles: a student card carries the year and symbol number, a
+staff card the title the campus office has set (Lecturer, Assistant Professor,
+Associate Professor, Campus Chief, and the rest). An administrator can print
+anyone's card from the **ID card** button on their row in **Admin → People**.
+
+The card is drawn in CSS at the true CR80 size — 85.6 × 54 mm, the size of a
+bank card — with a front and a back. **Print** sends both sides to one A4
+sheet; cut along the border and laminate. Turn on *background graphics* in the
+print dialogue or the navy and gold bands print white, and choose *Save as PDF*
+to send the card to a print shop.
+
+Details come from the person's own portfolio, so a card is only as complete as
+the profile behind it. Anything still blank — photograph, date of birth,
+address — prints as a rule to write on rather than disappearing, and the page
+says what is missing with a link to fix it. Blood group and emergency contact
+are always rules: nobody records them, and they are there to be filled in by
+hand.
+
+**The Campus Chief's signature** is uploaded once, under **Admin → System →
+Identity cards**, and then prints on every card. The same page sets the name
+and title printed beneath it, how long cards are valid, and the academic
+session. Leave the signature empty and every card prints a blank signature
+line to be signed by hand instead. Anyone who can print a card can load that
+image, which is inherent in printing it on their card — upload a signature
+meant for that use.
+
+A card number is derived from the account id rather than stored, so it never
+drifts out of step with the account: `KSC-S-0042` for students, `KSC-T-0007`
+for teaching staff, `KSC-A-0001` for administrators.
+
+**Photographs** are uploaded on the registration form or from the portfolio:
+JPEG, PNG or WebP, up to 5 MB, at least 200 px on each side. They are stored
+like any other upload — sniffed MIME type, random filename, no direct web
+access — and served inline through `download.php?photo=<id>`, which lets a
+person see their own photo, an administrator see any, and a lecturer see the
+students enrolled in a course they teach. Nobody else.
+
+Staff titles live in `users.designation`, which **Admin → System → Run database
+updates** adds. Run it once after deploying this version, or staff cards fall
+back to the blanket role name.
 
 ### Results and attendance
 

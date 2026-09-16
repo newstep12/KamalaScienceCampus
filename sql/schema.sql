@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone           VARCHAR(30)   NULL,
   address         VARCHAR(190)  NULL,
   date_of_birth   DATE          NULL,
+  designation     VARCHAR(80)   NULL,            -- staff title printed on the ID card
   bio             TEXT          NULL,
   avatar_path     VARCHAR(255)  NULL,
   rejection_note  VARCHAR(255)  NULL,

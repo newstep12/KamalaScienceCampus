@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
+require_once __DIR__ . '/../inc/uploads.php';
+require_once __DIR__ . '/../inc/idcard.php';
 
 $user = require_login();
 
@@ -26,7 +28,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user['id'],
             ]
         );
+
+        // A new photograph replaces the old one, and the old file is removed
+        // rather than left in the uploads directory for ever.
+        if (upload_present($_FILES['photo'] ?? null)) {
+            $stored = store_image($_FILES['photo'], 'photos');
+            if ($stored['ok']) {
+                delete_upload($user['avatar_path']);
+                q('UPDATE users SET avatar_path = ? WHERE id = ?', [$stored['path'], $user['id']]);
+            } else {
+                flash('error', image_error_message($stored['error']));
+                header('Location: ' . portal_url('/student/portfolio.php'));
+                exit;
+            }
+        }
+
         flash('ok', t('profile_saved'));
+        header('Location: ' . portal_url('/student/portfolio.php'));
+        exit;
+    }
+
+    if (($_POST['form'] ?? '') === 'remove_photo') {
+        delete_upload($user['avatar_path']);
+        q('UPDATE users SET avatar_path = NULL WHERE id = ?', [$user['id']]);
+        flash('ok', t('photo_removed'));
         header('Location: ' . portal_url('/student/portfolio.php'));
         exit;
     }
@@ -62,7 +87,7 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
 
 <div class="p-grid p-grid-2" style="align-items:start;">
   <div>
-    <form class="p-card" method="post" novalidate>
+    <form class="p-card" method="post" enctype="multipart/form-data" novalidate>
       <?= csrf_field() ?>
       <input type="hidden" name="form" value="profile">
       <h2><?= te('personal_details') ?></h2>
@@ -95,7 +120,14 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
 
       <div class="p-field">
         <label for="address"><?= te('address') ?></label>
-        <input type="text" id="address" name="address" value="<?= e($user['address']) ?>">
+        <input type="text" id="address" name="address" value="<?= e($user['address']) ?>"
+               placeholder="<?= te('address_placeholder') ?>">
+      </div>
+
+      <div class="p-field">
+        <label for="photo"><?= te('photo') ?> <span class="hint"><?= te('photo_hint') ?></span></label>
+        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
+        <span class="hint"><?= te('photo_idcard_note') ?></span>
       </div>
 
       <div class="p-field">
@@ -135,26 +167,52 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
   <aside class="p-card">
     <h2><?= te('academic_details') ?></h2>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
-      <span class="p-avatar" style="width:54px;height:54px;font-size:1.1rem;" aria-hidden="true"><?= e(initials($user['full_name'])) ?></span>
+      <?php if ($src = photo_src($user)): ?>
+        <img class="p-avatar" style="width:54px;height:54px;" src="<?= e($src) ?>" alt="" width="54" height="54">
+      <?php else: ?>
+        <span class="p-avatar" style="width:54px;height:54px;font-size:1.1rem;" aria-hidden="true"><?= e(initials($user['full_name'])) ?></span>
+      <?php endif; ?>
       <div>
         <div style="font-weight:600;color:var(--navy);"><?= e(display_name($user)) ?></div>
         <div style="font-size:.86rem;color:var(--ink-soft);"><?= e(role_label($user)) ?></div>
+        <?php if ($user['avatar_path']): ?>
+          <form method="post" style="margin-top:4px;" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="form" value="remove_photo">
+            <button class="p-btn-link" type="submit"><?= te('remove_photo') ?></button>
+          </form>
+        <?php endif; ?>
       </div>
     </div>
 
-    <table class="p-table" style="border:0;">
+    <table class="p-table p-table-compact" style="border:0;">
       <tbody>
         <?php if ($user['role'] === ROLE_STUDENT): ?>
         <tr><th scope="row"><?= te('year_of_study') ?></th>
             <td><?= e($user['year_level'] ? year_label((int) $user['year_level']) : '—') ?></td></tr>
         <tr><th scope="row"><?= te('symbol_no') ?></th><td><?= e($user['symbol_no'] ?: '—') ?></td></tr>
+        <?php else: ?>
+        <tr><th scope="row"><?= te('designation') ?></th>
+            <td><?= e(designation_label($user['designation'] ?? null) ?: t('role_' . $user['role'])) ?>
+              <div class="hint" style="font-size:.8rem;"><?= te('designation_set_by_office') ?></div>
+            </td></tr>
         <?php endif; ?>
+        <tr><th scope="row"><?= te('id_card_no') ?></th><td><?= e(id_card_number($user)) ?></td></tr>
         <tr><th scope="row"><?= te('status_active') ?></th>
             <td><span class="p-tag ok"><?= te('status_' . $user['status']) ?></span></td></tr>
         <tr><th scope="row"><?= te('member_since') ?></th><td><?= e(format_date($user['created_at'])) ?></td></tr>
         <tr><th scope="row"><?= te('last_signed_in') ?></th><td><?= e(format_date($user['last_login_at'], true)) ?></td></tr>
       </tbody>
     </table>
+
+    <div class="p-idcard-cta">
+      <h3><?= te('id_card_title') ?></h3>
+      <p><?= te('id_card_cta') ?></p>
+      <?php if ($missing = id_card_missing($user)): ?>
+        <p class="p-idcard-missing"><?= e(t('id_card_missing', join_list($missing))) ?></p>
+      <?php endif; ?>
+      <a class="p-btn p-btn-primary" href="<?= e(portal_url('/id-card.php')) ?>"><?= te('id_card_open') ?></a>
+    </div>
   </aside>
 </div>
 <?php layout_foot(); ?>

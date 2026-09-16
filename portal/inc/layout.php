@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/lang.php';
+require_once __DIR__ . '/idcard.php';
 
 /**
  * Page chrome. Every portal page calls layout_head() then layout_foot().
@@ -66,13 +67,17 @@ function layout_head(array $opts = []): void
         <?= e(LANGUAGES[$other]) ?>
       </a>
       <?php if ($user): ?>
-        <div class="p-user">
-          <span class="p-avatar" aria-hidden="true"><?= e(initials($user['full_name'])) ?></span>
+        <a class="p-user" href="<?= e(portal_url('/student/portfolio.php')) ?>" title="<?= te('nav_portfolio') ?>">
+          <?php if ($src = photo_src($user)): ?>
+            <img class="p-avatar" src="<?= e($src) ?>" alt="" width="34" height="34">
+          <?php else: ?>
+            <span class="p-avatar" aria-hidden="true"><?= e(initials($user['full_name'])) ?></span>
+          <?php endif; ?>
           <span class="p-user-meta">
             <span class="p-user-name"><?= e(display_name($user)) ?></span>
             <span class="p-user-role"><?= e(role_label($user)) ?></span>
           </span>
-        </div>
+        </a>
         <a class="p-signout" href="<?= e(portal_url('/logout.php')) ?>"><?= te('sign_out') ?></a>
       <?php else: ?>
         <a class="p-signout" href="<?= e(portal_url('/../index.html')) ?>"><?= te('back_to_site') ?></a>
@@ -175,6 +180,7 @@ function default_nav(?array $user): array
             ['key' => 'courses', 'href' => portal_url('/lecturer/index.php'),  'label' => t('nav_courses')],
             ['key' => 'notices', 'href' => portal_url('/student/notices.php'), 'label' => t('nav_notices')],
             ['key' => 'profile', 'href' => portal_url('/student/portfolio.php'),'label' => t('nav_portfolio')],
+            ['key' => 'idcard',  'href' => portal_url('/id-card.php'),          'label' => t('nav_id_card')],
         ];
     }
     return [
@@ -184,6 +190,7 @@ function default_nav(?array $user): array
         ['key' => 'attendance', 'href' => portal_url('/student/attendance.php'), 'label' => t('nav_attendance')],
         ['key' => 'notices',    'href' => portal_url('/student/notices.php'),    'label' => t('nav_notices')],
         ['key' => 'portfolio',  'href' => portal_url('/student/portfolio.php'),  'label' => t('nav_portfolio')],
+        ['key' => 'idcard',     'href' => portal_url('/id-card.php'),            'label' => t('nav_id_card')],
     ];
 }
 
@@ -198,10 +205,12 @@ function display_name(array $user): string
 function role_label(array $user): string
 {
     $base = t('role_' . $user['role']);
-    if ($user['role'] === ROLE_STUDENT && !empty($user['year_level'])) {
-        return $base . ' · ' . year_label((int) $user['year_level']);
+    if ($user['role'] === ROLE_STUDENT) {
+        return !empty($user['year_level']) ? $base . ' · ' . year_label((int) $user['year_level']) : $base;
     }
-    return $base;
+    // Staff go by the title the campus office has set — Assistant Professor
+    // rather than the blanket "Lecturer" the role column stores.
+    return designation_label($user['designation'] ?? null) ?: $base;
 }
 
 function initials(string $name): string

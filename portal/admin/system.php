@@ -2,6 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
 require_once __DIR__ . '/../inc/mail.php';
+require_once __DIR__ . '/../inc/uploads.php';
+require_once __DIR__ . '/../inc/idcard.php';
 
 $admin = require_role(ROLE_ADMIN);
 
@@ -58,6 +60,10 @@ function column_migrations(): array
         'notice categories' =>
             "ALTER TABLE notices MODIFY COLUMN category
              ENUM('tu','exam','campus','ugc','scholarship') NOT NULL DEFAULT 'tu'",
+        // The title a staff identity card carries — Assistant Professor and
+        // the rest. Students do not use it.
+        'staff designation' =>
+            'ALTER TABLE users ADD COLUMN designation VARCHAR(80) NULL',
     ];
 }
 
@@ -232,6 +238,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "This is a test message.\n\nIf you are reading it, notifications are working.\n"
             );
             flash($sent ? 'ok' : 'error', $sent ? t('mail_test_sent', $to) : t('mail_test_failed'));
+        } elseif ($action === 'save_idcard') {
+            $chiefTitle = (string) ($_POST['id_card_chief_title'] ?? 'campus_chief');
+            set_setting('id_card_chief_name',    trim((string) ($_POST['id_card_chief_name'] ?? '')) ?: null);
+            set_setting('id_card_chief_name_ne', trim((string) ($_POST['id_card_chief_name_ne'] ?? '')) ?: null);
+            set_setting('id_card_chief_title',   in_array($chiefTitle, designations(), true) ? $chiefTitle : 'campus_chief');
+            set_setting('id_card_valid_until',   parse_date((string) ($_POST['id_card_valid_until'] ?? '')));
+            set_setting('id_card_session',       mb_substr(trim((string) ($_POST['id_card_session'] ?? '')), 0, 40) ?: null);
+            log_activity((int) $admin['id'], 'save_idcard');
+            flash('ok', t('idcard_saved'));
+        } elseif ($action === 'upload_signature') {
+            // A scan of the Campus Chief's signature, printed on every card.
+            // 120 px is enough to stay sharp at the 22 mm it prints at.
+            $stored = store_image($_FILES['signature'] ?? [], 'signature', 120);
+            if ($stored['ok']) {
+                delete_upload(setting('id_card_signature_path'));
+                set_setting('id_card_signature_path', $stored['path']);
+                log_activity((int) $admin['id'], 'upload_signature');
+                flash('ok', t('signature_saved'));
+            } else {
+                flash('error', image_error_message($stored['error']));
+            }
+        } elseif ($action === 'remove_signature') {
+            delete_upload(setting('id_card_signature_path'));
+            set_setting('id_card_signature_path', null);
+            log_activity((int) $admin['id'], 'remove_signature');
+            flash('ok', t('signature_removed'));
         } elseif ($action === 'seed_courses') {
             $added = 0;
             foreach (starter_courses() as [$code, $year, $en, $ne, $cr]) {
@@ -323,6 +355,80 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
   <form method="post">
     <?= csrf_field() ?>
     <button class="p-btn p-btn-gold" type="submit" name="action" value="seed_links"><?= te('links_run') ?></button>
+  </form>
+</section>
+
+<section class="p-card">
+  <h2><?= te('idcard_admin_title') ?></h2>
+  <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('idcard_admin_intro') ?></p>
+
+  <form method="post" enctype="multipart/form-data" style="margin-top:18px;">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="upload_signature">
+
+    <?php if ($sig = signature_src()): ?>
+      <div class="p-signature-preview">
+        <img src="<?= e($sig) ?>" alt="<?= te('signature') ?>">
+      </div>
+    <?php endif; ?>
+
+    <div class="p-field">
+      <label for="signature"><?= te('signature') ?> <span class="hint"><?= te('signature_hint') ?></span></label>
+      <input type="file" id="signature" name="signature" accept="image/png,image/jpeg,image/webp">
+      <span class="hint"><?= te('signature_privacy') ?></span>
+    </div>
+    <div class="p-form-actions">
+      <button class="p-btn p-btn-primary" type="submit"><?= te('signature_upload') ?></button>
+    </div>
+  </form>
+
+  <?php if (setting('id_card_signature_path')): ?>
+    <form method="post" style="margin-top:10px;" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
+      <?= csrf_field() ?>
+      <button class="p-btn p-btn-danger p-btn-sm" type="submit" name="action" value="remove_signature">
+        <?= te('signature_remove') ?>
+      </button>
+    </form>
+  <?php endif; ?>
+
+  <form method="post" style="margin-top:24px;padding-top:24px;border-top:1px solid var(--line);">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="save_idcard">
+    <div class="p-field-row">
+      <div class="p-field">
+        <label for="chief_name"><?= te('chief_name') ?></label>
+        <input type="text" id="chief_name" name="id_card_chief_name" value="<?= e(setting('id_card_chief_name')) ?>">
+      </div>
+      <div class="p-field">
+        <label for="chief_name_ne"><?= te('chief_name_ne') ?> <span class="hint"><?= te('optional') ?></span></label>
+        <input type="text" id="chief_name_ne" name="id_card_chief_name_ne" lang="ne"
+               value="<?= e(setting('id_card_chief_name_ne')) ?>">
+      </div>
+    </div>
+    <div class="p-field-row">
+      <div class="p-field">
+        <label for="chief_title"><?= te('chief_title') ?></label>
+        <select id="chief_title" name="id_card_chief_title">
+          <?php foreach (designations() as $d): ?>
+            <option value="<?= e($d) ?>" <?= setting('id_card_chief_title', 'campus_chief') === $d ? 'selected' : '' ?>>
+              <?= e(designation_label($d)) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="p-field">
+        <label for="valid_until"><?= te('id_card_valid') ?> <span class="hint"><?= te('valid_until_hint') ?></span></label>
+        <input type="date" id="valid_until" name="id_card_valid_until" value="<?= e(setting('id_card_valid_until')) ?>">
+      </div>
+    </div>
+    <div class="p-field" style="max-width:320px;">
+      <label for="session"><?= te('id_card_session') ?> <span class="hint"><?= te('session_hint') ?></span></label>
+      <input type="text" id="session" name="id_card_session" value="<?= e(setting('id_card_session')) ?>" placeholder="2082/83">
+    </div>
+    <div class="p-form-actions">
+      <button class="p-btn p-btn-primary" type="submit"><?= te('save') ?></button>
+      <a class="p-btn p-btn-ghost" href="<?= e(portal_url('/id-card.php')) ?>"><?= te('id_card_preview') ?></a>
+    </div>
   </form>
 </section>
 
