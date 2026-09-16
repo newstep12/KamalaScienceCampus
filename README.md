@@ -260,10 +260,36 @@ Associate Professor, Campus Chief, and the rest). An administrator can print
 anyone's card from the **ID card** button on their row in **Admin → People**.
 
 The card is drawn in CSS at the true CR80 size — 85.6 × 54 mm, the size of a
-bank card — with a front and a back. **Print** sends both sides to one A4
-sheet; cut along the border and laminate. Turn on *background graphics* in the
-print dialogue or the navy and gold bands print white, and choose *Save as PDF*
-to send the card to a print shop.
+bank card — with a front and a back.
+
+**The design is campus-wide**, set once under **Admin → System → Identity
+cards**, so every card the campus issues looks like the same document. A live
+preview of the administrator's own card sits beside the controls and answers
+each click straight away:
+
+| Setting | Choices |
+| --- | --- |
+| **Colourway** | Navy & gold (the campus colours), Teal & cream, Crimson & gold, Forest & gold, Slate & silver, Ink on white |
+| **Orientation** | Portrait or landscape — the same card turned, with the photo beside the details rather than above them, and the type exactly the same size either way |
+| **Faces by default** | Front and back, or front only |
+
+**Ink on white** floods no colour at all: rules instead of coloured bands. It
+is the one to choose for a home printer, and the only one that still looks
+deliberate if someone prints with background graphics switched off.
+
+**Each person then chooses how their own print run comes out**, on the card
+page itself — which faces, and which printer:
+
+- **A4 sheet** — both faces on one A4 page at the real card size, with a thin
+  line to cut along. Any home or office printer will do. Turn on *background
+  graphics* in the print dialogue or the coloured bands come out white, and
+  choose *Save as PDF* to send the card to a print shop.
+- **Card printer** — each face gets a page exactly the size of a CR80 blank
+  with no margin, one per page. Set the printer to actual size rather than
+  "fit to page".
+
+Both choices live in the address (`?sides=&print=`), so a link prints the same
+way twice, and they work without JavaScript through an **Apply** button.
 
 Details come from the person's own portfolio, so a card is only as complete as
 the profile behind it. Anything still blank — photograph, date of birth,
@@ -272,10 +298,9 @@ says what is missing with a link to fix it. Blood group and emergency contact
 are always rules: nobody records them, and they are there to be filled in by
 hand.
 
-**The Campus Chief's signature** is uploaded once, under **Admin → System →
-Identity cards**, and then prints on every card. The same page sets the name
-and title printed beneath it, how long cards are valid, and the academic
-session. Leave the signature empty and every card prints a blank signature
+**The Campus Chief's signature** is uploaded once, in that same section, and
+then prints on every card. It also sets the name and title printed beneath it,
+how long cards are valid, and the academic session. Leave the signature empty and every card prints a blank signature
 line to be signed by hand instead. Anyone who can print a card can load that
 image, which is inherent in printing it on their card — upload a signature
 meant for that use.
@@ -290,6 +315,13 @@ like any other upload — sniffed MIME type, random filename, no direct web
 access — and served inline through `download.php?photo=<id>`, which lets a
 person see their own photo, an administrator see any, and a lecturer see the
 students enrolled in a course they teach. Nobody else.
+
+Both faces come from one function, `id_card_face()` in
+`portal/inc/idcard-view.php`, so the preview on the System page is the same
+markup as the card itself rather than a drawing of it. A colourway is six CSS
+custom properties on `.idc[data-theme]`; nothing in the card's layout names a
+colour, so adding one means adding one block to `assets/css/portal.css` and one
+line to `id_card_themes()`.
 
 Staff titles live in `users.designation`, which **Admin → System → Run database
 updates** adds. Run it once after deploying this version, or staff cards fall

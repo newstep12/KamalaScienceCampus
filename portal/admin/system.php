@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
 require_once __DIR__ . '/../inc/mail.php';
 require_once __DIR__ . '/../inc/uploads.php';
-require_once __DIR__ . '/../inc/idcard.php';
+require_once __DIR__ . '/../inc/idcard-view.php';
 
 $admin = require_role(ROLE_ADMIN);
 
@@ -238,6 +238,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "This is a test message.\n\nIf you are reading it, notifications are working.\n"
             );
             flash($sent ? 'ok' : 'error', $sent ? t('mail_test_sent', $to) : t('mail_test_failed'));
+        } elseif ($action === 'save_design') {
+            // Campus-wide, so every card issued looks like the same document.
+            set_setting('id_card_theme',       id_card_theme($_POST['id_card_theme'] ?? null));
+            set_setting('id_card_orientation', id_card_orientation($_POST['id_card_orientation'] ?? null));
+            set_setting('id_card_sides',       id_card_sides($_POST['id_card_sides'] ?? null));
+            log_activity((int) $admin['id'], 'save_card_design');
+            flash('ok', t('idcard_design_saved'));
         } elseif ($action === 'save_idcard') {
             $chiefTitle = (string) ($_POST['id_card_chief_title'] ?? 'campus_chief');
             set_setting('id_card_chief_name',    trim((string) ($_POST['id_card_chief_name'] ?? '')) ?: null);
@@ -287,10 +294,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'migrate' && $result) {
         // Keep the table list on screen rather than redirecting it away.
     } else {
-        header('Location: ' . portal_url('/admin/system.php'));
+        // Come back to the section that was being edited, not the top of a
+        // long page.
+        $anchor = in_array($action, ['save_design', 'save_idcard', 'upload_signature', 'remove_signature'], true)
+            ? '#id-cards' : '';
+        header('Location: ' . portal_url('/admin/system.php' . $anchor));
         exit;
     }
 }
+
+// The design section previews the administrator's own card, so what they are
+// judging is a real card in the colours they are choosing.
+$design  = id_card_settings();
+$preview = id_card_context($admin);
 
 $counts = [
     'courses'  => (int) scalar('SELECT COUNT(*) FROM courses'),
@@ -358,11 +374,75 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
   </form>
 </section>
 
-<section class="p-card">
+<section class="p-card" id="id-cards">
   <h2><?= te('idcard_admin_title') ?></h2>
   <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('idcard_admin_intro') ?></p>
 
-  <form method="post" enctype="multipart/form-data" style="margin-top:18px;">
+  <div class="idc-design" style="margin-top:20px;">
+    <div class="idc-design-fields">
+      <form method="post" id="idc-design-form">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="save_design">
+
+        <div class="p-field">
+          <label><?= te('idcard_theme') ?> <span class="hint"><?= te('idcard_theme_hint') ?></span></label>
+          <div class="idc-themes">
+            <?php foreach (id_card_themes() as $key => [$head, $band]): ?>
+              <label class="idc-theme">
+                <input type="radio" name="id_card_theme" value="<?= e($key) ?>"
+                       <?= $design['theme'] === $key ? 'checked' : '' ?>>
+                <span class="idc-swatch" aria-hidden="true">
+                  <i style="background:<?= e($head) ?>;"></i><i style="background:<?= e($band) ?>;"></i>
+                </span>
+                <span><?= te('theme_' . $key) ?></span>
+              </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <div class="p-field">
+          <label><?= te('idcard_orientation') ?></label>
+          <div class="idc-choices">
+            <?php foreach (['portrait', 'landscape'] as $o): ?>
+              <label class="idc-choice">
+                <input type="radio" name="id_card_orientation" value="<?= e($o) ?>"
+                       <?= $design['orientation'] === $o ? 'checked' : '' ?>>
+                <span><?= te('orientation_' . $o) ?></span>
+              </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <div class="p-field">
+          <label><?= te('idcard_sides_default') ?> <span class="hint"><?= te('idcard_sides_hint') ?></span></label>
+          <div class="idc-choices">
+            <?php foreach (['both' => 'id_card_sides_both', 'front' => 'id_card_sides_front'] as $v => $key): ?>
+              <label class="idc-choice">
+                <input type="radio" name="id_card_sides" value="<?= e($v) ?>"
+                       <?= $design['sides'] === $v ? 'checked' : '' ?>>
+                <span><?= te($key) ?></span>
+              </label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+
+        <div class="p-form-actions">
+          <button class="p-btn p-btn-primary" type="submit"><?= te('idcard_design_save') ?></button>
+          <a class="p-btn p-btn-ghost" href="<?= e(portal_url('/id-card.php')) ?>"><?= te('id_card_preview') ?></a>
+        </div>
+      </form>
+    </div>
+
+    <div class="idc-design-preview">
+      <span><?= te('idcard_preview_label') ?></span>
+      <div class="idc-sheet" data-sides="<?= e($design['sides']) ?>" data-orientation="<?= e($design['orientation']) ?>">
+        <figure class="idc-holder"><?php id_card_face($admin, $preview, 'front'); ?></figure>
+        <figure class="idc-holder idc-holder-back"><?php id_card_face($admin, $preview, 'back'); ?></figure>
+      </div>
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" style="margin-top:24px;padding-top:24px;border-top:1px solid var(--line);">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="upload_signature">
 
@@ -485,4 +565,23 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
     <dl class="p-stat"><dt><?= te('notices_title') ?></dt><dd><?= e(localize_digits((string) $counts['notices'])) ?></dd></dl>
   </div>
 </section>
+<script>
+// The preview answers the picker straight away: the card reads its colourway
+// and its orientation off two attributes, so nothing has to be re-rendered.
+(function () {
+  var form  = document.getElementById('idc-design-form');
+  var sheet = document.querySelector('.idc-design-preview .idc-sheet');
+  if (!form || !sheet) return;
+
+  form.addEventListener('change', function () {
+    var data = new FormData(form);
+    sheet.querySelectorAll('.idc').forEach(function (card) {
+      card.setAttribute('data-theme', data.get('id_card_theme') || 'navy');
+      card.setAttribute('data-orientation', data.get('id_card_orientation') || 'portrait');
+    });
+    sheet.setAttribute('data-sides', data.get('id_card_sides') || 'both');
+    sheet.setAttribute('data-orientation', data.get('id_card_orientation') || 'portrait');
+  });
+})();
+</script>
 <?php layout_foot(); ?>

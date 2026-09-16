@@ -60,6 +60,43 @@ function id_card_role_line(array $u): string
     return designation_label($u['designation'] ?? null) ?: t('role_' . $u['role']);
 }
 
+/**
+ * The colourways a card may be printed in: a header colour and a band colour
+ * that were picked together, each pair checked for legible text on paper as
+ * well as on screen. The two values are also the swatches the picker shows.
+ *
+ * 'ink' deliberately floods no colour at all. It is the one to choose for a
+ * home printer, and the only one that still looks deliberate when someone
+ * prints with background graphics switched off.
+ */
+function id_card_themes(): array
+{
+    return [
+        'navy'    => ['#0b2545', '#d99a2b'],
+        'teal'    => ['#0e5f5e', '#efe3c6'],
+        'crimson' => ['#7a1f2b', '#d9a13b'],
+        'forest'  => ['#14452f', '#d9bd6a'],
+        'slate'   => ['#263244', '#c8d2de'],
+        'ink'     => ['#ffffff', '#f4f7fa'],
+    ];
+}
+
+function id_card_theme(?string $key): string
+{
+    return isset(id_card_themes()[(string) $key]) ? (string) $key : 'navy';
+}
+
+function id_card_orientation(?string $key): string
+{
+    return in_array($key, ['portrait', 'landscape'], true) ? (string) $key : 'portrait';
+}
+
+/** Which faces to print: the front alone, or the front and the back. */
+function id_card_sides(?string $key): string
+{
+    return in_array($key, ['front', 'both'], true) ? (string) $key : 'both';
+}
+
 /** Card settings an administrator controls under Admin → System. */
 function id_card_settings(): array
 {
@@ -70,6 +107,29 @@ function id_card_settings(): array
         'signature'     => setting('id_card_signature_path'),
         'valid_until'   => setting('id_card_valid_until'),
         'session'       => setting('id_card_session'),
+        'theme'         => id_card_theme(setting('id_card_theme')),
+        'orientation'   => id_card_orientation(setting('id_card_orientation')),
+        'sides'         => id_card_sides(setting('id_card_sides')),
+    ];
+}
+
+/**
+ * Everything one card needs, gathered once. The page renders the faces from
+ * this, and so does the design preview on the System page.
+ */
+function id_card_context(array $holder): array
+{
+    $card = id_card_settings();
+    return [
+        'card'        => $card,
+        'theme'       => $card['theme'],
+        'orientation' => $card['orientation'],
+        'photo'       => photo_src($holder),
+        'signature'   => signature_src(),
+        'chief'       => id_card_chief_name($card),
+        'chief_title' => designation_label($card['chief_title'] ?: 'campus_chief'),
+        'names'       => campus_names(),
+        'issued'      => $holder['approved_at'] ?: $holder['created_at'],
     ];
 }
 

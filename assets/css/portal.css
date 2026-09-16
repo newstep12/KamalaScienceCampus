@@ -398,20 +398,79 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
 .p-flash strong, .p-flash code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 
 /* ======================================================== identity cards == */
-/* The card is drawn at true CR80 size (53.98 × 85.6 mm) when printed, and
-   larger on screen so it can be read. Every measurement inside it is in em,
-   so changing --card-w scales the whole card, type included. */
+/* The card is drawn at true CR80 size — 85.6 × 54 mm, a bank card — when
+   printed, and larger on screen so it can be read. Every measurement inside
+   it is in em, so changing --card-w scales the whole card, type included, and
+   portrait and landscape come out with identical type sizes.
+
+   --card-w is always the SHORT edge of the card. */
 
 .idc-sheet {
   --card-w: 86mm;
   display: flex; flex-wrap: wrap; gap: 26px;
 }
+.idc-sheet[data-orientation="landscape"] { --card-w: 68mm; }
 .idc-holder { margin: 0; max-width: 100%; }
 .idc-holder figcaption {
   margin-top: 8px; font-size: .78rem; font-weight: 700;
   letter-spacing: .09em; text-transform: uppercase; color: var(--ink-soft);
 }
 body.lang-ne .idc-holder figcaption { text-transform: none; letter-spacing: 0; }
+
+/* Printing the front alone hides the back everywhere, screen included, so
+   what is on screen is what comes out of the printer. */
+.idc-sheet[data-sides="front"] .idc-holder-back { display: none; }
+
+/* ---- colourways ---------------------------------------------------------
+   Each is a header colour and a band colour chosen together. Only these
+   tokens change between themes; the layout below never names a colour. */
+
+.idc {
+  --idc-head-bg: #0b2545;
+  --idc-head-fg: #ffffff;
+  --idc-head-sub: #e8eef6;
+  --idc-head-dim: #a8c3dd;
+  --idc-head-rule: transparent;
+  --idc-band-bg: #d99a2b;
+  --idc-band-fg: #2b1d02;
+  --idc-band-rule: transparent;
+  --idc-accent: #0b6564;
+  --idc-strip: #eef4f8;
+  --idc-rule: #e2e8ef;
+  --idc-edge: #cfd8e2;
+}
+.idc[data-theme="teal"] {
+  --idc-head-bg: #0e5f5e; --idc-head-sub: #dff0ef; --idc-head-dim: #9dc9c7;
+  --idc-band-bg: #efe3c6; --idc-band-fg: #4a3c1a;
+  --idc-accent: #0b5453;  --idc-strip: #eaf4f3;
+}
+.idc[data-theme="crimson"] {
+  --idc-head-bg: #7a1f2b; --idc-head-sub: #f8e9eb; --idc-head-dim: #dcaab1;
+  --idc-band-bg: #d9a13b; --idc-band-fg: #2f1e05;
+  --idc-accent: #7a1f2b;  --idc-strip: #f9eef0;
+}
+.idc[data-theme="forest"] {
+  --idc-head-bg: #14452f; --idc-head-sub: #e4f0e9; --idc-head-dim: #a6c6b5;
+  --idc-band-bg: #d9bd6a; --idc-band-fg: #2b230a;
+  --idc-accent: #14452f;  --idc-strip: #ecf4ef;
+}
+.idc[data-theme="slate"] {
+  --idc-head-bg: #263244; --idc-head-sub: #e9edf3; --idc-head-dim: #a9b6c6;
+  --idc-band-bg: #c8d2de; --idc-band-fg: #22303f;
+  --idc-accent: #3d5a80;  --idc-strip: #eef1f5;
+}
+/* No flood colour anywhere: the theme for a home printer, and the only one
+   that still looks deliberate when background graphics are switched off. */
+.idc[data-theme="ink"] {
+  --idc-head-bg: #ffffff; --idc-head-fg: #0b2545;
+  --idc-head-sub: #0b2545; --idc-head-dim: #4d5b6b;
+  --idc-head-rule: #0b2545;
+  --idc-band-bg: #ffffff;  --idc-band-fg: #0b2545; --idc-band-rule: #0b2545;
+  --idc-accent: #0b2545;   --idc-strip: #ffffff;
+  --idc-edge: #0b2545;
+}
+
+/* ---- the card ---- */
 
 .idc {
   width: var(--card-w);
@@ -421,11 +480,15 @@ body.lang-ne .idc-holder figcaption { text-transform: none; letter-spacing: 0; }
   line-height: 1.35;
   color: var(--ink);
   background: #fff;
-  border: 1px solid var(--line);
+  border: 1px solid var(--idc-edge);
   border-radius: .9em;
   box-shadow: var(--shadow-sm);
   overflow: hidden;
   display: flex; flex-direction: column;
+}
+.idc[data-orientation="landscape"] {
+  width: calc(var(--card-w) * 1.5858);
+  height: var(--card-w);
 }
 body.lang-ne .idc { font-family: var(--deva); line-height: 1.35; }
 
@@ -434,7 +497,8 @@ body.lang-ne .idc { font-family: var(--deva); line-height: 1.35; }
 .idc-top {
   display: flex; align-items: center; gap: .7em;
   padding: .7em .9em .6em;
-  background: var(--navy); color: #fff;
+  background: var(--idc-head-bg); color: var(--idc-head-fg);
+  border-bottom: .12em solid var(--idc-head-rule);
 }
 .idc-crest { width: 3.4em; height: 3.4em; flex: 0 0 3.4em; }
 .idc-top-text { display: flex; flex-direction: column; min-width: 0; }
@@ -443,15 +507,16 @@ body.lang-ne .idc { font-family: var(--deva); line-height: 1.35; }
 }
 .idc-campus-en {
   font-family: var(--serif); font-weight: 700; font-size: .92em;
-  line-height: 1.2; color: #e8eef6;
+  line-height: 1.2; color: var(--idc-head-sub);
 }
-.idc-place { font-size: .68em; color: #a8c3dd; margin-top: .25em; line-height: 1.3; }
+.idc-place { font-size: .68em; color: var(--idc-head-dim); margin-top: .25em; line-height: 1.3; }
 
 .idc-band {
-  background: var(--gold); color: #2b1d02;
+  background: var(--idc-band-bg); color: var(--idc-band-fg);
   font-size: .76em; font-weight: 700;
   letter-spacing: .22em; text-transform: uppercase;
   text-align: center; padding: .45em .6em;
+  border-block: .16em solid var(--idc-band-rule);
 }
 body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size: .82em; }
 
@@ -463,12 +528,14 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
   display: flex; flex-direction: column; align-items: stretch;
   overflow: hidden;
 }
+.idc-body > * { flex: 0 0 auto; }
+.idc-detail { display: flex; flex-direction: column; min-width: 0; text-align: center; }
 
 .idc-photo {
   flex: 0 0 auto;
   width: 7.8em; aspect-ratio: 25 / 32;
   margin: 0 auto .5em;
-  border: 1px solid var(--line); border-radius: .3em;
+  border: 1px solid var(--idc-rule); border-radius: .3em;
   overflow: hidden; background: var(--bg-soft);
 }
 .idc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -480,28 +547,28 @@ body.lang-ne .idc-photo { width: 7.4em; }
 }
 .idc-photo.empty span { font-size: .6em; color: #8a97a6; line-height: 1.35; }
 
-.idc-body > * { flex: 0 0 auto; }
 .idc-name {
-  text-align: center; font-weight: 700; font-size: 1.15em;
+  font-weight: 700; font-size: 1.15em;
   line-height: 1.2; color: var(--navy);
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
 .idc-name-ne {
-  text-align: center; font-family: var(--deva); font-size: .9em;
+  font-family: var(--deva); font-size: .9em;
   line-height: 1.3; color: var(--ink-soft);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .idc-role {
-  text-align: center; font-size: .78em; font-weight: 700;
+  font-size: .78em; font-weight: 700;
   letter-spacing: .1em; text-transform: uppercase;
-  color: var(--teal-600); margin-top: .2em;
+  color: var(--idc-accent); margin-top: .2em;
 }
 body.lang-ne .idc-role { letter-spacing: 0; text-transform: none; font-size: .84em; }
 
 .idc-rows {
   margin: .55em 0 0; padding: .5em 0 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--idc-rule);
   display: flex; flex-direction: column; gap: .26em;
+  text-align: start;
 }
 .idc-row { display: grid; grid-template-columns: 6.4em 1fr; gap: .4em; align-items: baseline; }
 /* The back's values are short, so its longer labels get room not to wrap. */
@@ -523,7 +590,7 @@ body.lang-ne .idc-row dt { text-transform: none; letter-spacing: 0; font-size: .
 
 .idc-foot {
   padding: .45em .9em .7em;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--idc-rule);
   display: flex; align-items: flex-end; justify-content: space-between; gap: .6em;
 }
 .idc-cardno { display: flex; flex-direction: column; }
@@ -550,9 +617,9 @@ body.lang-ne .idc-sig-title { text-transform: none; letter-spacing: 0; font-size
 /* ---- back ---- */
 
 .idc-affil {
-  padding: .5em .9em; background: var(--bg-tint);
+  padding: .5em .9em; background: var(--idc-strip);
   font-size: .66em; line-height: 1.4; color: var(--navy); text-align: center;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--idc-rule);
 }
 .idc-back .idc-body { padding-top: .75em; }
 .idc-back .idc-rows { margin-top: 0; padding-top: 0; border-top: 0; }
@@ -573,7 +640,7 @@ body.lang-ne .idc-terms h4 { font-family: var(--deva); text-transform: none; let
 .idc-holder-sig .idc-sig-rule { width: 11em; }
 
 .idc-back-foot {
-  background: var(--bg-soft); border-top: 1px solid var(--line);
+  background: var(--idc-strip); border-top: 1px solid var(--idc-rule);
   padding: .55em .9em .7em;
   display: flex; flex-direction: column;
 }
@@ -583,6 +650,47 @@ body.lang-ne .idc-terms h4 { font-family: var(--deva); text-transform: none; let
 }
 body.lang-ne .idc-back-foot strong { text-transform: none; letter-spacing: 0; font-size: .74em; }
 .idc-back-foot span { font-size: .66em; color: var(--ink-soft); line-height: 1.45; }
+
+/* ---- landscape -----------------------------------------------------------
+   Same card, turned: the photo moves beside the details rather than above
+   them, and the blocks that only stack vertically are tightened to fit the
+   shorter card. Type stays exactly the size it is in portrait. */
+
+.idc[data-orientation="landscape"] .idc-top { padding: .55em .8em .5em; }
+.idc[data-orientation="landscape"] .idc-crest { width: 2.9em; height: 2.9em; flex-basis: 2.9em; }
+.idc[data-orientation="landscape"] .idc-band { padding: .3em .6em; }
+
+.idc-front[data-orientation="landscape"] .idc-body {
+  flex-direction: row; align-items: flex-start; gap: .8em; padding: .55em .8em .3em;
+}
+.idc-front[data-orientation="landscape"] .idc-photo { width: 6.4em; margin: 0; }
+body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 6.1em; }
+.idc-front[data-orientation="landscape"] .idc-detail { flex: 1; text-align: start; }
+.idc-front[data-orientation="landscape"] .idc-name { font-size: 1.05em; }
+.idc-front[data-orientation="landscape"] .idc-rows {
+  margin-top: .35em; padding-top: 0; border-top: 0; gap: .16em;
+}
+.idc-front[data-orientation="landscape"] .idc-row { grid-template-columns: 6.2em 1fr; }
+
+.idc[data-orientation="landscape"] .idc-foot { padding: .3em .8em .45em; }
+.idc[data-orientation="landscape"] .idc-sig-img { height: 1.7em; }
+.idc[data-orientation="landscape"] .idc-sig-name { line-height: 1.25; }
+
+/* The back has room to sit in two columns once it is on its side. */
+.idc-back[data-orientation="landscape"] .idc-affil { padding: .35em .8em; }
+.idc-back[data-orientation="landscape"] .idc-body {
+  display: grid; padding: .55em .8em .45em;
+  grid-template-columns: 1.05fr 1fr; gap: .1em .9em;
+  grid-template-areas: "rows terms" "sig terms";
+  align-content: start;
+}
+.idc-back[data-orientation="landscape"] .idc-rows { grid-area: rows; gap: .16em; }
+.idc-back[data-orientation="landscape"] .idc-row { grid-template-columns: 7.2em 1fr; }
+.idc-back[data-orientation="landscape"] .idc-terms { grid-area: terms; margin-top: 0; }
+.idc-back[data-orientation="landscape"] .idc-holder-sig {
+  grid-area: sig; margin-top: 0; padding-top: .7em; align-self: end;
+}
+.idc-back[data-orientation="landscape"] .idc-back-foot { padding: .4em .8em .5em; }
 
 /* ---- the panel that sends people here from their portfolio ---- */
 
@@ -602,14 +710,81 @@ img.p-avatar { object-fit: cover; }
 a.p-user:hover { text-decoration: none; }
 a.p-user:hover .p-user-name { text-decoration: underline; }
 
+/* ---- choosing how this print run comes out ---- */
+
+.idc-controls {
+  display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: flex-end;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px 22px; margin-bottom: 14px;
+}
+.idc-controls fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.idc-controls legend {
+  padding: 0 0 8px; font-size: .78rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .idc-controls legend { text-transform: none; letter-spacing: 0; font-size: .86rem; }
+.idc-controls-actions { margin-inline-start: auto; display: flex; gap: 10px; align-items: center; }
+
+.idc-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.idc-choice {
+  display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto;
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 15px; font-size: .9rem; cursor: pointer; white-space: nowrap;
+  transition: border-color .15s ease, background .15s ease;
+}
+
+.idc-choice:hover { background: var(--bg-tint); }
+.idc-choice input { width: auto; flex: 0 0 auto; accent-color: var(--teal); margin: 0; }
+.idc-choice:has(input:checked) { border-color: var(--teal); background: var(--bg-tint); color: var(--navy); font-weight: 600; }
+.idc-choice:has(input:focus-visible) { box-shadow: var(--focus); }
+
+.idc-print-hint { max-width: 62ch; margin-bottom: 22px; }
+
+/* ---- the colourway picker on the System page ---- */
+
+.idc-themes { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px; }
+.idc-theme {
+  display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; flex: 0 0 auto;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 9px 15px 9px 11px; cursor: pointer; font-size: .92rem;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.idc-theme:hover { border-color: var(--teal); }
+.idc-theme:has(input:checked) { border-color: var(--teal); box-shadow: var(--focus); font-weight: 600; color: var(--navy); }
+.idc-theme input { position: absolute; width: auto; opacity: 0; pointer-events: none; }
+.idc-swatch {
+  display: inline-flex; border-radius: 5px; overflow: hidden;
+  border: 1px solid rgba(11, 37, 69, .18); flex: 0 0 auto;
+}
+.idc-swatch i { display: block; width: 15px; height: 26px; }
+
+.idc-design { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.idc-design-fields { flex: 1 1 340px; min-width: 0; }
+.idc-design-preview { flex: 0 0 auto; }
+.idc-design-preview .idc-sheet { --card-w: 62mm; gap: 14px; }
+.idc-design-preview > span {
+  display: block; margin-bottom: 10px; font-size: .78rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .idc-design-preview > span { text-transform: none; letter-spacing: 0; }
+
+@media (max-width: 560px) {
+  .idc-controls-actions { margin-inline-start: 0; width: 100%; }
+}
+
 /* On a narrow phone the card shrinks to fit the screen. Sized against the
    viewport, never a percentage: the card's containing block is sized by the
    card itself, so a percentage here would be circular. */
-@media (max-width: 420px) {
+@media screen and (max-width: 480px) {
   .idc-sheet { --card-w: min(86mm, calc(100vw - 42px)); }
+  .idc-sheet[data-orientation="landscape"] { --card-w: min(68mm, calc((100vw - 42px) / 1.5858)); }
 }
 
-/* ---- printing ---- */
+/* ---- printing -----------------------------------------------------------
+   Two targets. A4 keeps a margin and draws a cutting line round each card,
+   for an office or home printer. Card gives each face a page exactly the size
+   of a CR80 blank with no margin, for a card printer. The @page rule itself
+   is swapped by the script on the page, because @page cannot be selected. */
 
 @media print {
   @page { size: A4; margin: 12mm; }
@@ -618,7 +793,8 @@ a.p-user:hover .p-user-name { text-decoration: underline; }
   body.portal { background: #fff; }
   .p-main, .p-main.wide { padding: 0; max-width: none; }
 
-  .idc-sheet { --card-w: 53.98mm; gap: 8mm; }
+  .idc-sheet,
+  .idc-sheet[data-orientation="landscape"] { --card-w: 53.98mm; gap: 8mm; }
   .idc {
     box-shadow: none;
     border: 1px solid #9aa7b5;      /* a cutting line that survives on paper */
@@ -626,6 +802,16 @@ a.p-user:hover .p-user-name { text-decoration: underline; }
   }
   .idc-holder { break-inside: avoid; page-break-inside: avoid; }
   .idc, .idc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* A card printer feeds one blank at a time: no gap, no cutting line, no
+     rounded corner drawn on top of the blank's own, one face per page. */
+  .idc-sheet[data-print-target="card"] { display: block; gap: 0; }
+  .idc-sheet[data-print-target="card"] .idc-holder { break-after: page; page-break-after: always; }
+  .idc-sheet[data-print-target="card"] .idc-holder:last-child { break-after: auto; page-break-after: auto; }
+  .idc-sheet[data-print-target="card"] .idc { border: 0; border-radius: 0; }
+
+  /* The design preview is a preview, not something to print. */
+  .idc-design-preview { display: none !important; }
 }
 
 /* The stored signature, shown to an administrator before it goes on a card */
