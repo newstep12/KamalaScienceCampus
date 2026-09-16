@@ -365,15 +365,72 @@ notification never blocks a registration or an approval.
 
 `/notices.php` shows published notices without a login, in both languages.
 Only notices marked for **all years** appear publicly; a notice aimed at one
-year stays inside the portal.
+year stays inside the portal. The admin list has a **Shown on** column saying
+which of the two each notice is, because it is the field most easily got wrong:
+a notice set to "First year" will not appear on the public website, however
+public its subject.
+
+#### Attachments
+
+For most TU notices the attached PDF *is* the notice, so it is shown wherever
+the notice is:
+
+- On the public page, **Open the notice (PDF)** and **Download**, plus a
+  *Read it here* panel that displays the PDF in the page. The frame is filled
+  in only when it is opened, so a board of sixty notices does not download
+  sixty PDFs on arrival.
+- In the portal the same, through `download.php?notice=<id>&view=1`.
+
+Public attachments are served by `/notice-file.php`, not `portal/download.php`:
+that one requires a sign-in, which is exactly why an attached PDF used to be
+invisible to everybody who was not a student. `notice-file.php` serves only
+attachments of published, all-years notices — the same set the public list
+shows — sends PDFs and images inline and everything else as a download, and
+re-sniffs the type from the file so nothing a browser might execute is ever
+displayed in place.
+
+If an upload fails, the notice is **not** saved. The old behaviour published it
+without the attachment and still said "The notice has been published", which is
+how a PDF disappears without anyone noticing. The upload field shows the real
+ceiling, which on shared hosting is usually PHP's `upload_max_filesize` (often
+2 MB) rather than the 20 MB in `config.php` — raise it in hPanel if scanned
+notices are bigger than that.
+
+### Automatic Nepali translation
+
+Notices are written in English; the Nepali columns are optional. When one is
+left empty it is now translated rather than falling back to English, and the
+result is stored on the notice so the work happens once. Text an admin typed is
+never overwritten — `title_ne_auto` / `body_ne_auto` record which of the two
+wrote each value.
+
+Configure it in **Admin → System → Automatic Nepali translation**:
+
+| Setting | What it does |
+| --- | --- |
+| Built-in glossary only | The default. No account, no key, no outbound request. Knows TU and campus notice vocabulary, so "B.Sc. First Year Partial Examination Notice" becomes "बी.एस्सी. प्रथम वर्ष आंशिक परीक्षा सूचना". Text it cannot translate **in full** is left in English rather than translated halfway. |
+| MyMemory | Free, no account. Translates full notices including the body text. Notice text is sent to MyMemory; a contact address raises the daily allowance. |
+| LibreTranslate | Your own or a public server; set its address. |
+| Google Cloud Translation | Best quality, paid, needs an API key. |
+
+**Translate every notice now** backfills notices published earlier. Pages also
+translate on demand as they are read, capped at six service calls per request
+so one page load can never turn into a queue of HTTP requests; a service that
+fails is left alone for fifteen minutes. Nothing here can break a page — a
+translation that cannot be made simply leaves the English in place, and a
+machine-made Nepali notice says so underneath.
+
+After deploying this, run **Admin → System → Run database updates** to add the
+two `*_ne_auto` columns, then **Translate every notice now**.
 
 ### Languages
 
 The portal translates at runtime rather than at build time:
-`portal/lang/en.php` and `portal/lang/ne.php` hold 184 keys each, at full
+`portal/lang/en.php` and `portal/lang/ne.php` hold 420 keys each, at full
 parity. Courses and notices carry `_en` and `_ne` columns so an admin publishes
 each notice in both languages; where a Nepali value is blank the English one
-shows instead. The language toggle sits in the portal header.
+shows instead — except on notices, which are translated automatically (above).
+The language toggle sits in the portal header.
 
 ### Security notes
 
@@ -385,9 +442,13 @@ Worth knowing before changing anything here:
   against the user agent.
 - Six failed logins per email+IP in 15 minutes locks that pair out.
 - Uploads are validated by sniffed MIME type (not the extension), stored under
-  a random filename, and served only through `download.php`, which checks the
-  signed-in user is entitled to that file. `uploads/` denies direct access and
-  has PHP execution turned off.
+  a random filename, and served only through `download.php` (which checks the
+  signed-in user is entitled to that file) or `notice-file.php` (published,
+  all-years notices only). `uploads/` denies direct access and has PHP
+  execution turned off.
+- A file is only ever sent `Content-Disposition: inline` when the type sniffed
+  from the file itself is PDF or an image. Nothing that could carry script —
+  SVG and HTML among them — can be displayed in place, whatever it is named.
 - `portal/inc/` and `portal/lang/` deny web access entirely.
 - After sign-in, `?next=` only ever redirects to a path under `/portal/`
   (a bare leading `/` let `/\evil.example` through).

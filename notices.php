@@ -6,9 +6,15 @@ declare(strict_types=1);
  *
  * Only published notices that apply to every year are shown: a notice aimed at
  * one year is internal to those students and stays inside the portal.
+ *
+ * Attachments are part of the notice, not an extra: for most TU notices the
+ * PDF *is* the notice, so each one is offered here and served by
+ * notice-file.php. portal/download.php cannot do it — it requires a sign-in.
  */
 require_once __DIR__ . '/portal/inc/db.php';
 require_once __DIR__ . '/portal/inc/lang.php';
+require_once __DIR__ . '/portal/inc/uploads.php';
+require_once __DIR__ . '/portal/inc/translate.php';
 
 // Never cached by the CDN or browsers: the page varies with the language
 // cookie (a cached copy could serve Nepali to an English visitor), and a new
@@ -148,17 +154,63 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
             <?php endif; ?>
             <span class="p-item-meta"><?= e(format_date($n['published_at'])) ?></span>
           </div>
-          <h3><?= e(bilingual($n, 'title')) ?></h3>
-          <?php if ($body = bilingual($n, 'body')): ?>
+          <h3><?= e(notice_bilingual($n, 'title')) ?></h3>
+          <?php if ($body = notice_bilingual($n, 'body')): ?>
             <div class="p-notice-body"><?= e($body) ?></div>
           <?php endif; ?>
-          <?php if ($n['source_url']): ?>
+
+          <?php
+          // The stored extension comes from the type sniffed at upload time,
+          // so it tells us whether the browser can show this in the page.
+          $kind = $n['file_path'] ? upload_kind($n['file_path']) : '';
+          $file = 'notice-file.php?id=' . (int) $n['id'];
+          ?>
+          <?php if ($n['source_url'] || $n['file_path']): ?>
             <div class="p-form-actions">
-              <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e($n['source_url']) ?>"
-                 target="_blank" rel="noopener noreferrer nofollow">
-                <?= $ne ? 'आधिकारिक सूचना हेर्नुहोस्' : 'View the official notice' ?> ↗
-              </a>
+              <?php if ($n['file_path']): ?>
+                <a class="p-btn p-btn-primary p-btn-sm" href="<?= e($file) ?>" target="_blank" rel="noopener">
+                  <?= $kind === 'pdf'
+                    ? ($ne ? 'सूचना (PDF) हेर्नुहोस्' : 'Open the notice (PDF)')
+                    : ($ne ? 'संलग्न फाइल हेर्नुहोस्' : 'Open the attachment') ?> ↗
+                </a>
+                <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e($file) ?>&amp;download=1">
+                  <?= $ne ? 'डाउनलोड' : 'Download' ?> ⤓
+                </a>
+              <?php endif; ?>
+              <?php if ($n['source_url']): ?>
+                <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e($n['source_url']) ?>"
+                   target="_blank" rel="noopener noreferrer nofollow">
+                  <?= $ne ? 'आधिकारिक सूचना हेर्नुहोस्' : 'View the official notice' ?> ↗
+                </a>
+              <?php endif; ?>
             </div>
+          <?php endif; ?>
+
+          <?php // Read the notice without leaving the page. The frame is only
+                // filled in once it is opened, so sixty notices do not mean
+                // sixty PDFs downloaded on arrival; without JavaScript the
+                // buttons above still do the job. ?>
+          <?php if ($kind === 'pdf' || $kind === 'image'): ?>
+            <details class="p-preview" data-preview-src="<?= e($file) ?>">
+              <summary><?= $ne ? 'यहीँ पढ्नुहोस्' : 'Read it here' ?></summary>
+              <div class="p-preview-frame">
+                <?php if ($kind === 'image'): ?>
+                  <img src="<?= e($file) ?>" alt="<?= e(notice_bilingual($n, 'title')) ?>" loading="lazy">
+                <?php else: ?>
+                  <iframe title="<?= e(notice_bilingual($n, 'title')) ?>" loading="lazy"></iframe>
+                  <noscript>
+                    <p><a href="<?= e($file) ?>" target="_blank" rel="noopener">
+                      <?= $ne ? 'सूचना (PDF) खोल्नुहोस्' : 'Open the notice (PDF)' ?> ↗</a></p>
+                  </noscript>
+                <?php endif; ?>
+              </div>
+            </details>
+          <?php endif; ?>
+
+          <?php if (notice_is_machine_translated($n)): ?>
+            <p class="p-auto-note"><?= $ne
+              ? 'यो नेपाली रूपान्तरण स्वचालित रूपमा गरिएको हो। आधिकारिक भाषा अङ्ग्रेजी सूचना नै हो।'
+              : 'This Nepali version was translated automatically.' ?></p>
           <?php endif; ?>
         </article>
       <?php endforeach; ?>

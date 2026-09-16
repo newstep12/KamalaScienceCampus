@@ -106,6 +106,11 @@ CREATE TABLE IF NOT EXISTS notices (
   title_ne     VARCHAR(190) NULL,
   body_en      MEDIUMTEXT NULL,
   body_ne      MEDIUMTEXT NULL,
+  -- Set when the Nepali beside it was produced by portal/inc/translate.php
+  -- rather than typed by a person. It keeps an admin's own wording from being
+  -- overwritten, and lets the page say plainly that a translation is machine-made.
+  title_ne_auto TINYINT(1) NOT NULL DEFAULT 0,
+  body_ne_auto  TINYINT(1) NOT NULL DEFAULT 0,
   source_url   VARCHAR(500) NULL,
   file_path    VARCHAR(255) NULL,
   file_name    VARCHAR(190) NULL,

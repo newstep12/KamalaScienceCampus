@@ -820,3 +820,37 @@ body.lang-ne .idc-design-preview > span { text-transform: none; letter-spacing: 
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
 }
 .p-signature-preview img { max-height: 70px; width: auto; }
+
+/* ==================================================== notice attachments == */
+
+/* An attached PDF *is* the notice for most TU announcements, so it is offered
+   to be read in place rather than only downloaded. Collapsed by default: the
+   board can list sixty of them. */
+.p-preview { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.p-preview > summary {
+  cursor: pointer; font-weight: 600; font-size: .9rem; color: var(--teal-600);
+  list-style: none; display: inline-flex; align-items: center; gap: 7px;
+}
+.p-preview > summary::-webkit-details-marker { display: none; }
+.p-preview > summary::before { content: "▸"; font-size: .8em; transition: transform .15s ease; }
+.p-preview[open] > summary::before { transform: rotate(90deg); }
+.p-preview > summary:hover { text-decoration: underline; }
+
+.p-preview-frame {
+  margin-top: 12px; background: #f4f6f8;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden;
+}
+/* Tall enough to read a page of A4 without scrolling the frame itself, and
+   capped against the viewport so a phone still shows the rest of the page. */
+.p-preview-frame iframe { display: block; width: 100%; height: min(78vh, 780px); border: 0; }
+.p-preview-frame img { display: block; width: 100%; height: auto; }
+
+@media (max-width: 640px) {
+  .p-preview-frame iframe { height: 65vh; }
+}
+
+/* Says plainly that a Nepali notice was rendered by machine, not by a person */
+.p-auto-note {
+  margin-top: 12px; font-size: .82rem; color: var(--ink-soft);
+  border-left: 3px solid var(--line); padding-left: 10px;
+}
