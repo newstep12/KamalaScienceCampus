@@ -17,6 +17,11 @@ CREATE TABLE IF NOT EXISTS users (
   address         VARCHAR(190)  NULL,
   date_of_birth   DATE          NULL,
   blood_group     VARCHAR(8)    NULL,            -- A+, O-, and the rest; printed on the card's back
+  -- The two government numbers the card's front carries. Held as text, not as
+  -- a number: an NID is written 000-000-000-0, and a leading zero on a PAN is
+  -- part of it.
+  national_id     VARCHAR(30)   NULL,
+  pan_no          VARCHAR(20)   NULL,
   designation     VARCHAR(80)   NULL,            -- staff title printed on the ID card
   bio             TEXT          NULL,
   avatar_path     VARCHAR(255)  NULL,

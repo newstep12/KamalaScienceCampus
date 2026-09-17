@@ -68,6 +68,36 @@ function blood_group(?string $value): ?string
 }
 
 /**
+ * A government number as it should be stored: an NID written 000-000-000-0, a
+ * PAN written as its nine digits.
+ *
+ * Everything but digits and the separators people actually write between them
+ * is dropped, and runs of space are closed up. Not to validate — the campus
+ * office is not in a position to check somebody's NID against the register,
+ * and a card that refused a number because it had an unexpected shape would be
+ * worse than one carrying it. It is to keep a printed identity document free
+ * of whatever a stray keystroke left in the field, since nobody proof-reads a
+ * number they have already typed.
+ *
+ * Devanagari digits are turned into ASCII on the way in, so what is stored is
+ * always the same alphabet whatever keyboard typed it, and the card puts them
+ * back into Devanagari as it prints. The classes below are written 0-9 rather
+ * than \d deliberately: with the /u modifier PHP's \d matches the digits of
+ * every script, so a number typed in Devanagari would pass the strip and then
+ * fail a guard written without /u — stored as nothing, on a page that said the
+ * profile had been saved.
+ *
+ * '' comes back for anything with no digit left in it at all, which the caller
+ * stores as null: a row of punctuation is not a number.
+ */
+function id_number(?string $value, int $max = 30): string
+{
+    $value = preg_replace('/[^0-9\- \/]+/u', '', ascii_digits(trim((string) $value))) ?? '';
+    $value = trim((string) preg_replace('/\s+/', ' ', $value));
+    return preg_match('/[0-9]/', $value) ? mb_substr($value, 0, $max) : '';
+}
+
+/**
  * The card number. Derived from the account id rather than stored, so it is
  * stable for the life of the account and cannot drift out of step with it:
  * KSC-S-0042 for students, KSC-T-0007 for teaching staff, KSC-A-0001 for

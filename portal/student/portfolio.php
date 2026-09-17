@@ -28,7 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             => mb_substr(trim(is_string($_POST[$k] ?? null) ? $_POST[$k] : ''), 0, $max);
         q(
             'UPDATE users SET full_name = ?, full_name_ne = ?, phone = ?, address = ?,
-                              date_of_birth = ?, blood_group = ?, bio = ?
+                              date_of_birth = ?, blood_group = ?, national_id = ?,
+                              pan_no = ?, bio = ?
               WHERE id = ?',
             [
                 $field('full_name', 120) ?: $user['full_name'],
@@ -40,6 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // as nothing, which leaves the line on the card blank rather
                 // than printing a group nobody typed.
                 blood_group(is_string($_POST['blood_group'] ?? null) ? $_POST['blood_group'] : null),
+                // Digits and the separators written between them, and nothing
+                // else: these are printed on an identity document, where a
+                // stray keystroke nobody re-read would stay for the life of
+                // the card.
+                id_number($field('national_id', 30), 30) ?: null,
+                id_number($field('pan_no', 20), 20) ?: null,
                 $field('bio', 5000) ?: null,
                 $user['id'],
             ]
@@ -245,6 +252,24 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
             <?php endforeach; ?>
           </select>
           <span class="hint"><?= te('blood_group_hint') ?></span>
+        </div>
+      </div>
+
+      <div class="p-field-row">
+        <div class="p-field">
+          <label for="national_id"><?= te('national_id') ?> <span class="hint"><?= te('optional') ?></span></label>
+          <?php /* tel, not numeric: a numeric keypad on a phone has no hyphen
+                   and no way to reach one, and this is a number written with
+                   three of them. */ ?>
+          <input type="text" id="national_id" name="national_id" inputmode="tel"
+                 value="<?= e($user['national_id'] ?? '') ?>" placeholder="000-000-000-0">
+          <span class="hint"><?= te('national_id_hint') ?></span>
+        </div>
+        <div class="p-field">
+          <label for="pan_no"><?= te('pan_no') ?> <span class="hint"><?= te('optional') ?></span></label>
+          <input type="text" id="pan_no" name="pan_no" inputmode="numeric"
+                 value="<?= e($user['pan_no'] ?? '') ?>" placeholder="000000000">
+          <span class="hint"><?= te('pan_no_hint') ?></span>
         </div>
       </div>
 

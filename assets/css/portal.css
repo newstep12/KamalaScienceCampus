@@ -559,13 +559,13 @@ body.lang-ne .idc { font-family: var(--deva); line-height: 1.35; }
    so that no detail is pushed off the card. */
 
 .idc-top {
-  display: flex; flex-direction: column; align-items: center; gap: .26em;
-  padding: .6em .8em .5em;
+  display: flex; flex-direction: column; align-items: center; gap: .22em;
+  padding: .5em .8em .42em;
   text-align: center;
   background: var(--idc-head-bg); color: var(--idc-head-fg);
   border-bottom: .12em solid var(--idc-head-rule);
 }
-.idc-crest { width: 4.15em; height: 4.15em; flex: 0 0 auto; }
+.idc-crest { width: 3.55em; height: 3.55em; flex: 0 0 auto; }
 .idc-top-text { display: flex; flex-direction: column; align-items: center; min-width: 0; max-width: 100%; }
 .idc-campus-ne {
   font-family: var(--deva); font-weight: 700; font-size: 1.08em; line-height: 1.2;
@@ -580,7 +580,7 @@ body.lang-ne .idc { font-family: var(--deva); line-height: 1.35; }
   background: var(--idc-band-bg); color: var(--idc-band-fg);
   font-size: .76em; font-weight: 700;
   letter-spacing: .22em; text-transform: uppercase;
-  text-align: center; padding: .32em .6em;
+  text-align: center; padding: .28em .6em;
   border-block: .16em solid var(--idc-band-rule);
 }
 body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size: .82em; }
@@ -589,7 +589,7 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
 
 .idc-body {
   flex: 1; min-height: 0;
-  padding: .5em .9em .26em;
+  padding: .44em .9em .2em;
   display: flex; flex-direction: column; align-items: stretch;
   overflow: hidden;
 }
@@ -602,8 +602,8 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
    headroom a circle needs above the head. */
 .idc-photo {
   flex: 0 0 auto;
-  width: 6.9em; aspect-ratio: 1;
-  margin: 0 auto .34em;
+  width: 6.2em; aspect-ratio: 1;
+  margin: 0 auto .3em;
   border-radius: 50%;
   /* A white ring drawn by the border, and the line outside it drawn by an
      outline rather than a box-shadow: browsers treat a shadow as background
@@ -634,7 +634,7 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
    closing up instead. */
 .idc-front[data-orientation="portrait"] .idc-photo { flex: 0 0 auto; }
 /* Devanagari sets taller, so the Nepali card gives the type its room back. */
-body.lang-ne .idc-photo { width: 6.6em; }
+body.lang-ne .idc-photo { width: 5.90em; }
 .idc-photo.empty {
   border: .14em dashed #b9c4d1;
   outline: 0;
@@ -649,20 +649,20 @@ body.lang-ne .idc-photo { width: 6.6em; }
 }
 .idc-name-ne {
   font-family: var(--deva); font-size: .9em;
-  line-height: 1.22; color: var(--ink-soft);
+  line-height: 1.18; color: var(--ink-soft);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .idc-role {
   font-size: .78em; font-weight: 700;
   letter-spacing: .1em; text-transform: uppercase;
-  color: var(--idc-accent); margin-top: .12em;
+  color: var(--idc-accent); margin-top: .08em;
 }
 body.lang-ne .idc-role { letter-spacing: 0; text-transform: none; font-size: .84em; }
 
 .idc-rows {
-  margin: .4em 0 0; padding: .34em 0 0;
+  margin: .3em 0 0; padding: .26em 0 0;
   border-top: 1px solid var(--idc-rule);
-  display: flex; flex-direction: column; gap: .16em;
+  display: flex; flex-direction: column; gap: .1em;
   text-align: start;
 }
 .idc-row { display: grid; grid-template-columns: 6.25em 1fr; gap: .35em; align-items: baseline; }
@@ -670,12 +670,12 @@ body.lang-ne .idc-role { letter-spacing: 0; text-transform: none; font-size: .84
 .idc-back .idc-row { grid-template-columns: 7.4em 1fr; }
 .idc-row dt {
   font-size: .68em; font-weight: 700; letter-spacing: .03em;
-  text-transform: uppercase; color: var(--ink-soft); line-height: 1.35;
+  text-transform: uppercase; color: var(--ink-soft); line-height: 1.26;
 }
 body.lang-ne .idc-row dt { text-transform: none; letter-spacing: 0; font-size: .74em; }
 .idc-row dd {
   margin: 0; font-size: .8em; font-weight: 600; color: var(--ink);
-  line-height: 1.26; overflow-wrap: anywhere;
+  line-height: 1.2; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
 /* A detail nobody has filled in prints as a rule, so it can be written on. */
@@ -684,7 +684,7 @@ body.lang-ne .idc-row dt { text-transform: none; letter-spacing: 0; font-size: .
 /* ---- front: card number and the Campus Chief's signature ---- */
 
 .idc-foot {
-  padding: .2em .9em .34em;
+  padding: .16em .9em .3em;
   border-top: 1px solid var(--idc-rule);
   display: flex; align-items: flex-end; justify-content: space-between; gap: .6em;
 }
@@ -771,26 +771,26 @@ body.lang-ne .idc-back-foot strong { text-transform: none; letter-spacing: 0; fo
    seal, but lying down with the card. */
 .idc[data-orientation="landscape"] .idc-top {
   flex-direction: row; justify-content: center; gap: .6em;
-  padding: .45em .8em .42em; text-align: start;
+  padding: .32em .8em .28em; text-align: start;
 }
-.idc[data-orientation="landscape"] .idc-crest { width: 3.7em; height: 3.7em; }
+.idc[data-orientation="landscape"] .idc-crest { width: 3.1em; height: 3.1em; }
 .idc[data-orientation="landscape"] .idc-top-text { align-items: flex-start; }
 .idc[data-orientation="landscape"] .idc-place { margin-top: .16em; }
-.idc[data-orientation="landscape"] .idc-band { padding: .3em .6em; }
+.idc[data-orientation="landscape"] .idc-band { padding: .24em .6em; }
 
 .idc-front[data-orientation="landscape"] .idc-body {
-  flex-direction: row; align-items: flex-start; gap: .8em; padding: .55em .8em .3em;
+  flex-direction: row; align-items: flex-start; gap: .8em; padding: .32em .8em .22em;
 }
-.idc-front[data-orientation="landscape"] .idc-photo { width: 6.4em; margin: 0; }
-body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 6.2em; }
+.idc-front[data-orientation="landscape"] .idc-photo { width: 6em; margin: 0; }
+body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em; }
 .idc-front[data-orientation="landscape"] .idc-detail { flex: 1; text-align: start; }
-.idc-front[data-orientation="landscape"] .idc-name { font-size: 1.05em; }
+.idc-front[data-orientation="landscape"] .idc-name { font-size: .95em; }
 .idc-front[data-orientation="landscape"] .idc-rows {
-  margin-top: .35em; padding-top: 0; border-top: 0; gap: .16em;
+  margin-top: .2em; padding-top: 0; border-top: 0; gap: .05em;
 }
 .idc-front[data-orientation="landscape"] .idc-row { grid-template-columns: 6.2em 1fr; }
 
-.idc[data-orientation="landscape"] .idc-foot { padding: .25em .8em .38em; }
+.idc[data-orientation="landscape"] .idc-foot { padding: .18em .8em .26em; }
 .idc[data-orientation="landscape"] .idc-sig-img { height: 1.55em; }
 .idc[data-orientation="landscape"] .idc-sig-name { line-height: 1.25; }
 

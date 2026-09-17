@@ -113,6 +113,23 @@ function localize_digits(string $text): string
                          '5'=>'५','6'=>'६','7'=>'७','8'=>'८','9'=>'९']);
 }
 
+/**
+ * The other direction: Devanagari digits back to ASCII.
+ *
+ * A number typed on a Nepali keyboard, or copied off a Nepali document, arrives
+ * as ०-९. Stored that way it is stuck, because localize_digits() only ever
+ * converts towards Devanagari: an English card would print the Devanagari
+ * digits unconverted, and anything that compares or sorts the value would be
+ * comparing two alphabets. So a number is stored in ASCII and the card
+ * localises it as it prints — which is what every other number on the card
+ * already does.
+ */
+function ascii_digits(string $text): string
+{
+    return strtr($text, ['०'=>'0','१'=>'1','२'=>'2','३'=>'3','४'=>'4',
+                         '५'=>'5','६'=>'6','७'=>'7','८'=>'8','९'=>'9']);
+}
+
 function format_date(?string $datetime, bool $withTime = false): string
 {
     if (!$datetime) {

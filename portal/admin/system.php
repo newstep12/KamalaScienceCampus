@@ -90,6 +90,11 @@ function column_migrations(): array
             'ALTER TABLE users ADD COLUMN avatar_source_path VARCHAR(255) NULL',
         'photograph placement' =>
             'ALTER TABLE users ADD COLUMN avatar_focus TINYINT UNSIGNED NULL',
+        // The two government numbers on the front of the card.
+        'national id number' =>
+            'ALTER TABLE users ADD COLUMN national_id VARCHAR(30) NULL',
+        'pan number' =>
+            'ALTER TABLE users ADD COLUMN pan_no VARCHAR(20) NULL',
     ];
 }
 

@@ -9,14 +9,24 @@ require_once __DIR__ . '/idcard.php';
  * the same markup is not a preview.
  */
 
-/** One label/value line. A value nobody has filled in prints as a rule. */
+/**
+ * One label/value line. A value nobody has filled in prints as a rule.
+ *
+ * The rule carries a zero-width space, which is not decoration. The row aligns
+ * its label and its value on their baselines, and a box with nothing in it has
+ * no baseline for the browser to use: it takes the bottom edge instead, which
+ * drops the rule below where a line of text would have sat and makes every
+ * blank row taller than a filled one. On a card whose body is overflow: hidden
+ * that difference is enough to push the last row off a full front. One
+ * invisible character gives the box a line to sit on.
+ */
 function id_card_row(string $label, ?string $value): void
 {
     $blank = ($value === null || $value === '');
     ?>
     <div class="idc-row">
       <dt><?= e($label) ?></dt>
-      <dd<?= $blank ? ' class="blank"' : '' ?>><?= e($value ?? '') ?></dd>
+      <dd<?= $blank ? ' class="blank"' : '' ?>><?= $blank ? '&#8203;' : e($value) ?></dd>
     </div>
     <?php
 }
@@ -69,6 +79,10 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
             <?php else: ?>
               <?php id_card_row(t('phone'), $holder['phone'] ? localize_digits($holder['phone']) : null); ?>
             <?php endif; ?>
+            <?php /* The two government numbers, beside the campus's own. Both
+                     in the card's own digits, as the phone number above is. */ ?>
+            <?php id_card_row(t('id_card_nid'), !empty($holder['national_id']) ? localize_digits($holder['national_id']) : null); ?>
+            <?php id_card_row(t('id_card_pan'), !empty($holder['pan_no']) ? localize_digits($holder['pan_no']) : null); ?>
             <?php id_card_row(t('date_of_birth'), $holder['date_of_birth'] ? format_date($holder['date_of_birth']) : null); ?>
             <?php id_card_row(t('address'), $holder['address'] ?: null); ?>
           </dl>

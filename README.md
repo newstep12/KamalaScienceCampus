@@ -314,14 +314,37 @@ the profile behind it. Anything still blank — photograph, date of birth,
 address — prints as a rule to write on rather than disappearing, and the page
 says what is missing with a link to fix it.
 
+**The front carries the two government numbers** beside the campus's own: the
+national identity card number and the PAN number, in the card's own digits as
+the phone number above them is. Both are typed into the portfolio, and what is
+stored is digits and the separators people write between them — a `-`, a space,
+a `/` — and nothing else. Not to validate: the campus office is in no position
+to check somebody's NID against the register, and a card that refused a number
+for having an unexpected shape would be worse than one that carried it. It is
+so that a printed identity document does not keep whatever a stray keystroke
+left in the field, since nobody proof-reads a number they have already typed.
+Anything with no digit left in it at all is stored as nothing, because a row of
+punctuation is not a number.
+
 Two more details belong to the back, and are filled in on the same page.
 The **blood group** is a list of the eight groups and nothing else: a value
 that is not one of them is stored as nothing, so the card never prints a group
-nobody chose. The **signature** is uploaded like a photograph, held to 80 px on
-the short side rather than 200 (a signature strip is wide and shallow), and
-removed again from the same page. Neither is counted as missing — a card
-without them is a perfectly good card, signed by hand — so leaving both blank
-never produces a notice.
+nobody chose. The **card holder's signature** is uploaded like a photograph,
+held to 80 px on the short side rather than 200 (a signature strip is wide and
+shallow), and removed again from the same page. None of these is counted as
+missing — a card without them is a perfectly good card, signed by hand — so
+leaving them blank never produces a notice.
+
+**Six rows is what the front now holds**, and it is full: a student card
+carries the year, the symbol number, both government numbers, the date of birth
+and the address. The seal and the photograph gave up about a tenth of their
+width to make room, and the leading came in where it was not being used — a
+one-line label was set at 1.35, and a blank row was measurably taller than a
+filled one because a box with nothing in it has no baseline to align on. Every
+face is measured against the fullest card the design accepts (a name over two
+lines, an address over two, every row filled, in both languages and both
+orientations), because the card's body is `overflow: hidden`: a face that does
+not fit does not complain, it just prints without its last line.
 
 A signature photographed rather than scanned is **turned the right way up and
 re-encoded** as it is stored, exactly as a photograph is: a phone records how
@@ -460,10 +483,11 @@ colour, so adding one means adding one block to `assets/css/portal.css` and one
 line to `id_card_themes()`.
 
 Staff titles live in `users.designation`, the blood group in
-`users.blood_group` and the holder's signature in `users.signature_path`, all
-three added by **Admin → System → Run database updates**. Run it once after
-deploying this version, or staff cards fall back to the blanket role name and
-the portfolio cannot save either of the two new details.
+`users.blood_group`, the card holder's signature in `users.signature_path` and
+the two government numbers in `users.national_id` and `users.pan_no`, all added
+by **Admin → System → Run database updates**. Run it once after deploying this
+version, or staff cards fall back to the blanket role name and the portfolio
+cannot save a profile at all.
 
 ### Signatures
 
@@ -561,10 +585,11 @@ EXISTS` cannot deliver to a table that already exists. Each is written to be
 safe to run again, and one that has already been applied is logged and stepped
 over rather than failing the run.
 
-This version adds four columns to `users` — `blood_group` and `signature_path`
-for the back of the identity card, and `avatar_source_path` and `avatar_focus`
-for the photograph's working copy and where the frame sits on it. Run the
-update once after deploying it, or saving a profile fails. (The version before it added the
+This version adds six columns to `users` — `blood_group` and `signature_path`
+for the back of the identity card, `national_id` and `pan_no` for its front,
+and `avatar_source_path` and `avatar_focus` for the photograph's working copy
+and where the frame sits on it. Run the update once after deploying it, or
+saving a profile fails. (The version before it added the
 `signatures` and `documents` tables; Admin → Signatures and Admin → Documents
 send you back here if they are still missing.) A page that fails on a column
 that is not there yet says so and points at this button rather than leaving it

@@ -376,7 +376,9 @@ return [
     'id_card_conditions' => 'Conditions',
     'id_card_terms'      => "This card is the property of Kamala Science Campus and is not transferable.\nCarry it on campus and show it whenever it is asked for.\nReport a lost or damaged card to the campus office at once.",
     'id_card_blood'      => 'Blood group',
-    'id_card_holder_sig' => 'Holder’s signature',
+    'id_card_nid'        => 'NID no.',
+    'id_card_pan'        => 'PAN no.',
+    'id_card_holder_sig' => 'Card holder’s signature',
     'id_card_return'     => 'If found, please return to',
     'id_card_photo_here' => 'Attach a passport photo here',
     'id_card_missing'    => 'Your card is still missing %s. Add it and the card fills in; until then those lines print blank for you to write on.',
@@ -443,6 +445,10 @@ return [
     'remove_photo'       => 'Remove photograph',
 
     // The two details the holder adds for the back of their own card
+    'national_id'        => 'National identity card no. (NID)',
+    'national_id_hint'   => 'As it is written on the card, 000-000-000-0. It prints on the front of your identity card; leave it blank and that line prints empty to write on.',
+    'pan_no'             => 'PAN no.',
+    'pan_no_hint'        => 'Your Permanent Account Number, if you have one — the nine digits on the PAN card.',
     'blood_group'        => 'Blood group',
     'blood_group_none'   => 'Not given',
     'blood_group_hint'   => 'Printed on the back of your identity card, where it is read in an emergency. Leave it blank and the line prints empty to write on.',
