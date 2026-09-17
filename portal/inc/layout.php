@@ -171,6 +171,8 @@ function default_nav(?array $user): array
             ['key' => 'users',    'href' => portal_url('/admin/users.php'),    'label' => t('nav_users')],
             ['key' => 'courses',  'href' => portal_url('/admin/courses.php'),  'label' => t('nav_manage_courses')],
             ['key' => 'notices',  'href' => portal_url('/admin/notices.php'),  'label' => t('nav_manage_notices')],
+            ['key' => 'signatures','href' => portal_url('/admin/signatures.php'), 'label' => t('nav_signatures')],
+            ['key' => 'documents','href' => portal_url('/admin/documents.php'), 'label' => t('nav_documents')],
             ['key' => 'system',   'href' => portal_url('/admin/system.php'),   'label' => t('nav_system')],
         ];
     }

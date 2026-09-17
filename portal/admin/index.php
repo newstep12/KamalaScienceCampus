@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
+require_once __DIR__ . '/../inc/signatures.php';
 
 require_role(ROLE_ADMIN);
 
@@ -12,7 +13,8 @@ $courses   = (int) scalar('SELECT COUNT(*) FROM courses WHERE is_active = 1');
 // A deploy lands before anyone runs Admin → System → Run database updates, so
 // say plainly that the update is outstanding rather than letting People fail
 // the first time someone adds a lecturer.
-$needsDbUpdate = scalar('SHOW COLUMNS FROM users LIKE \'designation\'') === null;
+$needsDbUpdate = scalar('SHOW COLUMNS FROM users LIKE \'designation\'') === null
+    || !signature_tables_ready();
 
 $byYear = all(
     'SELECT year_level, COUNT(*) AS n FROM users

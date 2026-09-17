@@ -212,3 +212,63 @@ CREATE TABLE IF NOT EXISTS settings (
   v TEXT         NULL,
   PRIMARY KEY (k)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- The signature library. Scans of the signatures the campus issues documents
+-- under — the Campus Chief's among them — held in one place so that applying
+-- one is an act an administrator performs deliberately rather than a file
+-- anybody who can reach the portal may copy.
+--
+-- release_scope is the whole point of the table:
+--   locked   — held, applied to nothing. Every signature starts here.
+--   admin    — an administrator may apply it. It prints on a card an
+--              administrator prints and on a document they issue; a student
+--              printing their own card still gets a blank signature line.
+--   everyone — it prints on every card, including one a student prints.
+--
+-- Which signature is applied where is a pair of settings (signature_id_card,
+-- signature_document), so a signature can be uploaded and kept back until the
+-- office decides to use it.
+CREATE TABLE IF NOT EXISTS signatures (
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  label         VARCHAR(120)  NOT NULL,          -- "Black ink", "Blue ink"
+  owner_name    VARCHAR(120)  NOT NULL,
+  owner_name_ne VARCHAR(120)  NULL,
+  owner_title   VARCHAR(80)   NOT NULL DEFAULT 'campus_chief',
+  file_path     VARCHAR(255)  NOT NULL,
+  release_scope ENUM('locked','admin','everyone') NOT NULL DEFAULT 'locked',
+  note          VARCHAR(255)  NULL,
+  uploaded_by   INT UNSIGNED  NULL,
+  created_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  released_at   DATETIME      NULL,
+  released_by   INT UNSIGNED  NULL,
+  PRIMARY KEY (id),
+  KEY idx_sig_scope (release_scope),
+  CONSTRAINT fk_sig_uploader FOREIGN KEY (uploaded_by) REFERENCES users (id) ON DELETE SET NULL,
+  CONSTRAINT fk_sig_releaser FOREIGN KEY (released_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Official documents the campus office issues over a signature: bonafide and
+-- character certificates and the rest. The row is the office register — who
+-- it was issued to, by whom, under which signature — so that every use of a
+-- signature outside an identity card has a record behind it.
+CREATE TABLE IF NOT EXISTS documents (
+  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  ref_no       VARCHAR(40)  NOT NULL,
+  kind         ENUM('bonafide','character','enrolment','recommendation','custom') NOT NULL DEFAULT 'bonafide',
+  subject_id   INT UNSIGNED NULL,               -- the account it is about, when there is one
+  subject_name VARCHAR(120) NOT NULL,
+  title        VARCHAR(190) NULL,               -- kind = custom
+  body         MEDIUMTEXT   NULL,               -- kind = custom
+  purpose      VARCHAR(190) NULL,
+  issued_on    DATE         NOT NULL,
+  signature_id INT UNSIGNED NULL,
+  issued_by    INT UNSIGNED NULL,
+  created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_doc_ref (ref_no),
+  KEY idx_doc_issued (issued_on),
+  KEY idx_doc_subject (subject_id),
+  CONSTRAINT fk_doc_subject FOREIGN KEY (subject_id)   REFERENCES users (id)      ON DELETE SET NULL,
+  CONSTRAINT fk_doc_sig     FOREIGN KEY (signature_id) REFERENCES signatures (id) ON DELETE SET NULL,
+  CONSTRAINT fk_doc_issuer  FOREIGN KEY (issued_by)    REFERENCES users (id)      ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

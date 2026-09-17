@@ -854,3 +854,144 @@ body.lang-ne .idc-design-preview > span { text-transform: none; letter-spacing: 
   margin-top: 12px; font-size: .82rem; color: var(--ink-soft);
   border-left: 3px solid var(--line); padding-left: 10px;
 }
+
+/* ======================================================= signature library == */
+
+/* One card per signature: the image itself at a readable size, what the office
+   knows about it, and the one control that matters — how far it is released. */
+.p-sig-list { margin-top: 18px; display: grid; gap: 16px; }
+
+.p-sig {
+  display: grid; gap: 18px;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) minmax(200px, 250px);
+  align-items: start;
+  padding: 18px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+/* White behind the image whatever the page does: a signature scanned on white
+   paper disappears into a tinted panel, and one with a transparent background
+   would otherwise be read against it. */
+.p-sig-image {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 92px; padding: 12px;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.p-sig-image img { max-width: 100%; max-height: 92px; width: auto; height: auto; }
+
+.p-sig-meta h3 { margin: 0 0 4px; font-size: 1.02rem; }
+.p-sig-owner { margin: 0 0 6px; font-size: .92rem; color: var(--ink); }
+.p-sig-owner span { color: var(--ink-soft); font-size: .88rem; }
+.p-sig-note  { margin: 0 0 6px; font-size: .88rem; color: var(--ink-soft); }
+.p-sig-trail { margin: 0 0 10px; font-size: .82rem; color: var(--ink-soft); line-height: 1.7; }
+.p-sig-tags  { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+
+.p-sig-controls .p-field { margin-bottom: 6px; }
+.p-sig-controls .hint { display: block; margin-bottom: 12px; line-height: 1.6; }
+
+.p-sig-edit { margin-bottom: 12px; }
+.p-sig-edit > summary {
+  cursor: pointer; font-size: .88rem; font-weight: 600; color: var(--teal-600);
+  list-style: none; display: inline-flex; align-items: center; gap: 7px;
+}
+.p-sig-edit > summary::-webkit-details-marker { display: none; }
+.p-sig-edit > summary::before { content: "▸"; font-size: .8em; transition: transform .15s ease; }
+.p-sig-edit[open] > summary::before { transform: rotate(90deg); }
+.p-sig-edit > form { margin-top: 12px; }
+
+@media (max-width: 900px) {
+  .p-sig { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ====================================================== official documents == */
+
+/* A4 at its real width, so what an administrator reads on screen is the page
+   that comes out of the printer. */
+.p-doc {
+  width: 210mm; max-width: 100%; min-height: 297mm;
+  margin: 0 auto; padding: 18mm 20mm 16mm;
+  background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column;
+}
+
+.p-doc-head {
+  display: flex; align-items: center; gap: 16px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--navy);
+}
+.p-doc-crest { width: 84px; height: 84px; flex: 0 0 84px; }
+.p-doc-head-text { display: flex; flex-direction: column; gap: 1px; }
+.p-doc-campus-ne { font-family: var(--deva); font-weight: 700; font-size: 1.28rem; color: var(--navy); }
+.p-doc-campus-en { font-family: var(--serif); font-weight: 700; font-size: 1.44rem; color: var(--navy); }
+.p-doc-place   { font-size: .86rem; color: var(--ink-soft); }
+.p-doc-affil   { font-size: .8rem; color: var(--ink-soft); }
+.p-doc-contact { font-size: .76rem; color: var(--ink-soft); }
+
+.p-doc-meta {
+  display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  margin-top: 14px; font-size: .88rem; color: var(--ink-soft);
+}
+
+.p-doc-title {
+  margin: 26px 0 20px; text-align: center;
+  font-family: var(--serif); font-size: 1.32rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--navy);
+  text-decoration: underline; text-underline-offset: 7px;
+}
+body.lang-ne .p-doc-title { font-family: var(--deva); text-transform: none; letter-spacing: .02em; }
+
+.p-doc-particulars {
+  margin: 0 0 22px; padding: 14px 16px;
+  background: var(--bg-soft); border-radius: var(--radius-sm);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 26px;
+}
+.p-doc-particulars > div { display: grid; grid-template-columns: 9em 1fr; gap: 8px; align-items: baseline; }
+.p-doc-particulars dt { font-size: .82rem; font-weight: 600; color: var(--ink-soft); }
+.p-doc-particulars dd { margin: 0; font-size: .92rem; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Justified and generously led: this is read as a letter, not as a screen. */
+.p-doc-body { font-size: 1rem; line-height: 2; text-align: justify; }
+.p-doc-body p { margin: 0 0 1.1em; }
+
+/* Pushed to the foot of the page, where a signature belongs, whatever the
+   length of the body above it. */
+.p-doc-sign {
+  margin-top: auto; padding-top: 34px;
+  display: flex; flex-direction: column; align-items: flex-end;
+}
+.p-doc-sig-img { height: 58px; max-width: 220px; object-fit: contain; display: block; }
+span.p-doc-sig-img { width: 1px; }
+.p-doc-sig-rule { display: block; width: 220px; border-top: 1px solid var(--ink-soft); margin-top: 4px; }
+.p-doc-sig-name   { font-weight: 700; font-size: .96rem; color: var(--navy); margin-top: 5px; }
+.p-doc-sig-title  { font-size: .86rem; color: var(--ink-soft); }
+.p-doc-sig-campus { font-size: .82rem; color: var(--ink-soft); }
+
+.p-doc-foot {
+  margin-top: 26px; padding-top: 10px; border-top: 1px solid var(--line);
+  font-size: .76rem; color: var(--ink-soft); text-align: center;
+}
+
+.p-doc-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+
+@media (max-width: 760px) {
+  .p-doc { padding: 22px 18px; min-height: 0; }
+  .p-doc-head { flex-direction: column; text-align: center; gap: 10px; }
+  .p-doc-crest { width: 64px; height: 64px; flex-basis: 64px; }
+  .p-doc-particulars { grid-template-columns: minmax(0, 1fr); }
+  .p-doc-body { text-align: left; line-height: 1.85; }
+}
+
+@media print {
+  /* The page is the document: the portal's own chrome and the screen's frame
+     around it have no business on paper. */
+  .p-doc {
+    width: auto; min-height: auto; margin: 0;
+    padding: 18mm 20mm 16mm;
+    border: 0; border-radius: 0; box-shadow: none;
+    break-inside: auto;
+  }
+  .p-doc, .p-doc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .p-doc-head { break-after: avoid; page-break-after: avoid; }
+  .p-doc-sign { break-inside: avoid; page-break-inside: avoid; }
+}
