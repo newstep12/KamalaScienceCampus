@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/signatures.php';
 
 /**
  * Identity cards.
@@ -104,7 +105,6 @@ function id_card_settings(): array
         'chief_name'    => setting('id_card_chief_name'),
         'chief_name_ne' => setting('id_card_chief_name_ne'),
         'chief_title'   => setting('id_card_chief_title', 'campus_chief'),
-        'signature'     => setting('id_card_signature_path'),
         'valid_until'   => setting('id_card_valid_until'),
         'session'       => setting('id_card_session'),
         'theme'         => id_card_theme(setting('id_card_theme')),
@@ -116,18 +116,32 @@ function id_card_settings(): array
 /**
  * Everything one card needs, gathered once. The page renders the faces from
  * this, and so does the design preview on the System page.
+ *
+ * $viewer is whoever the card is being rendered for, and it decides the one
+ * thing on the card that is not the same for everybody: the Campus Chief's
+ * signature is printed only when the office has released it that far. An
+ * administrator printing a card from Admin → People carries it; a student
+ * printing the same card for themselves gets the blank line to be signed by
+ * hand. The name and title beneath it print either way, so the card reads the
+ * same whether the signature is on it or waiting to be written.
  */
-function id_card_context(array $holder): array
+function id_card_context(array $holder, ?array $viewer = null): array
 {
-    $card = id_card_settings();
+    $card   = id_card_settings();
+    $viewer = $viewer ?? current_user();
+    $sig    = applied_signature('id_card', $viewer);
+    $named  = $sig ?: signature_for_use('id_card');   // withheld, but it still names the signer
+
     return [
         'card'        => $card,
         'theme'       => $card['theme'],
         'orientation' => $card['orientation'],
         'photo'       => photo_src($holder),
-        'signature'   => signature_src(),
-        'chief'       => id_card_chief_name($card),
-        'chief_title' => designation_label($card['chief_title'] ?: 'campus_chief'),
+        'signature'   => $sig ? signature_url($sig) : null,
+        'chief'       => $named ? signature_owner_name($named) : id_card_chief_name($card),
+        'chief_title' => designation_label(
+            ($named['owner_title'] ?? '') ?: ($card['chief_title'] ?: 'campus_chief')
+        ),
         'names'       => campus_names(),
         'issued'      => $holder['approved_at'] ?: $holder['created_at'],
     ];
@@ -147,11 +161,6 @@ function photo_src(array $u): ?string
     return empty($u['avatar_path'])
         ? null
         : portal_url('/download.php?photo=' . (int) $u['id']);
-}
-
-function signature_src(): ?string
-{
-    return setting('id_card_signature_path') ? portal_url('/download.php?signature=1') : null;
 }
 
 /**

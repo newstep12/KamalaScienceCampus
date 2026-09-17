@@ -4,6 +4,7 @@ require_once __DIR__ . '/../inc/layout.php';
 require_once __DIR__ . '/../inc/mail.php';
 require_once __DIR__ . '/../inc/uploads.php';
 require_once __DIR__ . '/../inc/idcard-view.php';
+require_once __DIR__ . '/../inc/signatures.php';
 require_once __DIR__ . '/../inc/translate.php';
 
 $admin = require_role(ROLE_ADMIN);
@@ -296,23 +297,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_setting('id_card_session',       mb_substr(trim((string) ($_POST['id_card_session'] ?? '')), 0, 40) ?: null);
             log_activity((int) $admin['id'], 'save_idcard');
             flash('ok', t('idcard_saved'));
-        } elseif ($action === 'upload_signature') {
-            // A scan of the Campus Chief's signature, printed on every card.
-            // 120 px is enough to stay sharp at the 22 mm it prints at.
-            $stored = store_image($_FILES['signature'] ?? [], 'signature', 120);
-            if ($stored['ok']) {
-                delete_upload(setting('id_card_signature_path'));
-                set_setting('id_card_signature_path', $stored['path']);
-                log_activity((int) $admin['id'], 'upload_signature');
-                flash('ok', t('signature_saved'));
-            } else {
-                flash('error', image_error_message($stored['error']));
-            }
-        } elseif ($action === 'remove_signature') {
-            delete_upload(setting('id_card_signature_path'));
-            set_setting('id_card_signature_path', null);
-            log_activity((int) $admin['id'], 'remove_signature');
-            flash('ok', t('signature_removed'));
         } elseif ($action === 'seed_courses') {
             $added = 0;
             foreach (starter_courses() as [$code, $year, $en, $ne, $cr]) {
@@ -338,8 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Come back to the section that was being edited, not the top of a
         // long page.
-        $anchor = in_array($action, ['save_design', 'save_idcard', 'upload_signature', 'remove_signature'], true)
-            ? '#id-cards' : '';
+        $anchor = in_array($action, ['save_design', 'save_idcard'], true) ? '#id-cards' : '';
         header('Location: ' . portal_url('/admin/system.php' . $anchor));
         exit;
     }
@@ -348,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // The design section previews the administrator's own card, so what they are
 // judging is a real card in the colours they are choosing.
 $design  = id_card_settings();
-$preview = id_card_context($admin);
+$preview = id_card_context($admin, $admin);
 
 $counts = [
     'courses'  => (int) scalar('SELECT COUNT(*) FROM courses'),
@@ -484,34 +467,25 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
     </div>
   </div>
 
-  <form method="post" enctype="multipart/form-data" style="margin-top:24px;padding-top:24px;border-top:1px solid var(--line);">
-    <?= csrf_field() ?>
-    <input type="hidden" name="action" value="upload_signature">
-
-    <?php if ($sig = signature_src()): ?>
+  <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--line);">
+    <h3 style="margin:0 0 6px;font-size:1rem;"><?= te('signature') ?></h3>
+    <?php $cardSig = signature_for_use('id_card'); ?>
+    <?php if ($cardSig): ?>
       <div class="p-signature-preview">
-        <img src="<?= e($sig) ?>" alt="<?= te('signature') ?>">
+        <img src="<?= e(signature_url($cardSig)) ?>" alt="<?= e($cardSig['label']) ?>">
       </div>
+      <p style="color:var(--ink-soft);font-size:.94rem;">
+        <?= te('idcard_signature_now', $cardSig['label'], t('sig_scope_' . signature_scope($cardSig['release_scope']))) ?>
+      </p>
+    <?php else: ?>
+      <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('idcard_signature_none') ?></p>
     <?php endif; ?>
-
-    <div class="p-field">
-      <label for="signature"><?= te('signature') ?> <span class="hint"><?= te('signature_hint') ?></span></label>
-      <input type="file" id="signature" name="signature" accept="image/png,image/jpeg,image/webp">
-      <span class="hint"><?= te('signature_privacy') ?></span>
-    </div>
-    <div class="p-form-actions">
-      <button class="p-btn p-btn-primary" type="submit"><?= te('signature_upload') ?></button>
-    </div>
-  </form>
-
-  <?php if (setting('id_card_signature_path')): ?>
-    <form method="post" style="margin-top:10px;" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
-      <?= csrf_field() ?>
-      <button class="p-btn p-btn-danger p-btn-sm" type="submit" name="action" value="remove_signature">
-        <?= te('signature_remove') ?>
-      </button>
-    </form>
-  <?php endif; ?>
+    <p style="margin-top:12px;">
+      <a class="p-btn p-btn-gold p-btn-sm" href="<?= e(portal_url('/admin/signatures.php')) ?>">
+        <?= te('idcard_signature_manage') ?>
+      </a>
+    </p>
+  </div>
 
   <form method="post" style="margin-top:24px;padding-top:24px;border-top:1px solid var(--line);">
     <?= csrf_field() ?>

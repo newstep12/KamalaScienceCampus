@@ -4,6 +4,7 @@ require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/lang.php';
 require_once __DIR__ . '/inc/uploads.php';
 require_once __DIR__ . '/inc/idcard.php';
+require_once __DIR__ . '/inc/signatures.php';
 
 /**
  * Files are stored outside the document root's reach (uploads/ denies direct
@@ -21,10 +22,11 @@ $user = require_login();
 $view = isset($_GET['view']);
 
 /**
- * Photographs and the signature go into an <img>, so they are sent inline
+ * Photographs and signatures go into an <img>, so they are sent inline
  * rather than as a download — with the type re-sniffed from the file and
  * checked against the image allowlist, so only a real image is ever served
- * inline whatever the stored name says.
+ * inline whatever the stored name says. Who may ask for one is decided by
+ * the caller, above.
  */
 function inline_image_or_404(?string $relPath): void
 {
@@ -60,9 +62,17 @@ if ($photoId = (int) ($_GET['photo'] ?? 0)) {
 }
 
 if (isset($_GET['signature'])) {
-    // The Campus Chief's signature is printed on every card, so anyone who
-    // can sign in and print their own card can load it.
-    inline_image_or_404(setting('id_card_signature_path'));
+    // A signature is handed out only as far as the office has released it:
+    // to administrators alone while the scope is 'admin', to anybody signed
+    // in once it is 'everyone', and to nobody at all while it is locked.
+    // A 404 rather than a 403, so the reply says nothing about which
+    // signatures the campus holds.
+    $sig = signature_row((int) $_GET['signature']);
+    if (!signature_released_to($sig, $user)) {
+        http_response_code(404);
+        exit('Not found.');
+    }
+    inline_image_or_404($sig['file_path']);
 }
 
 if ($id = (int) ($_GET['id'] ?? 0)) {

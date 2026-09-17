@@ -36,7 +36,7 @@ if ($requested > 0 && $requested !== (int) $viewer['id']) {
 }
 
 $own     = (int) $holder['id'] === (int) $viewer['id'];
-$ctx     = id_card_context($holder);
+$ctx     = id_card_context($holder, $viewer);
 $card    = $ctx['card'];
 $missing = id_card_missing($holder);
 $sides   = id_card_sides($_GET['sides'] ?? $card['sides']);
@@ -62,7 +62,19 @@ layout_head([
 <?php endif; ?>
 
 <?php if (!$ctx['signature']): ?>
-  <div class="p-flash p-flash-info p-noprint"><?= te('id_card_no_signature') ?></div>
+  <div class="p-flash p-flash-info p-noprint">
+    <?php if (signature_withheld('id_card', $viewer)): ?>
+      <?php /* There is a signature; the office simply does not release it this
+               far. Say so, rather than letting the holder think one is missing
+               and ask the office to upload what it has already uploaded. */ ?>
+      <?= te('id_card_signature_held') ?>
+    <?php else: ?>
+      <?= te('id_card_no_signature') ?>
+      <?php if ($viewer['role'] === ROLE_ADMIN): ?>
+        <a href="<?= e(portal_url('/admin/signatures.php')) ?>"><?= te('signatures_title') ?></a>
+      <?php endif; ?>
+    <?php endif; ?>
+  </div>
 <?php endif; ?>
 
 <form class="idc-controls p-noprint" method="get">

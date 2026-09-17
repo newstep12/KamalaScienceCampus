@@ -204,7 +204,7 @@ it works both at that path and on a custom domain later.
 | --- | --- |
 | **Student** | Registers themselves, edits their portfolio, prints their identity card, opens their enrolled courses (materials, lecturer notes, own private notes), sees published results and attendance, reads notices for their year |
 | **Lecturer** | Adds materials to their courses, creates assessments and enters marks, takes attendance, sees who is enrolled, prints their own identity card |
-| **Admin** | Approves or rejects registrations, manages people, courses, enrolments and notices, prints anyone's identity card, plus database updates, identity-card and email settings under **System** |
+| **Admin** | Approves or rejects registrations, manages people, courses, enrolments and notices, prints anyone's identity card, holds the campus's **signatures** and issues **official documents** over them, plus database updates, identity-card and email settings under **System** |
 
 ### How people get accounts
 
@@ -298,12 +298,12 @@ says what is missing with a link to fix it. Blood group and emergency contact
 are always rules: nobody records them, and they are there to be filled in by
 hand.
 
-**The Campus Chief's signature** is uploaded once, in that same section, and
-then prints on every card. It also sets the name and title printed beneath it,
-how long cards are valid, and the academic session. Leave the signature empty and every card prints a blank signature
-line to be signed by hand instead. Anyone who can print a card can load that
-image, which is inherent in printing it on their card — upload a signature
-meant for that use.
+That same section sets the name and title printed beneath the signature, how
+long cards are valid, and the academic session. **The signature itself lives in
+the signature library** — see below — because who may put it on a card is a
+decision of its own. With no signature released for cards, every card prints a
+blank signature line to be signed by hand instead, and the name and title still
+print beneath it, so the card reads the same either way.
 
 A card number is derived from the account id rather than stored, so it never
 drifts out of step with the account: `KSC-S-0042` for students, `KSC-T-0007`
@@ -327,6 +327,71 @@ Staff titles live in `users.designation`, which **Admin → System → Run datab
 updates** adds. Run it once after deploying this version, or staff cards fall
 back to the blanket role name.
 
+### Signatures
+
+**Admin → Signatures** holds the signatures the campus issues documents under —
+the Campus Chief's among them — and is the only page from which one can be
+uploaded, released or applied. A lecturer cannot open it; a student cannot open
+it; `portal/inc/` is not served at all.
+
+Holding a signature and using one are deliberately two different acts:
+
+1. **Upload.** Any number of signatures, each with the signer's name (in both
+   scripts), the title printed under it, and a label. Upload one image per
+   version you have — a black-ink scan for anything that will be photocopied, a
+   blue-ink one where a wet signature is expected. They are stored like every
+   other upload: type sniffed from the file, random filename, no direct web
+   access.
+2. **Release.** Every signature arrives **locked** and prints on nothing. An
+   administrator then chooses how far it goes:
+
+   | Release | What it means |
+   | --- | --- |
+   | **Locked** | Printed on nothing at all. Cards carry a blank signature line. |
+   | **Administrators only** | Printed on a card an administrator prints from Admin → People and on a document they issue. A student printing their own card still gets the blank line, and `download.php` will not hand them the image. |
+   | **Everyone signed in** | Printed on every card, including one a student prints — which also means they can load the image. |
+
+3. **Apply.** Separately again, the office points each use — identity cards,
+   official documents — at one of the signatures. A signature that is released
+   but pointed at nothing still prints nowhere.
+
+So a signature only ever reaches a page when an administrator has both released
+it *and* pointed a use at it, and **Administrators only** is the setting that
+answers "only the office may put the Campus Chief's signature on something".
+Every upload, release, application and issue is written to the activity log,
+and the page lists that trail underneath the library.
+
+One decision worth knowing: whatever prints on a page can be saved from that
+page. **Everyone signed in** therefore does hand the image to every student,
+which is inherent in printing it on a card they print themselves — that is
+precisely why it is not the default, and why **Administrators only** exists.
+
+An upgrade from the version that kept a single signature under **System →
+Identity cards** carries it into the library the first time the Signatures page
+is opened. It arrives released to everyone signed in, because that is what it
+was already doing; narrow it there if the office would rather hold it.
+
+### Official documents
+
+**Admin → Documents** issues the letters the campus office signs: a bonafide
+certificate, a character certificate, an enrolment confirmation, a
+recommendation, or a free-written letter. It is the other half of the signature
+library — the page from which a signature reaches something that is not an
+identity card — and only an administrator can open it.
+
+Choose the document and the person; the campus letterhead, the particulars from
+their profile, a reference number (`KSC/<session>/0001`, from the academic
+session set under System) and the signature are added for you. Someone with no
+portal account can be named by hand instead, and then the document carries the
+name alone rather than inventing particulars nobody recorded. It prints on A4 —
+turn on background graphics for the letterhead rule, or save as PDF to email it.
+
+The signature is resolved when the page is rendered, not read back from the
+row. Withdraw a signature and reprints fall back to the blank line, while the
+register still records which signature was applied when the document was first
+issued. Every issue is stored: what was given, to whom, under whose signature,
+by which administrator.
+
 ### Results and attendance
 
 Lecturers create assessments per course (internal, assignment, practical,
@@ -345,6 +410,10 @@ count against a student.
 statement is `CREATE TABLE IF NOT EXISTS`, so it only ever adds tables
 introduced by a newer version — it never alters or drops anything, and running
 it twice is harmless. Run it after any deploy that adds tables.
+
+This version adds the `signatures` and `documents` tables; run the update once
+after deploying it, or Admin → Signatures and Admin → Documents will send you
+back to the System page to do exactly that.
 
 The same page seeds the four-year B.Sc. course structure. **Those course codes
 are placeholders**, not official TU codes — edit each course and set the real
@@ -446,6 +515,12 @@ Worth knowing before changing anything here:
   signed-in user is entitled to that file) or `notice-file.php` (published,
   all-years notices only). `uploads/` denies direct access and has PHP
   execution turned off.
+- A signature is served only as far as an administrator has released it, and
+  `signature_released_to()` in `portal/inc/signatures.php` is the single place
+  that decides — the card, a document and `download.php` all ask it. A request
+  for one that is locked, or one released no further than administrators, is
+  answered 404 rather than 403, so the reply says nothing about which
+  signatures the campus holds.
 - A file is only ever sent `Content-Disposition: inline` when the type sniffed
   from the file itself is PDF or an image. Nothing that could carry script —
   SVG and HTML among them — can be displayed in place, whatever it is named.
