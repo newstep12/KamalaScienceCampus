@@ -18,11 +18,6 @@ $in = [
     'date_of_birth' => '', 'address'      => '',
 ];
 
-function password_is_strong(string $pw): bool
-{
-    return mb_strlen($pw) >= 8 && preg_match('/\p{L}/u', $pw) && preg_match('/\d/', $pw);
-}
-
 /**
  * A date of birth that could belong to a campus student: a real calendar
  * date, in the past, and not so far back that it is plainly a typo.
@@ -69,6 +64,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors && !$isBot && one('SELECT id FROM users WHERE email = ?', [$email])) {
         $errors['email'] = t('err_email_taken');
+    }
+
+    // Two accounts on one TU symbol number are two people claiming to be the
+    // same student, and the office finds out at examination time. Checked
+    // here rather than as a unique key, because registrations that predate
+    // this may already collide and a constraint would lock the table.
+    if (!$errors && !$isBot && $in['symbol_no'] !== ''
+        && one('SELECT id FROM users WHERE symbol_no = ? LIMIT 1', [$in['symbol_no']])) {
+        $errors['symbol_no'] = t('err_symbol_taken');
     }
 
     // The photograph is optional — a student can add one later from their

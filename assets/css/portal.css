@@ -46,29 +46,19 @@ body.lang-ne h1, body.lang-ne h2, body.lang-ne h3, body.lang-ne .p-brand-name {
 .p-brand-sub { font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; color: #8fb0cf; }
 body.lang-ne .p-brand-sub { text-transform: none; letter-spacing: 0; font-size: .76rem; }
 
-/* The nav wraps to a second row rather than pushing the header wider than the
-   window: with seven links it no longer fits beside the brand and the account
-   block on a laptop screen. */
-.p-nav { margin-inline-start: auto; min-width: 0; }
-.p-nav ul {
-  display: flex; flex-wrap: wrap; justify-content: flex-end;
-  gap: 2px; list-style: none; margin: 0; padding: 0;
-}
-.p-nav a {
-  display: block; padding: 8px 14px; border-radius: 8px;
-  color: #cfe0f0; font-size: .92rem; font-weight: 500;
-  transition: background .15s ease, color .15s ease;
-}
-.p-nav a:hover { background: rgba(255, 255, 255, .1); color: #fff; text-decoration: none; }
-.p-nav a[aria-current="page"] { background: rgba(255, 255, 255, .16); color: #fff; }
-
+/* The sections are not up here any more — see the rail below. The button is,
+   because on a phone the rail is a drawer and something has to open it. */
 .p-nav-toggle {
-  display: none; margin-inline-start: auto;
+  display: none; flex: 0 0 auto;
   background: rgba(255, 255, 255, .1); border: 0; color: #fff;
   font-size: 1.05rem; padding: 8px 13px; border-radius: 8px; cursor: pointer;
+  line-height: 1;
 }
 
-.p-header-right { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
+.p-header-right {
+  display: flex; align-items: center; gap: 14px;
+  flex: 0 0 auto; margin-inline-start: auto;
+}
 
 .p-lang {
   font-size: .84rem; font-weight: 600; color: #cfe0f0;
@@ -79,11 +69,21 @@ body.lang-ne .p-brand-sub { text-transform: none; letter-spacing: 0; font-size: 
 .p-lang:hover { background: rgba(255, 255, 255, .14); color: #fff; text-decoration: none; }
 
 .p-user { display: flex; align-items: center; gap: 9px; }
+
+/* The same round portrait the public site gives the campus's people: a white
+   ring with a thin gold line outside it. A photograph fills the circle rather
+   than being letterboxed into it, and is anchored high, because what is stored
+   is a card portrait — taller than it is wide, with the head in the upper
+   third — and centring that in a circle cuts the forehead off. */
 .p-avatar {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: var(--teal); color: #fff;
+  flex: 0 0 auto;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, var(--teal), var(--navy) 78%);
+  color: #fff; overflow: hidden;
   display: grid; place-items: center;
-  font-size: .78rem; font-weight: 700; letter-spacing: .02em;
+  font-size: .76rem; font-weight: 700; letter-spacing: .02em;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--gold);
 }
 .p-user-meta { display: flex; flex-direction: column; line-height: 1.25; }
 .p-user-name { font-size: .86rem; font-weight: 600; color: #fff; }
@@ -96,6 +96,35 @@ body.lang-ne .p-brand-sub { text-transform: none; letter-spacing: 0; font-size: 
 }
 .p-signout:hover { background: rgba(255, 255, 255, .14); color: #fff; text-decoration: none; }
 
+/* ------------------------------------------------------------------ rail -- */
+
+/* Below the header the page is two columns: the sections down the left, the
+   page itself on the right. The rail sticks under the header rather than
+   scrolling away, so however far down a list of notices somebody is, every
+   other section is still one click off. */
+.p-shell { flex: 1; width: 100%; display: flex; align-items: flex-start; }
+
+.p-rail {
+  flex: 0 0 232px; width: 232px;
+  align-self: stretch;
+  position: sticky; top: 64px;
+  max-height: calc(100vh - 64px); overflow-y: auto;
+  background: #fff;
+  border-inline-end: 1px solid var(--line);
+  padding: 18px 12px 34px;
+}
+.p-rail nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.p-rail a {
+  display: block; padding: 10px 14px; border-radius: 9px;
+  color: var(--ink-soft); font-size: .94rem; font-weight: 500;
+  transition: background .15s ease, color .15s ease;
+}
+.p-rail a:hover { background: var(--bg-tint); color: var(--navy); text-decoration: none; }
+.p-rail a[aria-current="page"] { background: var(--navy); color: #fff; font-weight: 600; }
+body.lang-ne .p-rail a { font-size: 1rem; }
+
+.p-rail-scrim { display: none; }
+
 /* ------------------------------------------------------------------ main -- */
 
 .p-main {
@@ -104,6 +133,9 @@ body.lang-ne .p-brand-sub { text-transform: none; letter-spacing: 0; font-size: 
   margin: 0 auto; padding: 34px 20px 64px;
 }
 .p-main.wide { max-width: 1240px; }
+/* Beside the rail the column is whatever is left, centred in it. min-width: 0
+   so a wide table scrolls inside the column instead of stretching the page. */
+.p-shell .p-main { flex: 1 1 auto; min-width: 0; }
 
 .p-page-head { margin-bottom: 28px; }
 .p-page-head h1 { font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: .28em; }
@@ -344,20 +376,24 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
 
 /* ------------------------------------------------------------ responsive -- */
 
-/* The navigation folds into the menu button below the portal's own full
-   width: a student's seven links, the language switch, the account block and
-   Sign out need the whole 1240px to sit on one line. */
-@media (max-width: 1240px) {
-  .p-nav-toggle { display: block; }
-  .p-nav {
-    display: none; position: absolute; top: 100%; inset-inline: 0;
-    background: var(--navy); padding: 8px 16px 16px;
-    box-shadow: 0 12px 24px rgba(0, 0, 0, .2);
+/* Narrow enough that 232px of rail would be a third of the screen: it becomes
+   a drawer over the page, opened by the button in the header. */
+@media (max-width: 900px) {
+  .p-nav-toggle { display: inline-flex; }
+  .p-rail {
+    position: fixed; top: 64px; inset-inline-start: 0; bottom: 0;
+    z-index: 60; width: 268px; flex-basis: 268px; max-height: none;
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+    box-shadow: var(--shadow);
   }
-  .p-nav.open { display: block; }
-  .p-nav ul { flex-direction: column; flex-wrap: nowrap; gap: 2px; }
-  .p-nav a { padding: 12px 14px; }
-  .p-header-inner { position: relative; flex-wrap: wrap; }
+  .p-rail.open { transform: none; }
+  .p-rail a { padding: 12px 14px; }
+  .p-rail-scrim {
+    display: block; position: fixed; top: 64px; inset-inline: 0; bottom: 0;
+    z-index: 55; background: rgba(11, 37, 69, .42);
+  }
+  .p-rail-scrim[hidden] { display: none; }
 }
 
 @media (max-width: 900px) {
@@ -738,7 +774,7 @@ body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em;
   font: inherit; font-size: .82rem; color: var(--err); text-decoration: underline;
 }
 
-img.p-avatar { object-fit: cover; }
+img.p-avatar { display: block; object-fit: cover; object-position: 50% 18%; }
 a.p-user:hover { text-decoration: none; }
 a.p-user:hover .p-user-name { text-decoration: underline; }
 
@@ -821,8 +857,10 @@ body.lang-ne .idc-design-preview > span { text-transform: none; letter-spacing: 
 @media print {
   @page { size: A4; margin: 12mm; }
 
-  .p-header, .p-footer, .p-noprint, .skip, .p-flash { display: none !important; }
+  .p-header, .p-footer, .p-noprint, .skip, .p-flash,
+  .p-rail, .p-rail-scrim { display: none !important; }
   body.portal { background: #fff; }
+  .p-shell { display: block; }
   .p-main, .p-main.wide { padding: 0; max-width: none; }
 
   .idc-sheet,
@@ -1038,3 +1076,36 @@ span.p-doc-sig-img { width: 1px; }
   overflow: hidden; background: var(--bg-soft);
 }
 .p-photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ====================================================== handing a password over */
+
+/* A password on its way from the campus office to the person it belongs to.
+   It gets its own panel, its own line and a monospace face, because the one
+   way this goes wrong is a character lost on the way to whoever has to type
+   it — and the login page cannot tell them that is what happened. */
+.p-creds {
+  margin-bottom: 24px; padding: 20px 22px;
+  background: var(--ok-bg);
+  border: 1px solid rgba(15, 123, 82, .28);
+  border-inline-start: 4px solid var(--ok);
+  border-radius: var(--radius-sm);
+}
+.p-creds h2 { font-size: 1.04rem; margin: 0 0 4px; color: var(--ok); }
+.p-creds > p { margin: 0 0 14px; font-size: .94rem; color: var(--ink); }
+.p-creds dl { margin: 0; display: grid; gap: 8px; }
+.p-creds dl > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.p-creds dt {
+  flex: 0 0 auto; min-width: 5.5em;
+  font-size: .76rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .p-creds dt { text-transform: none; letter-spacing: 0; font-size: .84rem; }
+.p-creds dd { margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.p-creds code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.02rem; font-weight: 600; letter-spacing: .04em;
+  background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 7px;
+  padding: 7px 12px; user-select: all;
+}
+.p-creds .hint { margin: 14px 0 0; }

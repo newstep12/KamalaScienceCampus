@@ -9,7 +9,28 @@ require_once __DIR__ . '/idcard.php';
  * Page chrome. Every portal page calls layout_head() then layout_foot().
  *
  * $opts: title, nav (array of [href,label,key]), active (key), wide (bool)
+ *
+ * The bar across the top carries only what belongs to the campus and to the
+ * person: the crest and name, the language switch, who is signed in. The
+ * sections live in a rail down the left, one under the other, because there
+ * are eight of them for an administrator and eight tabs across a header is a
+ * header that wraps onto a second row and still cannot be read at a glance.
+ * A rail also has somewhere to grow.
  */
+
+/**
+ * Whether this page drew the rail, so layout_foot() knows to close it. Set by
+ * layout_head(); the sign-in and registration pages pass no navigation and get
+ * a single centred column instead.
+ */
+function layout_has_rail(?bool $set = null): bool
+{
+    static $has = false;
+    if ($set !== null) {
+        $has = $set;
+    }
+    return $has;
+}
 function layout_head(array $opts = []): void
 {
     $user   = current_user();
@@ -43,6 +64,10 @@ function layout_head(array $opts = []): void
 
 <header class="p-header">
   <div class="p-header-inner">
+    <?php if ($nav): ?>
+      <button class="p-nav-toggle" type="button" aria-expanded="false" aria-controls="p-rail"
+              aria-label="<?= te('menu') ?>">☰</button>
+    <?php endif; ?>
     <a class="p-brand" href="<?= e($user ? home_for($user) : portal_url('/index.php')) ?>">
       <img class="crest" src="<?= e(portal_url('/../assets/img/logo-192.png')) ?>" alt="" width="38" height="38">
       <span class="p-brand-text">
@@ -50,17 +75,6 @@ function layout_head(array $opts = []): void
         <span class="p-brand-sub"><?= te('portal') ?></span>
       </span>
     </a>
-
-    <?php if ($nav): ?>
-      <button class="p-nav-toggle" type="button" aria-expanded="false" aria-controls="p-nav">☰</button>
-      <nav class="p-nav" id="p-nav" aria-label="<?= te('menu') ?>">
-        <ul>
-          <?php foreach ($nav as $item): ?>
-            <li><a href="<?= e($item['href']) ?>"<?= $active === $item['key'] ? ' aria-current="page"' : '' ?>><?= e($item['label']) ?></a></li>
-          <?php endforeach; ?>
-        </ul>
-      </nav>
-    <?php endif; ?>
 
     <div class="p-header-right">
       <a class="p-lang" href="<?= e(lang_switch_url($other)) ?>" title="<?= te('language') ?>">
@@ -86,6 +100,23 @@ function layout_head(array $opts = []): void
   </div>
 </header>
 
+<?php layout_has_rail((bool) $nav); ?>
+<?php if ($nav): ?>
+<div class="p-shell">
+  <aside class="p-rail" id="p-rail">
+    <nav aria-label="<?= te('menu') ?>">
+      <ul>
+        <?php foreach ($nav as $item): ?>
+          <li><a href="<?= e($item['href']) ?>"<?= $active === $item['key'] ? ' aria-current="page"' : '' ?>><?= e($item['label']) ?></a></li>
+        <?php endforeach; ?>
+      </ul>
+    </nav>
+  </aside>
+  <?php /* Tapping outside the rail closes it on a phone. Hidden until the
+           rail is open, so it never sits over the page on a desktop. */ ?>
+  <div class="p-rail-scrim" hidden></div>
+<?php endif; ?>
+
 <main id="main" class="p-main<?= !empty($opts['wide']) ? ' wide' : '' ?>">
 <?php foreach (take_flashes() as $f): ?>
   <div class="p-flash p-flash-<?= e($f['type']) ?>" role="status"><?= e($f['message']) ?></div>
@@ -97,19 +128,29 @@ function layout_foot(): void
 {
     ?>
 </main>
+<?php if (layout_has_rail()): ?></div><?php endif; ?>
 <footer class="p-footer">
   <span>© <?= localize_digits(date('Y')) ?> <?= te('campus_name') ?></span>
   <a href="<?= e(portal_url('/../index.html')) ?>"><?= te('back_to_site') ?></a>
 </footer>
 <script>
 (function () {
-  var t = document.querySelector('.p-nav-toggle'), n = document.querySelector('.p-nav');
-  if (t && n) {
-    t.addEventListener('click', function () {
-      var open = n.classList.toggle('open');
-      t.setAttribute('aria-expanded', open ? 'true' : 'false');
-      t.textContent = open ? '✕' : '☰';
-    });
+  var toggle = document.querySelector('.p-nav-toggle');
+  var rail   = document.getElementById('p-rail');
+  var scrim  = document.querySelector('.p-rail-scrim');
+  if (toggle && rail) {
+    var setOpen = function (open) {
+      rail.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.textContent = open ? '✕' : '☰';
+      if (scrim) { scrim.hidden = !open; }
+    };
+    toggle.addEventListener('click', function () { setOpen(!rail.classList.contains('open')); });
+    if (scrim) { scrim.addEventListener('click', function () { setOpen(false); }); }
+    // Escape closes it, and so does following a link — otherwise the rail is
+    // still over the page when the next one loads from the back/forward cache.
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { setOpen(false); } });
+    rail.addEventListener('click', function (e) { if (e.target.closest('a')) { setOpen(false); } });
   }
   // Two-step confirm rather than window.confirm(): once a user ticks Chrome's
   // "prevent this page from creating additional dialogs", confirm() returns
@@ -133,6 +174,33 @@ function layout_foot(): void
       setTimeout(reset, 5000);        // disarm if they walk away
     });
     btn.addEventListener('blur', function () { if (armed) setTimeout(reset, 150); });
+  });
+  // Copy a value the page is handing over — a temporary password. The
+  // clipboard API needs a secure context; where there is not one, the text is
+  // selected instead so it can still be copied with the keyboard.
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    var target = document.getElementById(btn.getAttribute('data-copy'));
+    if (!target) return;
+    var select = function () {
+      var range = document.createRange();
+      range.selectNodeContents(target);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    };
+    btn.addEventListener('click', function () {
+      var text = (target.textContent || '').trim();
+      var said = function () {
+        var was = btn.textContent;
+        btn.textContent = btn.getAttribute('data-copied') || was;
+        setTimeout(function () { btn.textContent = was; }, 1600);
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(said, select);
+      } else {
+        select();
+      }
+    });
   });
   document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
     btn.addEventListener('click', function () {

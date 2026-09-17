@@ -25,25 +25,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone = trim((string) ($_POST['phone'] ?? '')) ?: null;
         $role  = in_array($_POST['role'] ?? '', ['lecturer', 'admin'], true) ? $_POST['role'] : 'lecturer';
         $desig = in_array($_POST['designation'] ?? '', designations(), true) ? $_POST['designation'] : null;
+        // An administrator may set the password themselves — one they can say
+        // over the phone, which a generated one is not. Left empty, one is
+        // generated as before. Either way it is temporary: must_change_password
+        // holds the account on the change-password page until its owner picks
+        // their own, so an administrator never keeps a working password.
+        $chosen = (string) ($_POST['password'] ?? '');
 
         if (mb_strlen($name) < 3) {
             flash('error', t('err_name_short'));
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             flash('error', t('err_email_bad'));
+        } elseif ($chosen !== '' && !password_is_strong($chosen)) {
+            flash('error', t('err_pw_weak'));
         } elseif (one('SELECT id FROM users WHERE email = ?', [$email])) {
             flash('error', t('err_email_taken'));
         } else {
-            // Generated here, shown to the admin once, and forced to be changed
-            // at first sign-in — so no one but the account holder ends up
-            // knowing the password they actually use.
-            $temp = temporary_password();
+            $temp = $chosen !== '' ? $chosen : temporary_password();
             q('INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
                       phone, designation, approved_at, approved_by, must_change_password)
                VALUES (?, ?, ?, ?, ?, \'active\', ?, ?, NOW(), ?, 1)',
               [$name, $nameNe, $email, password_hash($temp, PASSWORD_DEFAULT), $role, $phone, $desig, $admin['id']]);
 
             log_activity((int) $admin['id'], 'create_staff', $email, $role);
-            send_notification(
+            $sent = send_notification(
                 $email,
                 'Your Kamala Science Campus portal account',
                 "Dear {$name},\n\nAn account has been created for you on the Kamala Science Campus portal.\n\n"
@@ -53,7 +58,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . "You will be asked to choose your own password the first time you sign in.\n\n"
                 . "Kamala Science Campus\n"
             );
-            flash('ok', t('staff_created', $name, $temp));
+            // The password goes into its own panel rather than into the
+            // sentence, so it can be copied whole.
+            stash_credentials($name, $email, $temp, $sent);
+            flash('ok', t('staff_created', $name));
         }
         header('Location: ' . portal_url('/admin/users.php'));
         exit;
@@ -78,7 +86,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             q('UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?',
               [password_hash($temp, PASSWORD_DEFAULT), $id]);
             log_activity((int) $admin['id'], 'reset_password', $target['email']);
-            flash('ok', t('password_reset_to', $target['full_name'], $temp));
+            $sent = send_notification(
+                (string) $target['email'],
+                'Your Kamala Science Campus portal password has been reset',
+                "Dear {$target['full_name']},\n\nYour portal password has been reset by the campus office.\n\n"
+                . "Sign in at: " . portal_absolute_url('/index.php') . "\n"
+                . "Email:    {$target['email']}\n"
+                . "Password: {$temp}\n\n"
+                . "You will be asked to choose your own password the next time you sign in.\n\n"
+                . "Kamala Science Campus\n"
+            );
+            stash_credentials((string) $target['full_name'], (string) $target['email'], $temp, $sent);
+            flash('ok', t('password_reset_to', $target['full_name']));
         } elseif ($action === 'set_designation') {
             $desig = in_array($_POST['designation'] ?? '', designations(), true) ? $_POST['designation'] : null;
             q('UPDATE users SET designation = ? WHERE id = ?', [$desig, $id]);
@@ -117,6 +136,33 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
 <div class="p-page-head">
   <h1><?= te('manage_people') ?></h1>
 </div>
+
+<?php /* Shown once, straight after an account is made or a password reset.
+         The value stands on its own line, in a monospace face that tells I
+         from l and 0 from O, with a button that copies it — because the one
+         way this goes wrong is a character lost between here and the person
+         who has to type it. */ ?>
+<?php if ($creds = take_credentials()): ?>
+  <section class="p-creds" role="status">
+    <h2><?= te('creds_title') ?></h2>
+    <p><?= e(t('creds_intro', $creds['name'])) ?></p>
+    <dl>
+      <div>
+        <dt><?= te('email') ?></dt>
+        <dd><code id="creds-email"><?= e($creds['email']) ?></code></dd>
+      </div>
+      <div>
+        <dt><?= te('password') ?></dt>
+        <dd>
+          <code id="creds-pw"><?= e($creds['password']) ?></code>
+          <button class="p-btn p-btn-ghost p-btn-sm" type="button"
+                  data-copy="creds-pw" data-copied="<?= te('copied') ?>"><?= te('copy') ?></button>
+        </dd>
+      </div>
+    </dl>
+    <p class="hint"><?= $creds['emailed'] ? te('creds_emailed') : te('creds_not_emailed') ?></p>
+  </section>
+<?php endif; ?>
 
 <section class="p-card" style="margin-bottom:24px;">
   <h2><?= te('add_staff') ?></h2>
@@ -162,6 +208,14 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
           <?php endforeach; ?>
         </select>
       </div>
+    </div>
+    <div class="p-field" style="max-width:420px;">
+      <label for="s_pw"><?= te('first_password') ?> <span class="hint"><?= te('optional') ?></span></label>
+      <div class="p-pw-wrap">
+        <input type="text" id="s_pw" name="password" autocomplete="off" spellcheck="false"
+               placeholder="<?= te('first_password_placeholder') ?>">
+      </div>
+      <span class="hint"><?= te('first_password_hint') ?></span>
     </div>
     <div class="p-form-actions">
       <button class="p-btn p-btn-primary" type="submit"><?= te('create_account') ?></button>
