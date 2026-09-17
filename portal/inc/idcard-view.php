@@ -106,11 +106,11 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
             <?php id_card_row(t('id_card_session'), localize_digits((string) $card['session'])); ?>
           <?php endif; ?>
           <?php id_card_row(t('id_card_no'), id_card_number($holder)); ?>
-          <?php /* Blood group and emergency contact used to print here as
-                   empty rules. The portal never asks anybody for either, so
-                   they were two blank lines on every card the campus issued
-                   and no way to fill them in. Gone until something collects
-                   them. */ ?>
+          <?php /* The blood group is back, because the portfolio now asks
+                   for it. The emergency contact is not: nothing collects one,
+                   and a row nobody can fill in is what took both of them off
+                   this card in the first place. */ ?>
+          <?php id_card_row(t('id_card_blood'), $holder['blood_group'] ?? null); ?>
         </dl>
 
         <div class="idc-terms">
@@ -122,6 +122,18 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
           </ul>
         </div>
 
+        <?php /* The holder signs their own card. An uploaded signature prints
+                 above the line; without one the line prints alone, to be
+                 signed by hand. */ ?>
+        <div class="idc-holder-sig">
+          <?php if ($ctx['holder_sig'] ?? null): ?>
+            <img class="idc-sig-img" src="<?= e($ctx['holder_sig']) ?>" alt="">
+          <?php else: ?>
+            <span class="idc-sig-img"></span>
+          <?php endif; ?>
+          <span class="idc-sig-rule"></span>
+          <span class="idc-sig-title"><?= te('id_card_holder_sig') ?></span>
+        </div>
       </div>
 
       <footer class="idc-back-foot">

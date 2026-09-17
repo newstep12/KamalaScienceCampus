@@ -8,6 +8,17 @@ require_once __DIR__ . '/../inc/idcard.php';
 $user = require_login();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Checked before the CSRF token, because when PHP discards an oversized
+    // request body there is no token left to check — the form comes through
+    // completely empty and would be reported as an expired session. This page
+    // can carry two pictures at once, a photograph and a signature, so it
+    // reaches post_max_size on hosts where either alone would not.
+    if (post_exceeded_limit()) {
+        flash('error', t('err_file_too_large', format_bytes(upload_limit_bytes())));
+        header('Location: ' . portal_url('/student/portfolio.php'));
+        exit;
+    }
+
     verify_csrf();
 
     if (($_POST['form'] ?? '') === 'profile') {
@@ -17,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             => mb_substr(trim(is_string($_POST[$k] ?? null) ? $_POST[$k] : ''), 0, $max);
         q(
             'UPDATE users SET full_name = ?, full_name_ne = ?, phone = ?, address = ?,
-                              date_of_birth = ?, bio = ?
+                              date_of_birth = ?, blood_group = ?, bio = ?
               WHERE id = ?',
             [
                 $field('full_name', 120) ?: $user['full_name'],
@@ -25,10 +36,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $field('phone', 30) ?: null,
                 $field('address', 190) ?: null,
                 parse_date($field('date_of_birth', 10)),
+                // One of the eight or nothing at all. Anything else is stored
+                // as nothing, which leaves the line on the card blank rather
+                // than printing a group nobody typed.
+                blood_group(is_string($_POST['blood_group'] ?? null) ? $_POST['blood_group'] : null),
                 $field('bio', 5000) ?: null,
                 $user['id'],
             ]
         );
+
+        /**
+         * The two pictures a profile can carry, each judged on its own.
+         *
+         * One that fails says so and leaves the other alone. Ending the
+         * request on the first failure — which is what a photograph too small
+         * to print used to do — threw away a signature uploaded in the same
+         * submission, and left the person to find that file again with
+         * nothing on screen to say why it had not been kept.
+         */
+        $failed = false;
 
         // A new photograph replaces the old one, and the old file is removed
         // rather than left in the uploads directory for ever.
@@ -44,12 +70,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 delete_upload($user['avatar_path']);
             } else {
                 flash('error', image_error_message($stored['error']));
-                header('Location: ' . portal_url('/student/portfolio.php'));
-                exit;
+                $failed = true;
             }
         }
 
-        flash('ok', t('profile_saved'));
+        // The holder's own signature for the back of their card. Not cropped
+        // like the photograph: a signature is wide and shallow, and the card
+        // fits it to the line with object-fit instead.
+        if (upload_present($_FILES['signature'] ?? null)) {
+            // Turned the right way up as it is stored, because the hint on
+            // the form asks people to photograph one and a phone records how
+            // it was held rather than rotating the picture.
+            $stored = store_signature_image($_FILES['signature'], 'holder-signature');
+            if ($stored['ok']) {
+                q('UPDATE users SET signature_path = ? WHERE id = ?', [$stored['path'], $user['id']]);
+                delete_upload($user['signature_path'] ?? null);
+            } else {
+                flash('error', $stored['error'] === 'small'
+                    ? t('err_signature_small')
+                    : image_error_message($stored['error']));
+                $failed = true;
+            }
+        }
+
+        if (!$failed) {
+            flash('ok', t('profile_saved'));
+        }
         header('Location: ' . portal_url('/student/portfolio.php'));
         exit;
     }
@@ -58,6 +104,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         delete_upload($user['avatar_path']);
         q('UPDATE users SET avatar_path = NULL WHERE id = ?', [$user['id']]);
         flash('ok', t('photo_removed'));
+        header('Location: ' . portal_url('/student/portfolio.php'));
+        exit;
+    }
+
+    if (($_POST['form'] ?? '') === 'remove_signature') {
+        delete_upload($user['signature_path'] ?? null);
+        q('UPDATE users SET signature_path = NULL WHERE id = ?', [$user['id']]);
+        flash('ok', t('signature_removed'));
         header('Location: ' . portal_url('/student/portfolio.php'));
         exit;
     }
@@ -124,10 +178,24 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
         </div>
       </div>
 
-      <div class="p-field">
-        <label for="address"><?= te('address') ?></label>
-        <input type="text" id="address" name="address" value="<?= e($user['address']) ?>"
-               placeholder="<?= te('address_placeholder') ?>">
+      <div class="p-field-row">
+        <div class="p-field">
+          <label for="address"><?= te('address') ?></label>
+          <input type="text" id="address" name="address" value="<?= e($user['address']) ?>"
+                 placeholder="<?= te('address_placeholder') ?>">
+        </div>
+        <div class="p-field">
+          <label for="blood_group"><?= te('blood_group') ?> <span class="hint"><?= te('optional') ?></span></label>
+          <select id="blood_group" name="blood_group">
+            <option value=""><?= te('blood_group_none') ?></option>
+            <?php foreach (blood_groups() as $group): ?>
+              <option value="<?= e($group) ?>" <?= ($user['blood_group'] ?? '') === $group ? 'selected' : '' ?>>
+                <?= e($group) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <span class="hint"><?= te('blood_group_hint') ?></span>
+        </div>
       </div>
 
       <div class="p-field">
@@ -142,6 +210,18 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
         <?php endif; ?>
         <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
         <span class="hint"><?= te('photo_idcard_note') ?></span>
+      </div>
+
+      <div class="p-field">
+        <label for="signature"><?= te('holder_signature') ?> <span class="hint"><?= te('optional') ?></span></label>
+        <?php if ($sigSrc = holder_signature_src($user)): ?>
+          <div class="p-sig-preview">
+            <div class="p-sig-frame"><img src="<?= e($sigSrc) ?>" alt="<?= te('holder_signature') ?>"></div>
+            <p class="hint"><?= te('holder_signature_preview') ?></p>
+          </div>
+        <?php endif; ?>
+        <input type="file" id="signature" name="signature" accept="image/jpeg,image/png,image/webp">
+        <span class="hint"><?= te('holder_signature_hint') ?></span>
       </div>
 
       <div class="p-field">
@@ -194,6 +274,16 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
             <?= csrf_field() ?>
             <input type="hidden" name="form" value="remove_photo">
             <button class="p-btn-link" type="submit"><?= te('remove_photo') ?></button>
+          </form>
+        <?php endif; ?>
+        <?php /* Beside the photograph's, because both remove a file this
+                 person uploaded — and because a form cannot be nested inside
+                 the one that uploads it. */ ?>
+        <?php if (!empty($user['signature_path'])): ?>
+          <form method="post" style="margin-top:4px;" data-confirm data-confirm-label="<?= te('confirm_again') ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="form" value="remove_signature">
+            <button class="p-btn-link" type="submit"><?= te('remove_signature') ?></button>
           </form>
         <?php endif; ?>
       </div>

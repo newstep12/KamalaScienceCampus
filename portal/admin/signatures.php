@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
 require_once __DIR__ . '/../inc/uploads.php';
 require_once __DIR__ . '/../inc/signatures.php';
+require_once __DIR__ . '/../inc/photos.php';
 
 /**
  * The signature library — administrators only, and the only page in the portal
@@ -50,8 +51,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 80 px on the short side: a signature strip is wide and shallow,
             // so the 200 px a passport photo needs would turn away a perfectly
             // good scan. Wide enough to print at the 22 mm it occupies is what
-            // matters, and the hint on the form asks for 600 px across.
-            $stored = store_image($_FILES['signature'] ?? [], 'signature', 80);
+            // matters, and the hint on the form asks for 600 px across. A scan
+            // photographed rather than scanned is turned the right way up as
+            // it is stored; a PNG is never touched, so a transparent
+            // background stays transparent.
+            $stored = store_signature_image($_FILES['signature'] ?? [], 'signature');
             if (!$stored['ok']) {
                 flash('error', $stored['error'] === 'small' ? t('err_signature_small') : image_error_message($stored['error']));
             } else {

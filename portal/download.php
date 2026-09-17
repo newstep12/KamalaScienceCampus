@@ -61,6 +61,19 @@ if ($photoId = (int) ($_GET['photo'] ?? 0)) {
     inline_image_or_404($person['avatar_path'] ?? null);
 }
 
+if ($holderSigId = (int) ($_GET['holder_signature'] ?? 0)) {
+    // The holder's own signature, printed on the back of their card. Theirs
+    // and the office's to see, nobody else's — a lecturer who may see a
+    // student's photograph may not see their signature. A 404 rather than a
+    // 403, as above, so the reply says nothing about whose account exists.
+    if (!can_view_holder_signature($user, $holderSigId)) {
+        http_response_code(404);
+        exit('Not found.');
+    }
+    $person = one('SELECT signature_path FROM users WHERE id = ? LIMIT 1', [$holderSigId]);
+    inline_image_or_404($person['signature_path'] ?? null);
+}
+
 if (isset($_GET['signature'])) {
     // A signature is handed out only as far as the office has released it:
     // to administrators alone while the scope is 'admin', to anybody signed

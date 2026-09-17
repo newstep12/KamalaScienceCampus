@@ -314,6 +314,25 @@ the profile behind it. Anything still blank — photograph, date of birth,
 address — prints as a rule to write on rather than disappearing, and the page
 says what is missing with a link to fix it.
 
+Two more details belong to the back, and are filled in on the same page.
+The **blood group** is a list of the eight groups and nothing else: a value
+that is not one of them is stored as nothing, so the card never prints a group
+nobody chose. The **signature** is uploaded like a photograph, held to 80 px on
+the short side rather than 200 (a signature strip is wide and shallow), and
+removed again from the same page. Neither is counted as missing — a card
+without them is a perfectly good card, signed by hand — so leaving both blank
+never produces a notice.
+
+A signature photographed rather than scanned is **turned the right way up and
+re-encoded** as it is stored, exactly as a photograph is: a phone records how
+it was held in an EXIF tag instead of rotating the picture, and a signature
+lying on its side is not something anyone looks twice at a squiggle to notice.
+Only a JPEG is touched, because it is the only format that carries that tag and
+the only one a camera produces — a PNG or WebP is stored exactly as it arrived,
+so a scan with a transparent background stays transparent, which is what prints
+best on a card. The campus's own signature library stores its scans the same
+way.
+
 **The photograph is round**, framed the way the public site frames the
 campus's people: a white ring with a thin line outside it. The ring is drawn
 with an outline rather than a shadow, because browsers drop a shadow when
@@ -324,15 +343,32 @@ The photograph is **stored square**, because the frame is. Storing a 25 × 32
 portrait for a round frame would mean the card cropped it a second time at
 render, on top of the crop done at upload: two head-placement rules stacked,
 and `is_card_shaped()` certifying photographs as fitting a frame they no
-longer fit. The crop still sits high — a quarter of the excess off the top,
-three quarters off the bottom — so the head survives it.
+longer fit. The card therefore anchors nothing itself — the stored photograph
+is centred in the frame, which is also exactly what the portfolio previews.
 
-The back used to carry a blood group, an emergency contact and a line for the
-holder's signature. Nothing in the portal asks anybody for the first two, so
-they printed as two empty rules on every card the campus issued with no way to
-fill them in, and they are gone until something collects them — as is the
-holder's signature line. What is left is what the campus actually knows: when
-the card was issued, how long it is valid, the academic session, the card
+**The crop keeps the headroom a circle needs.** It used to take a quarter of
+the excess off the top, which is right for a rectangle and wrong for this
+frame: a circle meets the square only at the middle of each edge, so a head
+spanning the middle half of the frame needs about 7% of the height clear above
+it or the ring cuts across it. A quarter of the excess was more than that on
+every ordinary phone photo — 6% off the top of a 3 × 4, 11% off a 9 × 16
+full-length shot, which left the top of the head level with the edge of the
+crop and the ring through it. Only a sliver comes off the top now, so the
+headroom the photograph arrived with is the headroom it keeps.
+
+A photograph that was already stored before this went in cannot be given
+headroom back — the original it was cropped from is gone — so **a photograph
+whose head sits tight against the ring needs uploading again** from the
+portfolio, where the preview shows the new crop before it is saved.
+
+**The back carries the blood group and the holder's own signature**, both
+filled in by the holder from their portfolio. Neither used to be collected
+anywhere, which is why both came off the card: they printed as empty rules on
+every card the campus issued with no way to fill them in. Now the profile asks
+for them. Left blank they still print as a rule to write on, exactly like a
+missing date of birth on the front. The emergency contact has not come back:
+nothing collects one. The rest of the back is what the campus already knows —
+when the card was issued, how long it is valid, the academic session, the card
 number, the conditions, and where to return it.
 
 That same section sets the name and title printed beneath the signature, how
@@ -361,11 +397,12 @@ downstream has to think about it:
   orientation and records how it was held in an EXIF tag. CSS knows nothing
   about that tag, so a portrait taken the usual way used to print on its side.
   It is now rotated before anything else happens.
-- **Cropped to the card's frame**, 25 × 32. Too wide and the sides come off
-  evenly. Too tall and the crop sits high — a quarter of the excess off the
-  top, three quarters off the bottom — because people stand in the middle of
-  their own photographs, which puts the head in the upper third; centring a
-  full-length photo takes the top of the head off and keeps the knees.
+- **Cropped to the card's frame**, a square. Too wide and the sides come off
+  evenly. Too tall and nearly all of the excess comes off the bottom, because
+  people stand in the middle of their own photographs, which puts the head in
+  the upper third; centring a full-length photo takes the top of the head off
+  and keeps the knees. Only a sliver comes off the top, so the head keeps the
+  clearance the round frame needs (above).
 - **Re-encoded** to 600 px across (about 900 dpi at the size it prints) as
   JPEG, so a five megabyte original is not sent down the wire every time
   anyone opens a card. A photograph smaller than that is never enlarged.
@@ -374,8 +411,9 @@ The portfolio shows the result in the card's own frame, so the person sees the
 crop that will print rather than a round thumbnail that hides it, and can
 upload another if it is wrong. Nothing here can fail an upload: if GD is
 missing, or the picture is too large to hold in memory on a shared plan, the
-original is stored untouched and the card crops it with `object-fit` as
-before.
+original is stored untouched and the card fits it to the frame with
+`object-fit` as before — centred, which is what the portfolio has always
+previewed.
 
 **Admin → System → Photographs** brings photographs uploaded before any of
 this into line. It stops after twenty seconds and reports what it did and what
@@ -394,9 +432,11 @@ custom properties on `.idc[data-theme]`; nothing in the card's layout names a
 colour, so adding one means adding one block to `assets/css/portal.css` and one
 line to `id_card_themes()`.
 
-Staff titles live in `users.designation`, which **Admin → System → Run database
-updates** adds. Run it once after deploying this version, or staff cards fall
-back to the blanket role name.
+Staff titles live in `users.designation`, the blood group in
+`users.blood_group` and the holder's signature in `users.signature_path`, all
+three added by **Admin → System → Run database updates**. Run it once after
+deploying this version, or staff cards fall back to the blanket role name and
+the portfolio cannot save either of the two new details.
 
 ### Signatures
 
@@ -404,6 +444,13 @@ back to the blanket role name.
 the Campus Chief's among them — and is the only page from which one can be
 uploaded, released or applied. A lecturer cannot open it; a student cannot open
 it; `portal/inc/` is not served at all.
+
+This is not where a person's own signature goes. The signature on the back of
+an identity card is the holder signing their own card: they upload it from
+their portfolio, they remove it from there, and only they and an administrator
+can load the image (`download.php?holder_signature=<id>`) — a narrower rule
+than photographs, which a lecturer may see for the students they teach. It is
+never applied to anything the campus issues.
 
 Holding a signature and using one are deliberately two different acts:
 
@@ -482,9 +529,18 @@ statement is `CREATE TABLE IF NOT EXISTS`, so it only ever adds tables
 introduced by a newer version — it never alters or drops anything, and running
 it twice is harmless. Run it after any deploy that adds tables.
 
-This version adds the `signatures` and `documents` tables; run the update once
-after deploying it, or Admin → Signatures and Admin → Documents will send you
-back to the System page to do exactly that.
+The same run applies a short list of column changes that `CREATE TABLE IF NOT
+EXISTS` cannot deliver to a table that already exists. Each is written to be
+safe to run again, and one that has already been applied is logged and stepped
+over rather than failing the run.
+
+This version adds two columns to `users` — `blood_group` and `signature_path`,
+the two details the back of an identity card now carries. Run the update once
+after deploying it, or saving a profile fails. (The version before it added the
+`signatures` and `documents` tables; Admin → Signatures and Admin → Documents
+send you back here if they are still missing.) A page that fails on a column
+that is not there yet says so and points at this button rather than leaving it
+to the host's error log.
 
 The same page seeds the four-year B.Sc. course structure. **Those course codes
 are placeholders**, not official TU codes — edit each course and set the real

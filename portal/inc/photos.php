@@ -54,12 +54,26 @@ const CARD_PHOTO_UNMETERED_PIXELS = 30000000;
  * Where the crop sits when a photo is taller than the frame — which, the
  * frame being square, is nearly every photograph anyone uploads.
  *
- * Not the middle. People stand in the middle of their own photographs, which
- * puts the head in the upper third; centring the crop on a full-length photo
- * takes the top of the head off and keeps the knees. A quarter of the excess
- * comes off the top and three quarters off the bottom.
+ * Almost all of the excess comes off the bottom, and only a sliver off the
+ * top. Not the middle, because people stand in the middle of their own
+ * photographs, which puts the head in the upper third; centring the crop on a
+ * full-length photo takes the top of the head off and keeps the knees.
+ *
+ * But not a quarter off the top either, which is what this used to take. The
+ * frame is a CIRCLE inscribed in this square, and a circle meets the square
+ * only at the middle of each edge: a head spanning the middle half of the
+ * frame has its corners a quarter of the width out, where the circle has
+ * already come down 6.7% of the height. So a head needs about a fifteenth of
+ * the frame clear above it or the ring cuts into it, however comfortably it
+ * sits inside the square — and a quarter of the excess is more than that on
+ * every ordinary phone photo. On a 3 × 4 it took 6% off the top; on a 9 × 16
+ * full-length shot it took 11%, which put the top of the head level with the
+ * edge of the crop.
+ *
+ * A photograph arrives with whatever headroom the person framing it left. The
+ * crop's job is not to spend it.
  */
-const CARD_PHOTO_TOP_BIAS = 0.25;
+const CARD_PHOTO_TOP_BIAS = 0.04;
 
 /**
  * Validate, crop and store one uploaded photograph.
@@ -115,6 +129,109 @@ function store_card_photo(array $file, string $subdir = 'photos'): array
     @chmod($dir . '/' . $stored, 0644);
 
     return ['ok' => true, 'path' => $subdir . '/' . $stored, 'width' => $w, 'height' => $h];
+}
+
+/* ------------------------------------------------------------ signatures -- */
+
+/**
+ * The smallest signature worth printing, and the widest worth storing.
+ *
+ * A signature strip is wide and shallow, so the 200 px a passport photo needs
+ * on every side would turn away a perfectly good scan. It prints about 24 mm
+ * across, so 900 px is roughly 950 dpi — past anything a campus printer
+ * resolves, and small enough that a card page stays quick to open.
+ */
+const MIN_SIGNATURE_SIDE     = 80;
+const SIGNATURE_WIDTH        = 900;
+const SIGNATURE_QUALITY      = 88;
+
+/**
+ * Validate and store one uploaded signature, turned the right way up.
+ *
+ * The form asks people to photograph a signature on white paper, and a phone
+ * writes the picture in the sensor's orientation with the rotation in an EXIF
+ * tag. Stored as it arrives, a signature photographed the usual way prints on
+ * its side — the same failure store_card_photo() exists to prevent for
+ * photographs, and worse here, because nobody looks twice at a squiggle to
+ * notice it is lying down. The chance to fix it is at upload, once.
+ *
+ * Only a JPEG is touched. It is the only format that carries the orientation
+ * tag and the only one a camera produces, and a PNG or WebP is very often a
+ * scan with a transparent background — which is what prints best on a card
+ * and what re-encoding would flatten to a white box. Those are stored exactly
+ * as they arrived.
+ *
+ * Same contract as store_image(), and the same fallback: if GD is missing or
+ * the picture is too large to decode, the original is stored untouched rather
+ * than the upload failing.
+ */
+function store_signature_image(array $file, string $subdir): array
+{
+    $check = validate_image_upload($file, MIN_SIGNATURE_SIDE);
+    if (!$check['ok']) {
+        return $check;
+    }
+    if ($check['mime'] !== 'image/jpeg' || !image_can_be_processed($check['width'], $check['height'])) {
+        return store_image($file, $subdir, MIN_SIGNATURE_SIDE);
+    }
+
+    $src = load_photo($file['tmp_name'], $check['mime']);
+    if (!$src) {
+        return store_image($file, $subdir, MIN_SIGNATURE_SIDE);
+    }
+    $out = shrink_to_width($src, SIGNATURE_WIDTH);
+    imagedestroy($src);
+
+    $dir = __DIR__ . '/../uploads/' . $subdir;
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+        imagedestroy($out);
+        return ['ok' => false, 'error' => 'upload'];
+    }
+
+    $stored = bin2hex(random_bytes(16)) . '.jpg';
+    $ok     = imagejpeg($out, $dir . '/' . $stored, SIGNATURE_QUALITY);
+    $w      = imagesx($out);
+    $h      = imagesy($out);
+    imagedestroy($out);
+
+    if (!$ok) {
+        // A failed write can leave a truncated file nothing will ever point
+        // at. Out of the way before the fallback stores the original.
+        @unlink($dir . '/' . $stored);
+        return store_image($file, $subdir, MIN_SIGNATURE_SIDE);
+    }
+    @chmod($dir . '/' . $stored, 0644);
+
+    return ['ok' => true, 'path' => $subdir . '/' . $stored, 'width' => $w, 'height' => $h];
+}
+
+/**
+ * A copy no wider than $width, keeping the proportions.
+ *
+ * Never enlarged: a scan already narrower than that keeps its own size rather
+ * than being blown up into a blurry one. It is still copied, because the
+ * caller destroys both this and the image it passed in, and handing back the
+ * same image would have it destroyed twice.
+ */
+function shrink_to_width(GdImage $src, int $width): GdImage
+{
+    $sw = imagesx($src);
+    $sh = imagesy($src);
+    if ($sw <= $width) {
+        // The caller destroys what comes back, and must not be handed the
+        // image it still holds — so this is a copy, not the original.
+        $same = imagecreatetruecolor($sw, $sh);
+        imagefill($same, 0, 0, imagecolorallocate($same, 255, 255, 255));
+        imagecopy($same, $src, 0, 0, 0, 0, $sw, $sh);
+        return $same;
+    }
+    $h   = max(1, (int) round($sh * ($width / $sw)));
+    $out = imagecreatetruecolor($width, $h);
+    // Paper, not black: a JPEG cannot carry transparency anyway, and a card is
+    // printed on white card stock.
+    imagefill($out, 0, 0, imagecolorallocate($out, 255, 255, 255));
+    imagecopyresampled($out, $src, 0, 0, 0, 0, $width, $h, $sw, $sh);
+    return $out;
 }
 
 /**
@@ -370,12 +487,12 @@ function apply_exif_orientation(GdImage $im, string $path): GdImage
 }
 
 /**
- * Crop to 25 × 32 and resample to the stored size.
+ * Crop to the frame's square and resample to the stored size.
  *
  * Too wide, and the sides come off evenly — a person photographed against a
- * wall is in the middle of it. Too tall, and the crop sits high, per
- * CARD_PHOTO_TOP_BIAS. Never enlarged: a small photograph stays its own size
- * rather than being blown up into a blurry one.
+ * wall is in the middle of it. Too tall, and nearly all of the excess comes
+ * off the bottom, per CARD_PHOTO_TOP_BIAS. Never enlarged: a small photograph
+ * stays its own size rather than being blown up into a blurry one.
  */
 function crop_to_card_frame(GdImage $src): GdImage
 {

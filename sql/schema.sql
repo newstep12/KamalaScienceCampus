@@ -16,9 +16,14 @@ CREATE TABLE IF NOT EXISTS users (
   phone           VARCHAR(30)   NULL,
   address         VARCHAR(190)  NULL,
   date_of_birth   DATE          NULL,
+  blood_group     VARCHAR(8)    NULL,            -- A+, O-, and the rest; printed on the card's back
   designation     VARCHAR(80)   NULL,            -- staff title printed on the ID card
   bio             TEXT          NULL,
   avatar_path     VARCHAR(255)  NULL,
+  -- The holder's own signature, uploaded from their portfolio and printed on
+  -- the back of their card. Nothing to do with the signatures table below:
+  -- that is the campus's own signatures, which only an administrator touches.
+  signature_path  VARCHAR(255)  NULL,
   rejection_note  VARCHAR(255)  NULL,
   must_change_password TINYINT(1) NOT NULL DEFAULT 0,
   created_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,

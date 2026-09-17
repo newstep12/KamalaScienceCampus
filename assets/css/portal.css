@@ -597,9 +597,9 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
 .idc-detail { display: flex; flex-direction: column; min-width: 0; text-align: center; }
 
 /* Round, the way the public site frames the campus's people: a white ring
-   with a thin line outside it. The stored photograph is 25 × 32, so filling a
-   circle crops the sides — anchored high by the rule below, which is why the
-   head survives it. */
+   with a thin line outside it. The stored photograph is square, because this
+   frame is — photos.php crops it to the frame as it is uploaded, keeping the
+   headroom a circle needs above the head. */
 .idc-photo {
   flex: 0 0 auto;
   width: 6.9em; aspect-ratio: 1;
@@ -614,15 +614,17 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
   outline: .08em solid var(--idc-ring); outline-offset: 0;
   overflow: hidden; background: var(--bg-soft);
 }
-/* Anchored above centre, not in the middle. A stored photo already has the
-   head in the upper third — photos.php crops it that way — so when the frame
-   is shorter than the picture, what must be given up is the bottom of the
-   frame and not an even slice off each end. Centred, a squeezed frame takes
-   the top of the head off, which is the one thing the upload-time crop exists
-   to prevent. */
+/* Centred, and deliberately not anchored high a second time.
+   The placing is decided once, at upload, and a photograph cropped there
+   arrives here already square: in a square frame object-position moves it
+   nowhere at all, and the only pictures it can move are the ones photos.php
+   had to store untouched — no GD on the host, or an image too large to
+   decode. Anchoring those at a tenth pressed the head into the top of the
+   ring, and it disagreed with the portfolio, which previews the same
+   photograph centred in the same frame and promises that is what prints. */
 .idc-photo img {
   width: 100%; height: 100%; display: block;
-  object-fit: cover; object-position: 50% 10%;
+  object-fit: cover; object-position: 50% 50%;
 }
 
 /* The frame used to give up height when the card was too full. It cannot any
@@ -718,13 +720,12 @@ body.lang-ne .idc-sig-title { text-transform: none; letter-spacing: 0; font-size
 .idc-back .idc-body { padding-top: .75em; }
 .idc-back .idc-rows { margin-top: 0; padding-top: 0; border-top: 0; }
 
-/* 15: only the portrait back gained room when the holder's signature went.
-   In landscape the terms already spanned both rows of the grid, so they got
-   nothing, and loosening them there would push the last condition off a card
-   whose body is overflow: hidden. */
-.idc-back[data-orientation="portrait"] .idc-rows { gap: .3em; }
-.idc-back[data-orientation="portrait"] .idc-terms { margin-top: 1.2em; }
-.idc-back[data-orientation="portrait"] .idc-terms li { line-height: 1.55; margin-bottom: .34em; }
+/* The portrait back was loosened — wider gaps between the rows, more air above
+   the conditions — when the blood group and the holder's signature came off
+   it. They are back, because the portfolio now collects both, so the room they
+   took is theirs again and the loosening is gone with them. Nothing here can
+   be given away twice: the back's body is overflow: hidden, so an over-filled
+   card drops its last condition and says nothing about it. */
 
 .idc-terms { margin-top: .9em; }
 .idc-terms h4 {
@@ -734,6 +735,18 @@ body.lang-ne .idc-sig-title { text-transform: none; letter-spacing: 0; font-size
 body.lang-ne .idc-terms h4 { font-family: var(--deva); text-transform: none; letter-spacing: 0; font-size: .8em; }
 .idc-terms ul { margin: 0; padding-inline-start: 1.1em; }
 .idc-terms li { font-size: .7em; line-height: 1.45; color: var(--ink-soft); margin-bottom: .2em; }
+
+/* The holder's own signature, at the foot of the back. margin-top: auto keeps
+   it against the bottom of the body whatever length the conditions run to, so
+   it never floats in the middle of a card with a short list above it. A
+   holder who has not uploaded one gets the rule alone, to sign by hand — the
+   same bargain the Campus Chief's signature strikes on the front. */
+.idc-holder-sig {
+  margin-top: auto; padding-top: 1.2em;
+  display: flex; flex-direction: column; align-items: flex-start;
+}
+.idc-holder-sig .idc-sig-img { max-width: 11em; }
+.idc-holder-sig .idc-sig-rule { width: 11em; }
 
 .idc-back-foot {
   background: var(--idc-strip); border-top: 1px solid var(--idc-rule);
@@ -786,12 +799,20 @@ body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 6.2em;
 .idc-back[data-orientation="landscape"] .idc-body {
   display: grid; padding: .55em .8em .45em;
   grid-template-columns: 1.05fr 1fr; gap: .1em .9em;
-  grid-template-areas: "rows terms";
+  grid-template-areas: "rows terms" "sig terms";
   align-content: start;
 }
 .idc-back[data-orientation="landscape"] .idc-rows { grid-area: rows; gap: .16em; }
 .idc-back[data-orientation="landscape"] .idc-row { grid-template-columns: 7.2em 1fr; }
 .idc-back[data-orientation="landscape"] .idc-terms { grid-area: terms; margin-top: 0; }
+/* Beside the conditions rather than below them, and no taller than the row it
+   sits in: the terms already span both rows, so a signature that grew would
+   push the last condition off a card that cannot scroll. */
+.idc-back[data-orientation="landscape"] .idc-holder-sig {
+  grid-area: sig; margin-top: 0; padding-top: .7em; align-self: end;
+}
+.idc-back[data-orientation="landscape"] .idc-holder-sig .idc-sig-img { height: 1.5em; max-width: 9.5em; }
+.idc-back[data-orientation="landscape"] .idc-holder-sig .idc-sig-rule { width: 9.5em; }
 .idc-back[data-orientation="landscape"] .idc-back-foot { padding: .4em .8em .5em; }
 
 /* ---- the panel that sends people here from their portfolio ---- */
@@ -1113,6 +1134,19 @@ span.p-doc-sig-img { width: 1px; }
   overflow: hidden; background: var(--bg-soft);
 }
 .p-photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* The holder's own signature, shown as it will print: a strip rather than a
+   frame, because a signature is wide and shallow, and on white because a
+   scan with a transparent background would otherwise sit on the page's grey
+   and look like a different image on the card. */
+.p-sig-preview { display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; }
+.p-sig-preview .hint { margin: 0; }
+.p-sig-frame {
+  flex: 0 0 auto; width: 170px; height: 60px; padding: 6px 10px;
+  display: grid; place-items: center;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.p-sig-frame img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
 
 /* ====================================================== handing a password over */
 

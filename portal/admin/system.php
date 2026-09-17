@@ -78,6 +78,12 @@ function column_migrations(): array
         // catches and logs, so this is safe to re-run.
         'symbol number index' =>
             'ALTER TABLE users ADD INDEX idx_users_symbol (symbol_no)',
+        // The two details the back of a card now carries, both filled in by
+        // the holder from their own portfolio.
+        'blood group' =>
+            'ALTER TABLE users ADD COLUMN blood_group VARCHAR(8) NULL',
+        'holder signature' =>
+            'ALTER TABLE users ADD COLUMN signature_path VARCHAR(255) NULL',
     ];
 }
 
