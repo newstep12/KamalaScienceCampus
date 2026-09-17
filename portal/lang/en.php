@@ -424,7 +424,16 @@ return [
     'photo_hint'         => 'JPEG, PNG or WebP, up to 5 MB.',
     'photo_idcard_note'  => 'A passport-style photo — head and shoulders, plain background, at least 200 pixels on each side. It is cropped to the card’s frame and turned the right way up for you, and then prints on your identity card.',
     'photo_removed'      => 'Your photograph has been removed.',
-    'photo_card_preview' => 'This is how it prints on your identity card. Upload another if the crop is not right.',
+    'photo_card_preview' => 'This is how it prints on your identity card. Move the frame below if it sits wrong, or upload another photograph.',
+
+    // Placing the round frame on the photograph
+    'photo_place'        => 'Where the frame sits on your photograph',
+    'photo_place_top'    => 'Keep the top',
+    'photo_place_bottom' => 'Keep the bottom',
+    'photo_place_hint'   => 'The card shows a circle, and a circle cuts into the corners of a photograph — so a head with no room above it is clipped by the ring however the picture is framed. Drag this towards “keep the top” for more room above the head, and save to see it. Nothing is lost: the photograph you uploaded is kept and the frame is cut from it again each time.',
+    'photo_place_square' => 'This photograph is already square, so the frame takes all of it and there is nothing to move. If the head sits hard against the ring, the photograph itself has no room above it — upload the original, taller picture instead of one already cropped square, and the frame will keep room above the head for you.',
+    'photo_place_no_source' => 'This photograph was uploaded before the portal began keeping the picture it cuts the frame from, so there is nothing left to move it on. Upload it again and the frame becomes adjustable.',
+    'err_photo_place'    => 'The frame could not be moved on that photograph. Your card is unchanged. Try uploading the photograph again.',
     'photos_title'       => 'Photographs',
     'photos_intro'       => 'Every photograph is cropped to the card’s frame, turned the right way up and re-encoded as it is uploaded, so the card prints what was stored. Photographs added before that ran are still whatever shape they arrived in — this brings them into line. Originals are replaced, so a photograph cropped here cannot be uncropped; anyone can upload a new one from their portfolio.',
     'photos_count'       => '%s photographs on file.',

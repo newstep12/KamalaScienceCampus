@@ -1135,6 +1135,15 @@ span.p-doc-sig-img { width: 1px; }
 }
 .p-photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* Where the round frame sits on the photograph. The generic .p-field rule
+   gives every input a box and padding, which on a slider draws a border round
+   the track; a range input is its own control and wants neither. */
+.p-place input[type="range"] { width: 100%; padding: 0; border: 0; background: none; accent-color: var(--teal); }
+.p-place-ends {
+  display: flex; justify-content: space-between;
+  font-size: .8rem; color: var(--ink-soft); margin-top: 2px;
+}
+
 /* The holder's own signature, shown as it will print: a strip rather than a
    frame, because a signature is wide and shallow, and on white because a
    scan with a transparent background would otherwise sit on the page's grey

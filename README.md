@@ -356,10 +356,33 @@ full-length shot, which left the top of the head level with the edge of the
 crop and the ring through it. Only a sliver comes off the top now, so the
 headroom the photograph arrived with is the headroom it keeps.
 
-A photograph that was already stored before this went in cannot be given
-headroom back — the original it was cropped from is gone — so **a photograph
-whose head sits tight against the ring needs uploading again** from the
-portfolio, where the preview shows the new crop before it is saved.
+**No rule can finish this job, so the holder finishes it.** The crop knows the
+shape of a photograph and nothing about what is in it; where a head actually
+sits is a fact about the picture, not about its proportions. So the rule picks
+a sound starting point and the portfolio offers a slider — *where the frame
+sits on your photograph* — from keeping the top of the picture to keeping the
+bottom. Saving re-cuts the card photograph at the chosen point and the preview
+shows the result.
+
+That is possible because **the picture the frame was cut from is now kept**, as
+a working copy scaled to 1200 px on the long side (a couple of hundred
+kilobytes), turned the right way up, and printed on nothing. Until this version
+the upload was thrown away the moment it was cropped, which made the crop a
+decision that could be taken once and never revisited — and it is why a
+photograph stored before this version cannot be moved at all. Upload it again
+and it becomes adjustable. It also means a future change to the card's frame
+can be re-cut from the picture rather than squeezed out of the last crop, which
+is exactly what went wrong when the frame became a circle.
+
+**A photograph that arrives already square is the one case none of this can
+help**, and it is the common one: a picture someone cropped square for a
+website, or for a round avatar somewhere else. There is no excess for the frame
+to take off either end, so the slider moves nothing and the crop never runs —
+whatever is at the top of the file is at the top of the circle. If that is the
+top of somebody's hair, the ring cuts across it and no frame can invent room
+that is not in the picture. The portfolio says so rather than offering a
+control that would do nothing, and asks for the original, taller photograph
+instead.
 
 **The back carries the blood group and the holder's own signature**, both
 filled in by the holder from their portfolio. Neither used to be collected
@@ -406,6 +429,9 @@ downstream has to think about it:
 - **Re-encoded** to 600 px across (about 900 dpi at the size it prints) as
   JPEG, so a five megabyte original is not sent down the wire every time
   anyone opens a card. A photograph smaller than that is never enlarged.
+- **Kept**, as a working copy at 1200 px on the long side, so the frame can be
+  moved on it afterwards. It is stored under `uploads/photo-source/`, is served
+  by nothing, and goes when the photograph goes.
 
 The portfolio shows the result in the card's own frame, so the person sees the
 crop that will print rather than a round thumbnail that hides it, and can
@@ -416,7 +442,8 @@ original is stored untouched and the card fits it to the frame with
 previewed.
 
 **Admin → System → Photographs** brings photographs uploaded before any of
-this into line. It stops after twenty seconds and reports what it did and what
+this into line, cutting each to the frame from the photograph on the card —
+the only thing there is to cut from, since those have no working copy. It stops after twenty seconds and reports what it did and what
 is left, so a campus with hundreds of them runs it twice rather than watching
 the page die at the host's execution limit; each photograph is committed as it
 goes, and running it again simply continues. A photograph whose file is
@@ -534,9 +561,10 @@ EXISTS` cannot deliver to a table that already exists. Each is written to be
 safe to run again, and one that has already been applied is logged and stepped
 over rather than failing the run.
 
-This version adds two columns to `users` — `blood_group` and `signature_path`,
-the two details the back of an identity card now carries. Run the update once
-after deploying it, or saving a profile fails. (The version before it added the
+This version adds four columns to `users` — `blood_group` and `signature_path`
+for the back of the identity card, and `avatar_source_path` and `avatar_focus`
+for the photograph's working copy and where the frame sits on it. Run the
+update once after deploying it, or saving a profile fails. (The version before it added the
 `signatures` and `documents` tables; Admin → Signatures and Admin → Documents
 send you back here if they are still missing.) A page that fails on a column
 that is not there yet says so and points at this button rather than leaving it

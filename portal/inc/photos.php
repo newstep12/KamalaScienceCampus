@@ -72,20 +72,67 @@ const CARD_PHOTO_UNMETERED_PIXELS = 30000000;
  *
  * A photograph arrives with whatever headroom the person framing it left. The
  * crop's job is not to spend it.
+ *
+ * A twentieth rather than some finer figure because this is also where the
+ * portfolio's slider starts, and that slider moves in steps of five. A default
+ * off the steps is snapped to the nearest one by the browser, so an ordinary
+ * save of the profile would post a placement that differs from the stored one
+ * and quietly re-cut a photograph nobody had asked to move.
  */
-const CARD_PHOTO_TOP_BIAS = 0.04;
+const CARD_PHOTO_TOP_BIAS = 0.05;
 
 /**
- * Validate, crop and store one uploaded photograph.
+ * Where the frame sits on the photograph, as a percentage of the excess taken
+ * off the top: 0 keeps the very top of the picture, 100 keeps the very bottom,
+ * and the default is CARD_PHOTO_TOP_BIAS.
  *
- * Same contract as store_image(), so the callers are unchanged apart from the
- * name: ['ok' => true, 'path', 'width', 'height'], or ['ok' => false, 'error']
- * with 'upload', 'type' or 'small'.
+ * It is a per-person setting because no rule can do this job properly. The
+ * crop above knows the shape of a photograph and nothing about what is in it:
+ * where somebody's head actually sits is a fact about the picture, not about
+ * its proportions, and the only reliable reader of it is the person whose face
+ * it is. So the rule picks a sound starting point and the holder moves it.
+ */
+function card_photo_focus(?int $percent): int
+{
+    if ($percent === null) {
+        return (int) round(CARD_PHOTO_TOP_BIAS * 100);
+    }
+    return max(0, min(100, $percent));
+}
+
+/**
+ * The working copy kept beside the card photograph: the picture as it was
+ * uploaded, turned the right way up and scaled down, printed on nothing.
+ *
+ * It exists because the crop is a decision, and a decision that cannot be
+ * revisited is a decision made once and for ever. Until now the original was
+ * thrown away the moment it was cropped, so the crop could never be moved, and
+ * when the card's frame changed shape everyone's photograph had to be squeezed
+ * into the new one from the old crop rather than re-cut from the picture. The
+ * copy costs a couple of hundred kilobytes and buys back both.
+ *
+ * 1200 px on the long side is far more than the 600 px square the card needs,
+ * and small enough that keeping one per person is not a burden on a shared
+ * plan.
+ */
+const CARD_PHOTO_SOURCE_SIDE    = 1200;
+const CARD_PHOTO_SOURCE_QUALITY = 82;
+const CARD_PHOTO_SOURCE_DIR     = 'photo-source';
+
+/**
+ * Validate, crop and store one uploaded photograph, and keep the working copy
+ * it was cropped from.
+ *
+ * Same contract as store_image() with one key added: ['ok' => true, 'path',
+ * 'source', 'width', 'height'], or ['ok' => false, 'error'] with 'upload',
+ * 'type' or 'small'. 'source' is the working copy's path, or null when there
+ * is none — in which case the crop cannot be moved afterwards.
  *
  * If the image cannot be processed — GD missing, a picture too large to hold
  * in memory, a decoder that refuses it — the original is stored as it is
- * rather than the upload failing. The card still crops it with object-fit;
- * the person just does not get the tidier version.
+ * rather than the upload failing. The card still fits it to the frame with
+ * object-fit; the person just does not get the tidier version, and has no
+ * working copy to move it with.
  */
 function store_card_photo(array $file, string $subdir = 'photos'): array
 {
@@ -101,8 +148,16 @@ function store_card_photo(array $file, string $subdir = 'photos'): array
         ? load_photo($file['tmp_name'], $check['mime'])
         : null;
     if (!$src) {
-        return store_image($file, $subdir, MIN_PHOTO_SIDE);
+        $plain = store_image($file, $subdir, MIN_PHOTO_SIDE);
+        $plain['source'] = null;
+        return $plain;
     }
+
+    // Written first, from the same decode, and already turned the right way
+    // up — so moving the crop later never has to read an EXIF tag again. A
+    // failure here is not a failed upload: it costs the placement control,
+    // not the photograph.
+    $source = store_photo_source($src);
 
     $card = crop_to_card_frame($src);
     imagedestroy($src);
@@ -110,6 +165,9 @@ function store_card_photo(array $file, string $subdir = 'photos'): array
     $dir = __DIR__ . '/../uploads/' . $subdir;
     if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
         imagedestroy($card);
+        // Nothing will ever name the working copy if the photograph itself
+        // cannot be stored.
+        delete_upload($source);
         return ['ok' => false, 'error' => 'upload'];
     }
 
@@ -122,13 +180,111 @@ function store_card_photo(array $file, string $subdir = 'photos'): array
     if (!$ok) {
         // A failed write can still have left a truncated file, and nothing
         // will ever point at it. Out of the way before the fallback stores
-        // the original under a different name.
+        // the original under a different name — and the working copy goes
+        // with it, since nothing will ever name that either.
         @unlink($dir . '/' . $stored);
-        return store_image($file, $subdir, MIN_PHOTO_SIDE);
+        delete_upload($source);
+        $plain = store_image($file, $subdir, MIN_PHOTO_SIDE);
+        $plain['source'] = null;
+        return $plain;
     }
     @chmod($dir . '/' . $stored, 0644);
 
-    return ['ok' => true, 'path' => $subdir . '/' . $stored, 'width' => $w, 'height' => $h];
+    return [
+        'ok'     => true,
+        'path'   => $subdir . '/' . $stored,
+        'source' => $source,
+        'width'  => $w,
+        'height' => $h,
+    ];
+}
+
+/**
+ * Write the working copy and return its path, or null if it could not be
+ * written. Never fails an upload: a photograph without one simply cannot have
+ * its crop moved afterwards.
+ */
+function store_photo_source(GdImage $src): ?string
+{
+    $dir = __DIR__ . '/../uploads/' . CARD_PHOTO_SOURCE_DIR;
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+        return null;
+    }
+    $copy   = shrink_within($src, CARD_PHOTO_SOURCE_SIDE);
+    $stored = bin2hex(random_bytes(16)) . '.jpg';
+    $ok     = imagejpeg($copy, $dir . '/' . $stored, CARD_PHOTO_SOURCE_QUALITY);
+    imagedestroy($copy);
+    if (!$ok) {
+        @unlink($dir . '/' . $stored);
+        return null;
+    }
+    @chmod($dir . '/' . $stored, 0644);
+    return CARD_PHOTO_SOURCE_DIR . '/' . $stored;
+}
+
+/**
+ * Cut a card photograph again from a picture already in the uploads directory,
+ * writing the result as a new file and returning its relative path — or null
+ * when it cannot be done, in which case nothing has changed on disk and what
+ * is on the card stays on it.
+ *
+ * Two callers, one job. The portfolio passes somebody's working copy and the
+ * placement they have just chosen; the batch under Admin → System passes a
+ * card photograph stored before any of this and no placement at all, to bring
+ * it to the frame's shape.
+ *
+ * What it is given is deliberately left alone. Removing it is the caller's
+ * job, and only once the database points at the new file: delete first and a
+ * row that fails to update — or a request the host kills in between — names a
+ * photograph that no longer exists, which is a good deal worse than an untidy
+ * uploads directory.
+ */
+function recrop_from_source(?string $sourcePath, ?int $focus = null, string $subdir = 'photos'): ?string
+{
+    $full = resolve_upload($sourcePath);
+    if ($full === null || !photo_can_be_cropped($sourcePath)) {
+        return null;
+    }
+    $src = load_photo($full, (string) (new finfo(FILEINFO_MIME_TYPE))->file($full));
+    if (!$src) {
+        return null;
+    }
+    $card = crop_to_card_frame($src, $focus);
+    imagedestroy($src);
+
+    $dir    = __DIR__ . '/../uploads/' . $subdir;
+    $stored = bin2hex(random_bytes(16)) . '.jpg';
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+        imagedestroy($card);
+        return null;
+    }
+    $ok = imagejpeg($card, $dir . '/' . $stored, CARD_PHOTO_QUALITY);
+    imagedestroy($card);
+    if (!$ok) {
+        @unlink($dir . '/' . $stored);
+        return null;
+    }
+    @chmod($dir . '/' . $stored, 0644);
+    return $subdir . '/' . $stored;
+}
+
+/**
+ * Whether moving the placement would do anything at all.
+ *
+ * A photograph taller than the frame has excess to take off one end or the
+ * other, and the slider moves it. One already square — or wider — has none:
+ * the frame takes the whole height whatever the setting says, and telling
+ * somebody to drag a control that cannot move their photograph is worse than
+ * not offering it. The portfolio says so instead.
+ */
+function photo_can_be_placed(?string $sourcePath): bool
+{
+    $full = resolve_upload($sourcePath);
+    if ($full === null) {
+        return false;
+    }
+    $size = @getimagesize($full);
+    return $size && $size[1] > 0 && ($size[0] / $size[1]) < CARD_PHOTO_RATIO - 0.005;
 }
 
 /* ------------------------------------------------------------ signatures -- */
@@ -179,7 +335,7 @@ function store_signature_image(array $file, string $subdir): array
     if (!$src) {
         return store_image($file, $subdir, MIN_SIGNATURE_SIDE);
     }
-    $out = shrink_to_width($src, SIGNATURE_WIDTH);
+    $out = shrink_within($src, SIGNATURE_WIDTH);
     imagedestroy($src);
 
     $dir = __DIR__ . '/../uploads/' . $subdir;
@@ -206,18 +362,22 @@ function store_signature_image(array $file, string $subdir): array
 }
 
 /**
- * A copy no wider than $width, keeping the proportions.
+ * A copy with neither side longer than $max, keeping the proportions.
  *
- * Never enlarged: a scan already narrower than that keeps its own size rather
+ * The longest side is what is bounded, not the width: a signature strip is
+ * wide and a photograph is tall, and one of them would otherwise come through
+ * at two and a half thousand pixels.
+ *
+ * Never enlarged: a picture already inside the bound keeps its own size rather
  * than being blown up into a blurry one. It is still copied, because the
  * caller destroys both this and the image it passed in, and handing back the
  * same image would have it destroyed twice.
  */
-function shrink_to_width(GdImage $src, int $width): GdImage
+function shrink_within(GdImage $src, int $max): GdImage
 {
     $sw = imagesx($src);
     $sh = imagesy($src);
-    if ($sw <= $width) {
+    if ($sw <= $max && $sh <= $max) {
         // The caller destroys what comes back, and must not be handed the
         // image it still holds — so this is a copy, not the original.
         $same = imagecreatetruecolor($sw, $sh);
@@ -225,55 +385,15 @@ function shrink_to_width(GdImage $src, int $width): GdImage
         imagecopy($same, $src, 0, 0, 0, 0, $sw, $sh);
         return $same;
     }
-    $h   = max(1, (int) round($sh * ($width / $sw)));
-    $out = imagecreatetruecolor($width, $h);
+    $scale = $max / max($sw, $sh);
+    $w     = max(1, (int) round($sw * $scale));
+    $h     = max(1, (int) round($sh * $scale));
+    $out   = imagecreatetruecolor($w, $h);
     // Paper, not black: a JPEG cannot carry transparency anyway, and a card is
     // printed on white card stock.
     imagefill($out, 0, 0, imagecolorallocate($out, 255, 255, 255));
-    imagecopyresampled($out, $src, 0, 0, 0, 0, $width, $h, $sw, $sh);
+    imagecopyresampled($out, $src, 0, 0, 0, 0, $w, $h, $sw, $sh);
     return $out;
-}
-
-/**
- * Re-crop a photograph already in the uploads directory, writing the result
- * as a new file and returning its relative path — or null when it cannot be
- * done, in which case nothing has changed on disk.
- *
- * The original is deliberately left alone. Removing it is the caller's job,
- * and only once the database points at the new file: delete first and a row
- * that fails to update — or a request the host kills in between — names a
- * photograph that no longer exists, which is a good deal worse than an
- * untidy uploads directory.
- */
-function recrop_stored_photo(?string $relPath, string $subdir = 'photos'): ?string
-{
-    $full = resolve_upload($relPath);
-    if ($full === null) {
-        return null;
-    }
-    if (!photo_can_be_cropped($relPath)) {
-        return null;
-    }
-    $src = load_photo($full, (string) (new finfo(FILEINFO_MIME_TYPE))->file($full));
-    if (!$src) {
-        return null;
-    }
-    $card = crop_to_card_frame($src);
-    imagedestroy($src);
-
-    $dir    = __DIR__ . '/../uploads/' . $subdir;
-    $stored = bin2hex(random_bytes(16)) . '.jpg';
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
-        imagedestroy($card);
-        return null;
-    }
-    $ok = imagejpeg($card, $dir . '/' . $stored, CARD_PHOTO_QUALITY);
-    imagedestroy($card);
-    if (!$ok) {
-        return null;
-    }
-    @chmod($dir . '/' . $stored, 0644);
-    return $subdir . '/' . $stored;
 }
 
 /**
@@ -336,7 +456,7 @@ function recrop_stored_photos(): array
             continue;
         }
 
-        $new = recrop_stored_photo($old);
+        $new = recrop_from_source($old);
         if ($new === null) {
             $skipped++;
             continue;
@@ -490,11 +610,12 @@ function apply_exif_orientation(GdImage $im, string $path): GdImage
  * Crop to the frame's square and resample to the stored size.
  *
  * Too wide, and the sides come off evenly — a person photographed against a
- * wall is in the middle of it. Too tall, and nearly all of the excess comes
- * off the bottom, per CARD_PHOTO_TOP_BIAS. Never enlarged: a small photograph
- * stays its own size rather than being blown up into a blurry one.
+ * wall is in the middle of it. Too tall, and the excess comes off according to
+ * $focus, which defaults to CARD_PHOTO_TOP_BIAS: nearly all of it off the
+ * bottom. Never enlarged: a small photograph stays its own size rather than
+ * being blown up into a blurry one.
  */
-function crop_to_card_frame(GdImage $src): GdImage
+function crop_to_card_frame(GdImage $src, ?int $focus = null): GdImage
 {
     $sw = imagesx($src);
     $sh = imagesy($src);
@@ -508,7 +629,7 @@ function crop_to_card_frame(GdImage $src): GdImage
         $cropW = $sw;
         $cropH = (int) round($sw / CARD_PHOTO_RATIO);
         $cropX = 0;
-        $cropY = (int) round(($sh - $cropH) * CARD_PHOTO_TOP_BIAS);
+        $cropY = (int) round(($sh - $cropH) * (card_photo_focus($focus) / 100));
     }
     // Rounding can put the window a pixel over the edge on an exact ratio.
     $cropW = min($cropW, $sw);

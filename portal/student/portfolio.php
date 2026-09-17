@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * nothing on screen to say why it had not been kept.
          */
         $failed = false;
+        $placed = false;
 
         // A new photograph replaces the old one, and the old file is removed
         // rather than left in the uploads directory for ever.
@@ -63,11 +64,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // is stored, so what is kept is what the card prints.
             $stored = store_card_photo($_FILES['photo'], 'photos');
             if ($stored['ok']) {
-                // The row is pointed at the new file first: delete first and a
-                // failed update leaves the account naming a photograph that is
-                // no longer there.
-                q('UPDATE users SET avatar_path = ? WHERE id = ?', [$stored['path'], $user['id']]);
+                // The row is pointed at the new files first: delete first and
+                // a failed update leaves the account naming a photograph that
+                // is no longer there.
+                //
+                // The placement goes back to the default with the photograph,
+                // because it described where the frame sat on the last one. A
+                // setting carried over from a picture nobody is looking at any
+                // more is a worse starting point than the rule.
+                q(
+                    'UPDATE users SET avatar_path = ?, avatar_source_path = ?, avatar_focus = NULL
+                      WHERE id = ?',
+                    [$stored['path'], $stored['source'], $user['id']]
+                );
                 delete_upload($user['avatar_path']);
+                delete_upload($user['avatar_source_path'] ?? null);
+                $placed = true;          // the new photograph settles the placement
             } else {
                 flash('error', image_error_message($stored['error']));
                 $failed = true;
@@ -93,6 +105,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        /**
+         * Moving the frame on a photograph already uploaded.
+         *
+         * Only when the placement actually changed, there is a working copy
+         * with something to move, and no new photograph came with this
+         * submission — a new one has just been cut at the default, and cutting
+         * it again to a figure the person chose for the picture before it
+         * would undo that silently.
+         *
+         * A re-cut that fails changes nothing: the row still names the
+         * photograph on the card, which is on disk, and the setting is left
+         * where it was so the form does not claim a placement the card is not
+         * printing.
+         */
+        $focus = array_key_exists('photo_focus', $_POST)
+            ? card_photo_focus((int) $_POST['photo_focus'])
+            : null;
+
+        $moved = $focus !== null && $focus !== card_photo_focus(
+            isset($user['avatar_focus']) ? (int) $user['avatar_focus'] : null
+        );
+
+        if (!$placed && $moved && photo_can_be_placed($user['avatar_source_path'] ?? null)) {
+            $recut = recrop_from_source($user['avatar_source_path'] ?? null, $focus);
+            if ($recut !== null) {
+                q(
+                    'UPDATE users SET avatar_path = ?, avatar_focus = ? WHERE id = ?',
+                    [$recut, $focus, $user['id']]
+                );
+                delete_upload($user['avatar_path']);
+            } else {
+                flash('error', t('err_photo_place'));
+                $failed = true;
+            }
+        }
+
         if (!$failed) {
             flash('ok', t('profile_saved'));
         }
@@ -102,7 +150,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (($_POST['form'] ?? '') === 'remove_photo') {
         delete_upload($user['avatar_path']);
-        q('UPDATE users SET avatar_path = NULL WHERE id = ?', [$user['id']]);
+        delete_upload($user['avatar_source_path'] ?? null);
+        q('UPDATE users SET avatar_path = NULL, avatar_source_path = NULL, avatar_focus = NULL
+            WHERE id = ?', [$user['id']]);
         flash('ok', t('photo_removed'));
         header('Location: ' . portal_url('/student/portfolio.php'));
         exit;
@@ -211,6 +261,48 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
         <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
         <span class="hint"><?= te('photo_idcard_note') ?></span>
       </div>
+
+      <?php
+      /**
+       * Where the round frame sits on the photograph.
+       *
+       * Offered only when it can do something. A photograph that arrived
+       * already square — a picture cut to a circle for a website, which is
+       * what people reach for first — has no excess for the frame to take off
+       * one end or the other, so the slider would move nothing however far it
+       * was dragged. That case gets the reason instead, because it is also the
+       * one thing that makes a head sit hard against the ring: a photograph
+       * cropped to the top of somebody's hair has no room above it to show,
+       * and no frame can invent any.
+       */
+      $source   = resolve_upload($user['avatar_source_path'] ?? null);
+      $canPlace = $user['avatar_path'] && $source !== null
+          && photo_can_be_placed($user['avatar_source_path']);
+      ?>
+      <?php if ($user['avatar_path']): ?>
+        <div class="p-field p-place">
+          <label for="photo_focus"><?= te('photo_place') ?></label>
+          <?php if ($canPlace): ?>
+            <input type="range" id="photo_focus" name="photo_focus" min="0" max="100" step="5"
+                   value="<?= (int) card_photo_focus(isset($user['avatar_focus']) ? (int) $user['avatar_focus'] : null) ?>">
+            <div class="p-place-ends">
+              <span><?= te('photo_place_top') ?></span>
+              <span><?= te('photo_place_bottom') ?></span>
+            </div>
+            <span class="hint"><?= te('photo_place_hint') ?></span>
+          <?php elseif ($source === null): ?>
+            <?php /* Either the photograph predates the working copy, or the
+                     copy has gone from disk. Both mean the same thing to the
+                     person reading it: there is nothing to move it on, and
+                     uploading it again is what fixes that. Saying it is
+                     square instead would be telling them something untrue
+                     about their own picture. */ ?>
+            <span class="hint"><?= te('photo_place_no_source') ?></span>
+          <?php else: ?>
+            <span class="hint"><?= te('photo_place_square') ?></span>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
 
       <div class="p-field">
         <label for="signature"><?= te('holder_signature') ?> <span class="hint"><?= te('optional') ?></span></label>

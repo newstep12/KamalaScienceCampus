@@ -84,6 +84,12 @@ function column_migrations(): array
             'ALTER TABLE users ADD COLUMN blood_group VARCHAR(8) NULL',
         'holder signature' =>
             'ALTER TABLE users ADD COLUMN signature_path VARCHAR(255) NULL',
+        // The photograph a card photo was cut from, and where the frame sits
+        // on it — so the crop is a decision that can be revisited.
+        'photograph working copy' =>
+            'ALTER TABLE users ADD COLUMN avatar_source_path VARCHAR(255) NULL',
+        'photograph placement' =>
+            'ALTER TABLE users ADD COLUMN avatar_focus TINYINT UNSIGNED NULL',
     ];
 }
 

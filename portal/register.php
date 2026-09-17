@@ -45,12 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // A field people never see but form-filling bots complete. Such a
     // submission gets the normal success page and nothing is stored.
     $isBot = ($_POST['website'] ?? '') !== '';
-    $password = (string) ($_POST['password'] ?? '');
-    $confirm  = (string) ($_POST['password_confirm'] ?? '');
-    $email    = strtolower($in['email']);
-    $year     = (int) $in['year_level'];
-    $dob      = parse_date($in['date_of_birth']);
-    $photoPath = null;
+    $password    = (string) ($_POST['password'] ?? '');
+    $confirm     = (string) ($_POST['password_confirm'] ?? '');
+    $email       = strtolower($in['email']);
+    $year        = (int) $in['year_level'];
+    $dob         = parse_date($in['date_of_birth']);
+    $photoPath   = null;
+    $photoSource = null;
 
     if (mb_strlen($in['full_name']) < 3)                      { $errors['full_name'] = t('err_name_short'); }
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 190) { $errors['email'] = t('err_email_bad'); }
@@ -91,6 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stored = store_card_photo($_FILES['photo'], 'photos');
         if ($stored['ok']) {
             $photoPath = $stored['path'];
+            // The picture the frame was cut from, kept with the account so the
+            // student can move the frame on it from their portfolio later.
+            // Dropped here, it would sit in the uploads directory with nothing
+            // naming it, and the portfolio would tell them their photograph
+            // was uploaded before the portal kept one.
+            $photoSource = $stored['source'];
         } else {
             $errors['photo'] = image_error_message($stored['error']);
         }
@@ -101,8 +108,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!$errors) {
         q(
             'INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
-                                year_level, symbol_no, phone, date_of_birth, address, avatar_path)
-             VALUES (?, ?, ?, ?, \'student\', \'pending\', ?, ?, ?, ?, ?, ?)',
+                                year_level, symbol_no, phone, date_of_birth, address, avatar_path,
+                                avatar_source_path)
+             VALUES (?, ?, ?, ?, \'student\', \'pending\', ?, ?, ?, ?, ?, ?, ?)',
             [
                 $in['full_name'],
                 $in['full_name_ne'] !== '' ? $in['full_name_ne'] : null,
@@ -114,6 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $dob,
                 $in['address'],
                 $photoPath,
+                $photoSource,
             ]
         );
         log_activity(null, 'register', $email, 'Year ' . $year);

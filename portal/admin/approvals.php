@@ -23,8 +23,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Only ever a pending registration, and never an admin account.
         if ($target['role'] !== ROLE_ADMIN && (int) $target['id'] !== (int) $admin['id']) {
             // Take the photograph with the account, rather than leaving it in
-            // the uploads directory with nothing pointing at it.
+            // the uploads directory with nothing pointing at it — and the
+            // working copy the frame was cut from with it.
             delete_upload($target['avatar_path']);
+            delete_upload($target['avatar_source_path'] ?? null);
             q('DELETE FROM users WHERE id = ?', [$id]);
             log_activity((int) $admin['id'], 'delete_user', $target['email']);
             flash('ok', t('deleted_ok', $target['full_name']));

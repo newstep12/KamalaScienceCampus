@@ -20,6 +20,13 @@ CREATE TABLE IF NOT EXISTS users (
   designation     VARCHAR(80)   NULL,            -- staff title printed on the ID card
   bio             TEXT          NULL,
   avatar_path     VARCHAR(255)  NULL,
+  -- The photograph as it was uploaded, scaled down and printed on nothing. It
+  -- is kept so the crop can be moved afterwards, and so a change to the card's
+  -- frame can be re-cut from the picture instead of from the last crop.
+  avatar_source_path VARCHAR(255) NULL,
+  -- Where the frame sits on it: 0 keeps the top of the photograph, 100 the
+  -- bottom. NULL means the crop's own default.
+  avatar_focus    TINYINT UNSIGNED NULL,
   -- The holder's own signature, uploaded from their portfolio and printed on
   -- the back of their card. Nothing to do with the signatures table below:
   -- that is the campus's own signatures, which only an administrator touches.
