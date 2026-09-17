@@ -302,24 +302,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Photographs uploaded before the crop existed are still whatever
             // shape they arrived in. Bring them to the card's frame so a card
             // printed today looks the same whenever its photo was added.
-            $done = $skipped = 0;
-            foreach (all('SELECT id, avatar_path FROM users WHERE avatar_path IS NOT NULL') as $person) {
-                if (is_card_shaped($person['avatar_path'])) {
-                    continue;
-                }
-                $new = recrop_stored_photo($person['avatar_path']);
-                if ($new === null) {
-                    $skipped++;
-                    continue;
-                }
-                q('UPDATE users SET avatar_path = ? WHERE id = ?', [$new, (int) $person['id']]);
-                $done++;
+            $pass = recrop_stored_photos();
+            log_activity((int) $admin['id'], 'recrop_photos', (string) $pass['done']);
+            flash('ok', t(
+                'photos_done',
+                localize_digits((string) $pass['done']),
+                localize_digits((string) $pass['skipped'])
+            ));
+            if ($pass['left']) {
+                // Stopped on the budget rather than finished. Say so, or the
+                // count simply looks wrong.
+                flash('info', t('photos_more', localize_digits((string) $pass['left'])));
             }
-            log_activity((int) $admin['id'], 'recrop_photos', (string) $done);
-            flash(
-                $done || !$skipped ? 'ok' : 'error',
-                t('photos_done', localize_digits((string) $done), localize_digits((string) $skipped))
-            );
         } elseif ($action === 'seed_courses') {
             $added = 0;
             foreach (starter_courses() as [$code, $year, $en, $ne, $cr]) {
@@ -345,8 +339,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Come back to the section that was being edited, not the top of a
         // long page.
-        $anchor = in_array($action, ['save_design', 'save_idcard'], true) ? '#id-cards' : '';
-        if ($action === 'recrop_photos') { $anchor = '#photos'; }
+        $anchor = [
+            'save_design'   => '#id-cards',
+            'save_idcard'   => '#id-cards',
+            'recrop_photos' => '#photos',
+        ][$action] ?? '';
         header('Location: ' . portal_url('/admin/system.php' . $anchor));
         exit;
     }
@@ -361,6 +358,7 @@ $counts = [
     'courses'  => (int) scalar('SELECT COUNT(*) FROM courses'),
     'students' => (int) scalar('SELECT COUNT(*) FROM users WHERE role = \'student\''),
     'notices'  => (int) scalar('SELECT COUNT(*) FROM notices'),
+    'photos'   => (int) scalar('SELECT COUNT(*) FROM users WHERE avatar_path IS NOT NULL AND avatar_path <> \'\''),
 ];
 
 layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]);
@@ -555,22 +553,16 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
 <section class="p-card" id="photos">
   <h2><?= te('photos_title') ?></h2>
   <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('photos_intro') ?></p>
-  <?php
-    $withPhoto = (int) scalar('SELECT COUNT(*) FROM users WHERE avatar_path IS NOT NULL');
-    $toCrop = 0;
-    foreach (all('SELECT avatar_path FROM users WHERE avatar_path IS NOT NULL') as $row) {
-        if (!is_card_shaped($row['avatar_path'])) { $toCrop++; }
-    }
-  ?>
+  <?php /* A count, not a survey: working out how many still need cropping
+           means opening every photograph on disk, which is no business of a
+           page opened to change a mail setting. The pass itself reports what
+           it found. */ ?>
   <p style="font-size:.9rem;color:var(--ink-soft);margin-top:10px;">
-    <?= te('photos_count', localize_digits((string) $withPhoto), localize_digits((string) $toCrop)) ?>
+    <?= te('photos_count', localize_digits((string) $counts['photos'])) ?>
   </p>
   <form method="post" style="margin-top:14px;">
     <?= csrf_field() ?>
-    <button class="p-btn <?= $toCrop ? 'p-btn-primary' : 'p-btn-ghost' ?>" type="submit" name="action" value="recrop_photos"
-            <?= $toCrop ? '' : 'disabled' ?>>
-      <?= te('photos_run') ?>
-    </button>
+    <button class="p-btn p-btn-gold" type="submit" name="action" value="recrop_photos"><?= te('photos_run') ?></button>
   </form>
 </section>
 

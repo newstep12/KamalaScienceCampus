@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/uploads.php';
 
 /**
@@ -31,6 +32,16 @@ const CARD_PHOTO_WIDTH   = 600;
 const CARD_PHOTO_QUALITY = 88;
 
 /**
+ * Ceilings on what is worth decoding. The first stops a picture whose only
+ * purpose is to exhaust the machine; the second is the more careful figure
+ * used when memory_limit is unset or unlimited and there is nothing at all to
+ * measure against. Both are absolute: an ordinary phone photo, eight to
+ * twelve megapixels, is far below either.
+ */
+const CARD_PHOTO_MAX_PIXELS       = 50000000;
+const CARD_PHOTO_UNMETERED_PIXELS = 30000000;
+
+/**
  * Where the crop sits when a photo is taller than the frame.
  *
  * Not the middle. People stand in the middle of their own photographs, which
@@ -54,31 +65,19 @@ const CARD_PHOTO_TOP_BIAS = 0.25;
  */
 function store_card_photo(array $file, string $subdir = 'photos'): array
 {
-    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
-        return ['ok' => false, 'error' => 'upload'];
-    }
-    if ($file['size'] > MAX_IMAGE_UPLOAD || $file['size'] <= 0) {
-        return ['ok' => false, 'error' => 'upload'];
-    }
-
-    $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
-    if (!isset(ALLOWED_IMAGES[$mime])) {
-        return ['ok' => false, 'error' => 'type'];
+    // The same rules store_image() applies, because it is the same function:
+    // the minimum side is measured on what was uploaded, not on what is left
+    // after the frame takes its cut.
+    $check = validate_image_upload($file, MIN_PHOTO_SIDE);
+    if (!$check['ok']) {
+        return $check;
     }
 
-    $size = @getimagesize($file['tmp_name']);
-    if (!$size || $size[0] < 1 || $size[1] < 1) {
-        return ['ok' => false, 'error' => 'type'];
-    }
-    // Measured before any cropping: an image large enough to print is judged
-    // on what was uploaded, not on what is left after the frame takes its cut.
-    if ($size[0] < 200 || $size[1] < 200) {
-        return ['ok' => false, 'error' => 'small'];
-    }
-
-    $src = image_can_be_processed($size[0], $size[1]) ? load_photo($file['tmp_name'], $mime) : null;
+    $src = image_can_be_processed($check['width'], $check['height'])
+        ? load_photo($file['tmp_name'], $check['mime'])
+        : null;
     if (!$src) {
-        return store_image($file, $subdir, 200);
+        return store_image($file, $subdir, MIN_PHOTO_SIDE);
     }
 
     $card = crop_to_card_frame($src);
@@ -97,7 +96,11 @@ function store_card_photo(array $file, string $subdir = 'photos'): array
     imagedestroy($card);
 
     if (!$ok) {
-        return store_image($file, $subdir, 200);
+        // A failed write can still have left a truncated file, and nothing
+        // will ever point at it. Out of the way before the fallback stores
+        // the original under a different name.
+        @unlink($dir . '/' . $stored);
+        return store_image($file, $subdir, MIN_PHOTO_SIDE);
     }
     @chmod($dir . '/' . $stored, 0644);
 
@@ -105,12 +108,15 @@ function store_card_photo(array $file, string $subdir = 'photos'): array
 }
 
 /**
- * Re-crop a photograph already in the uploads directory, replacing it in
- * place and returning the new relative path — or null when it cannot be done,
- * in which case the original is left exactly as it was.
+ * Re-crop a photograph already in the uploads directory, writing the result
+ * as a new file and returning its relative path — or null when it cannot be
+ * done, in which case nothing has changed on disk.
  *
- * This is what Admin → System runs over photographs uploaded before the crop
- * existed, so a card printed today looks the same whenever its photo arrived.
+ * The original is deliberately left alone. Removing it is the caller's job,
+ * and only once the database points at the new file: delete first and a row
+ * that fails to update — or a request the host kills in between — names a
+ * photograph that no longer exists, which is a good deal worse than an
+ * untidy uploads directory.
  */
 function recrop_stored_photo(?string $relPath, string $subdir = 'photos'): ?string
 {
@@ -118,13 +124,10 @@ function recrop_stored_photo(?string $relPath, string $subdir = 'photos'): ?stri
     if ($full === null) {
         return null;
     }
-    $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->file($full);
-    $size = @getimagesize($full);
-    if (!isset(ALLOWED_IMAGES[$mime]) || !$size || !image_can_be_processed($size[0], $size[1])) {
+    if (!photo_can_be_cropped($relPath)) {
         return null;
     }
-
-    $src = load_photo($full, $mime);
+    $src = load_photo($full, (string) (new finfo(FILEINFO_MIME_TYPE))->file($full));
     if (!$src) {
         return null;
     }
@@ -143,11 +146,88 @@ function recrop_stored_photo(?string $relPath, string $subdir = 'photos'): ?stri
         return null;
     }
     @chmod($dir . '/' . $stored, 0644);
-
-    // Written first, then the old one removed: a failed write must never take
-    // the only copy of somebody's photograph with it.
-    delete_upload($relPath);
     return $subdir . '/' . $stored;
+}
+
+/**
+ * Whether a stored photograph is something this can actually act on — the
+ * file is there, it is an image, and it is small enough to decode.
+ *
+ * The distinction matters to the batch below: a photograph whose file has
+ * gone, or that GD will not read, is not work waiting to be done. Counting it
+ * as outstanding would leave the page reporting a figure that no amount of
+ * clicking could ever clear.
+ */
+function photo_can_be_cropped(?string $relPath): bool
+{
+    $full = resolve_upload($relPath);
+    if ($full === null) {
+        return false;
+    }
+    $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->file($full);
+    $size = @getimagesize($full);
+    return isset(ALLOWED_IMAGES[$mime]) && $size && image_can_be_processed($size[0], $size[1]);
+}
+
+/**
+ * How long a pass may run. Decoding and re-encoding a photograph takes a
+ * appreciable fraction of a second, and a campus with four hundred of them
+ * would run well past the 30-second max_execution_time shared hosting sets —
+ * killing the request mid-loop, with no redirect, no log line and nothing on
+ * screen to say how far it got.
+ */
+const RECROP_SECONDS = 20;
+
+/**
+ * Bring stored photographs to the card's frame, as many as the budget allows.
+ *
+ * Each row is committed as it goes, so stopping early loses nothing and
+ * running it again simply continues. The order within one photograph matters:
+ * the new file is written, then the row is pointed at it, and only then is the
+ * original removed — so a failed update leaves the person's photograph exactly
+ * where it was rather than pointing at a file that has been deleted.
+ *
+ * @return array{done:int, skipped:int, left:int, total:int}
+ */
+function recrop_stored_photos(): array
+{
+    $deadline = microtime(true) + RECROP_SECONDS;
+    $rows = all('SELECT id, avatar_path FROM users WHERE avatar_path IS NOT NULL AND avatar_path <> \'\'');
+
+    $done = $skipped = $left = 0;
+    foreach ($rows as $person) {
+        $old = (string) $person['avatar_path'];
+        if (is_card_shaped($old)) {
+            continue;
+        }
+        if (!photo_can_be_cropped($old)) {
+            $skipped++;
+            continue;
+        }
+        if (microtime(true) > $deadline) {
+            $left++;
+            continue;
+        }
+
+        $new = recrop_stored_photo($old);
+        if ($new === null) {
+            $skipped++;
+            continue;
+        }
+        try {
+            q('UPDATE users SET avatar_path = ? WHERE id = ?', [$new, (int) $person['id']]);
+        } catch (Throwable $e) {
+            // The row still names the original, so the copy just written is
+            // the one that has to go.
+            delete_upload($new);
+            $skipped++;
+            continue;
+        }
+        delete_upload($old);
+        $done++;
+    }
+
+    return ['done' => $done, 'skipped' => $skipped, 'left' => $left, 'total' => count($rows)];
 }
 
 /** True when a photograph is already stored at the card's proportions. */
@@ -167,26 +247,44 @@ function is_card_shaped(?string $relPath): bool
 /* ------------------------------------------------------------- the work -- */
 
 /**
- * Whether there is room to hold this image in memory.
+ * Whether this image may be decoded at all.
  *
- * GD works on uncompressed pixels: a 12 megapixel phone photo is about 48 MB
- * once decoded, and two of them — source and destination — will end a request
- * on a shared plan whose memory_limit is 128 MB. Better to store the original
- * untouched than to hand somebody a blank page.
+ * The pixel count is the guard that matters, and it is checked first, because
+ * memory_limit cannot be relied on here: GD allocates its pixel buffers
+ * through libgd rather than PHP's allocator, so they are not counted against
+ * the limit and a limit of -1 bounds nothing whatsoever. A PNG a couple of
+ * hundred kilobytes long can declare 30000 x 30000 and ask the decoder for
+ * three and a half gigabytes — and register.php takes uploads before anyone
+ * has signed in.
+ *
+ * Refusing is not an error: the caller stores the original untouched, and the
+ * card crops it in CSS as it always did.
  */
 function image_can_be_processed(int $w, int $h): bool
 {
-    if (!function_exists('imagecreatetruecolor')) {
+    if (!function_exists('imagecreatetruecolor') || $w < 1 || $h < 1) {
         return false;
     }
+    $pixels = $w * $h;
+    if ($pixels > CARD_PHOTO_MAX_PIXELS) {
+        return false;
+    }
+
     $limit = ini_bytes((string) ini_get('memory_limit'));
     if ($limit <= 0) {
-        return true;                         // unlimited
+        // No limit to read, so nothing to reason with beyond the cap above.
+        return $pixels <= CARD_PHOTO_UNMETERED_PIXELS;
     }
-    // Source plus destination, and half as much again for the decoder's own
-    // working space.
-    $need = ($w * $h + CARD_PHOTO_WIDTH * (int) round(CARD_PHOTO_WIDTH / CARD_PHOTO_RATIO)) * 4 * 1.5;
-    return $need < ($limit - memory_get_usage(true));
+
+    // Below the caps, memory_limit is used as a rough proxy for how much the
+    // host has to spare — not as a bound, since it does not bind GD. Three
+    // full-size buffers: the decoded source, the copy imagerotate() makes when
+    // the photo needs turning, and the resampled destination. It is deliberately
+    // pessimistic, so on a small plan a very large photograph is stored as it
+    // arrived rather than risking the request. That is a worse-looking card,
+    // never a broken upload.
+    $need = ($pixels * 2 + CARD_PHOTO_WIDTH * (int) round(CARD_PHOTO_WIDTH / CARD_PHOTO_RATIO)) * 4;
+    return $need < $limit;
 }
 
 /**
@@ -211,28 +309,46 @@ function load_photo(string $path, string $mime): ?GdImage
     return $mime === 'image/jpeg' ? apply_exif_orientation($im, $path) : $im;
 }
 
+/**
+ * What to do with each orientation a camera may record: flip first, then
+ * rotate. 1 is upright and needs nothing.
+ *
+ * Read straight off the EXIF spec, which defines each value by where row 0
+ * and column 0 of the stored image belong in the displayed one, and then
+ * checked against it pixel by pixel rather than reasoned about — 4, 5 and 7
+ * are exactly the three that are easy to get wrong, and a wrong one prints
+ * somebody's face upside down.
+ *
+ * A positive angle is anticlockwise, which is imagerotate()'s convention.
+ */
+function exif_corrections(): array
+{
+    return [
+        2 => [IMG_FLIP_HORIZONTAL, 0],
+        3 => [null,                180],
+        4 => [IMG_FLIP_VERTICAL,   0],
+        5 => [IMG_FLIP_HORIZONTAL, 90],
+        6 => [null,                -90],
+        7 => [IMG_FLIP_HORIZONTAL, -90],
+        8 => [null,                90],
+    ];
+}
+
 function apply_exif_orientation(GdImage $im, string $path): GdImage
 {
     if (!function_exists('exif_read_data')) {
         return $im;
     }
     $exif = @exif_read_data($path);
-    $o    = (int) ($exif['Orientation'] ?? 0);
-    if ($o < 2 || $o > 8) {
+    $plan = exif_corrections()[(int) ($exif['Orientation'] ?? 1)] ?? null;
+    if ($plan === null) {
         return $im;
     }
+    [$flip, $angle] = $plan;
 
-    // 1 is upright; the other seven are the rotations and mirrors a camera
-    // may record. Mirrors are flipped before the rotation, as EXIF defines.
-    if (in_array($o, [2, 4, 5, 7], true)) {
-        imageflip($im, $o === 4 ? IMG_FLIP_VERTICAL : IMG_FLIP_HORIZONTAL);
+    if ($flip !== null) {
+        imageflip($im, $flip);
     }
-    $angle = match ($o) {
-        3, 4    => 180,
-        5, 6    => -90,
-        7, 8    => 90,
-        default => 0,
-    };
     if ($angle !== 0) {
         $rotated = @imagerotate($im, $angle, 0);
         if ($rotated) {

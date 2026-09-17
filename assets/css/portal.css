@@ -544,12 +544,21 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
   border: 1px solid var(--idc-rule); border-radius: .3em;
   overflow: hidden; background: var(--bg-soft);
 }
-.idc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Anchored above centre, not in the middle. A stored photo already has the
+   head in the upper third — photos.php crops it that way — so when the frame
+   is shorter than the picture, what must be given up is the bottom of the
+   frame and not an even slice off each end. Centred, a squeezed frame takes
+   the top of the head off, which is the one thing the upload-time crop exists
+   to prevent. */
+.idc-photo img {
+  width: 100%; height: 100%; display: block;
+  object-fit: cover; object-position: 50% 10%;
+}
 
 /* The photograph is the one block on the front that can give way. When an
    unusually long name and a long address together want more room than the
-   card has, the frame crops a few millimetres — object-fit: cover, so the
-   face is cropped and never squashed — instead of the address dropping off
+   card has, the frame gives up height — as much as a third of it, cropping
+   from the bottom per the rule above — instead of the address dropping off
    the bottom edge, which is what a card too full used to do silently. */
 .idc-front[data-orientation="portrait"] .idc-photo { flex: 0 1 auto; min-height: 5.9em; }
 /* Devanagari sets taller, so the Nepali card gives the type its room back. */

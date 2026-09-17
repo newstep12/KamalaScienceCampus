@@ -37,8 +37,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // is stored, so what is kept is what the card prints.
             $stored = store_card_photo($_FILES['photo'], 'photos');
             if ($stored['ok']) {
-                delete_upload($user['avatar_path']);
+                // The row is pointed at the new file first: delete first and a
+                // failed update leaves the account naming a photograph that is
+                // no longer there.
                 q('UPDATE users SET avatar_path = ? WHERE id = ?', [$stored['path'], $user['id']]);
+                delete_upload($user['avatar_path']);
             } else {
                 flash('error', image_error_message($stored['error']));
                 header('Location: ' . portal_url('/student/portfolio.php'));

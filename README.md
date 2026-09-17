@@ -341,10 +341,14 @@ original is stored untouched and the card crops it with `object-fit` as
 before.
 
 **Admin → System → Photographs** brings photographs uploaded before any of
-this into line, and says how many are still to do. It replaces the original,
-so a photograph cropped there cannot be uncropped — but anyone can upload a
-new one from their portfolio, and running it twice does nothing the second
-time.
+this into line. It stops after twenty seconds and reports what it did and what
+is left, so a campus with hundreds of them runs it twice rather than watching
+the page die at the host's execution limit; each photograph is committed as it
+goes, and running it again simply continues. A photograph whose file is
+missing, or that GD cannot read, is reported as skipped rather than queued for
+ever. It replaces the original, so a photograph cropped there cannot be
+uncropped — but anyone can upload a new one from their portfolio, and a second
+pass over finished work does nothing.
 
 Both faces come from one function, `id_card_face()` in
 `portal/inc/idcard-view.php`, so the preview on the System page is the same
