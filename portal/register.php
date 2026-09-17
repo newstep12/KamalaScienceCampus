@@ -67,11 +67,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Two accounts on one TU symbol number are two people claiming to be the
-    // same student, and the office finds out at examination time. Checked
-    // here rather than as a unique key, because registrations that predate
-    // this may already collide and a constraint would lock the table.
+    // same student, and the office finds out at examination time.
+    //
+    // A check rather than a UNIQUE key: registrations predating this may
+    // already collide, and MySQL refuses to add a unique index to a column
+    // that does. sql/schema.sql carries a plain index instead, which applies
+    // to colliding data and makes this a seek rather than a table scan.
+    //
+    // Rejected rows are excluded on purpose. A student whose registration was
+    // turned down for a typo has to be able to register again with the same
+    // symbol number — it is, after all, still their symbol number — and the
+    // rejected row is kept rather than deleted.
     if (!$errors && !$isBot && $in['symbol_no'] !== ''
-        && one('SELECT id FROM users WHERE symbol_no = ? LIMIT 1', [$in['symbol_no']])) {
+        && one('SELECT id FROM users WHERE symbol_no = ? AND status <> \'rejected\' LIMIT 1', [$in['symbol_no']])) {
         $errors['symbol_no'] = t('err_symbol_taken');
     }
 

@@ -30,7 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // generated as before. Either way it is temporary: must_change_password
         // holds the account on the change-password page until its owner picks
         // their own, so an administrator never keeps a working password.
-        $chosen = (string) ($_POST['password'] ?? '');
+        // Trimmed, like every other field on this form. A password with a
+        // space on the end is a password nobody can retype, and the copy
+        // button beside it trims — so an untrimmed one would hash to
+        // something the copied value does not match.
+        $chosen = trim((string) ($_POST['password'] ?? ''));
 
         if (mb_strlen($name) < 3) {
             flash('error', t('err_name_short'));
@@ -60,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             // The password goes into its own panel rather than into the
             // sentence, so it can be copied whole.
-            stash_credentials($name, $email, $temp, $sent);
+            stash_credentials($name, $email, $temp, $sent, mail_enabled());
             flash('ok', t('staff_created', $name));
         }
         header('Location: ' . portal_url('/admin/users.php'));
@@ -96,8 +100,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 . "You will be asked to choose your own password the next time you sign in.\n\n"
                 . "Kamala Science Campus\n"
             );
-            stash_credentials((string) $target['full_name'], (string) $target['email'], $temp, $sent);
+            stash_credentials((string) $target['full_name'], (string) $target['email'], $temp, $sent, mail_enabled());
             flash('ok', t('password_reset_to', $target['full_name']));
+            // Its own message, and the panel below it. The generic "Saved."
+            // that every other action here falls through to would be a third
+            // success banner above the one thing worth reading.
+            header('Location: ' . portal_url('/admin/users.php'));
+            exit;
         } elseif ($action === 'set_designation') {
             $desig = in_array($_POST['designation'] ?? '', designations(), true) ? $_POST['designation'] : null;
             q('UPDATE users SET designation = ? WHERE id = ?', [$desig, $id]);
@@ -160,7 +169,18 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
         </dd>
       </div>
     </dl>
-    <p class="hint"><?= $creds['emailed'] ? te('creds_emailed') : te('creds_not_emailed') ?></p>
+    <p class="hint">
+      <?php if ($creds['emailed']): ?>
+        <?= te('creds_emailed') ?>
+      <?php elseif (empty($creds['mail_on'])): ?>
+        <?= te('creds_not_emailed') ?>
+      <?php else: ?>
+        <?php /* Notifications are on and it still did not go: an invalid
+                 from-address, or the host refusing the send. Saying "they are
+                 off" would send the admin to check a setting that is right. */ ?>
+        <?= te('creds_send_failed') ?>
+      <?php endif; ?>
+    </p>
   </section>
 <?php endif; ?>
 
@@ -211,10 +231,8 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
     </div>
     <div class="p-field" style="max-width:420px;">
       <label for="s_pw"><?= te('first_password') ?> <span class="hint"><?= te('optional') ?></span></label>
-      <div class="p-pw-wrap">
-        <input type="text" id="s_pw" name="password" autocomplete="off" spellcheck="false"
-               placeholder="<?= te('first_password_placeholder') ?>">
-      </div>
+      <input type="text" id="s_pw" name="password" autocomplete="off" spellcheck="false"
+             placeholder="<?= te('first_password_placeholder') ?>">
       <span class="hint"><?= te('first_password_hint') ?></span>
     </div>
     <div class="p-form-actions">

@@ -230,8 +230,11 @@ from `O`, with a button that copies it. It used to be a value buried in a
 sentence, between a colon and an em dash, and the failure that produces is
 invisible — a trailing space or the dash caught along with it reaches the login
 page as the wrong password, and the login page cannot say which of the two
-went wrong. It is shown once and not stored in the clear, so if it is lost,
-use **Reset password** on that row rather than hunting for it.
+went wrong. It is shown once and there is no way to look it up
+afterwards, so if it is lost, use **Reset password** on that row. It does
+spend the moment between the redirect and that page in the administrator's
+session file in the clear — the cost of the post-redirect-get every form here
+uses — and the first page that shows it clears it.
 
 **Reset password** on any row issues a fresh temporary password under the same
 flag, hands it over the same way, and emails it if notifications are on.

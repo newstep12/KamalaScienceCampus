@@ -286,12 +286,28 @@ function password_is_strong(string $pw): bool
  * colon and an em dash is how a brand-new account ends up unable to sign in —
  * a trailing space or the dash caught with it reads to the login page as the
  * wrong password, which is the one thing it cannot explain.
+ *
+ * It does mean the password sits in the administrator's session file, in the
+ * clear, from the redirect until the page that shows it is loaded. That is the
+ * cost of a POST-redirect-GET, which is how every form in this portal works;
+ * the alternative is rendering the panel straight out of the POST and leaving
+ * a reload to re-create the account. It is read and cleared by the first page
+ * that asks for it.
  */
-function stash_credentials(string $name, string $email, string $password, bool $emailed): void
-{
+function stash_credentials(
+    string $name,
+    string $email,
+    string $password,
+    bool $emailed,
+    bool $mailOn = false
+): void {
     start_session();
     $_SESSION['new_credentials'] = [
-        'name' => $name, 'email' => $email, 'password' => $password, 'emailed' => $emailed,
+        'name'    => $name,
+        'email'   => $email,
+        'password' => $password,
+        'emailed' => $emailed,
+        'mail_on' => $mailOn,
     ];
 }
 

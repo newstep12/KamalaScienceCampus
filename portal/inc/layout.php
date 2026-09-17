@@ -18,19 +18,7 @@ require_once __DIR__ . '/idcard.php';
  * A rail also has somewhere to grow.
  */
 
-/**
- * Whether this page drew the rail, so layout_foot() knows to close it. Set by
- * layout_head(); the sign-in and registration pages pass no navigation and get
- * a single centred column instead.
- */
-function layout_has_rail(?bool $set = null): bool
-{
-    static $has = false;
-    if ($set !== null) {
-        $has = $set;
-    }
-    return $has;
-}
+
 function layout_head(array $opts = []): void
 {
     $user   = current_user();
@@ -100,9 +88,12 @@ function layout_head(array $opts = []): void
   </div>
 </header>
 
-<?php layout_has_rail((bool) $nav); ?>
+<?php /* The shell is always here, with or without a rail inside it, so that
+         layout_foot() closes exactly what layout_head() opened without either
+         of them having to remember which. The sign-in and registration pages
+         pass no navigation and get the single centred column. */ ?>
+<div class="p-shell<?= $nav ? '' : ' p-shell-bare' ?>">
 <?php if ($nav): ?>
-<div class="p-shell">
   <aside class="p-rail" id="p-rail">
     <nav aria-label="<?= te('menu') ?>">
       <ul>
@@ -128,7 +119,7 @@ function layout_foot(): void
 {
     ?>
 </main>
-<?php if (layout_has_rail()): ?></div><?php endif; ?>
+</div>
 <footer class="p-footer">
   <span>© <?= localize_digits(date('Y')) ?> <?= te('campus_name') ?></span>
   <a href="<?= e(portal_url('/../index.html')) ?>"><?= te('back_to_site') ?></a>
@@ -181,20 +172,30 @@ function layout_foot(): void
   document.querySelectorAll('[data-copy]').forEach(function (btn) {
     var target = document.getElementById(btn.getAttribute('data-copy'));
     if (!target) return;
+    // Captured once. Read inside the handler, a second click within the
+    // timeout captures "Copied" as the label to restore, and the button says
+    // Copied for ever after.
+    var label = btn.textContent;
+    var timer = null;
+    var said = function () {
+      btn.textContent = btn.getAttribute('data-copied') || label;
+      clearTimeout(timer);
+      timer = setTimeout(function () { btn.textContent = label; }, 1600);
+    };
+    // Selecting the text is the fallback wherever the clipboard API is not
+    // available — it needs a secure context — so the value can still be copied
+    // with the keyboard. getSelection() is null in some embedded documents.
     var select = function () {
+      var sel = window.getSelection();
+      if (!sel) { return; }
       var range = document.createRange();
       range.selectNodeContents(target);
-      var sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
+      said();
     };
     btn.addEventListener('click', function () {
       var text = (target.textContent || '').trim();
-      var said = function () {
-        var was = btn.textContent;
-        btn.textContent = btn.getAttribute('data-copied') || was;
-        setTimeout(function () { btn.textContent = was; }, 1600);
-      };
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text).then(said, select);
       } else {

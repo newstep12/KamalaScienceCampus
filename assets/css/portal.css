@@ -2,7 +2,9 @@
    Extends the public site's tokens in styles.css; only portal chrome here. */
 
 :root {
-  --p-rail: 252px;
+  --p-rail: 232px;          /* the sections down the left */
+  --p-rail-drawer: 268px;   /* the same rail as a drawer on a phone */
+  --p-head-h: 64px;         /* matches .p-header-inner's min-height */
   --ok: #0f7b52;
   --ok-bg: #e7f5ee;
   --warn: #8a6116;
@@ -35,13 +37,21 @@ body.lang-ne h1, body.lang-ne h2, body.lang-ne h3, body.lang-ne .p-brand-name {
 }
 .p-header-inner {
   max-width: 1240px; margin: 0 auto; padding: 0 20px;
-  display: flex; align-items: center; gap: 18px; min-height: 64px;
+  display: flex; align-items: center; gap: 18px; min-height: var(--p-head-h);
+  /* None of these three can shrink below their contents, so on a narrow phone
+     they wrap onto a second row rather than pushing Sign out off the side of
+     the screen and the whole portal into a sideways scroll. */
+  flex-wrap: wrap; row-gap: 6px;
 }
 
-.p-brand { display: flex; align-items: center; gap: 11px; flex: 0 0 auto; }
+/* The campus name gives way first — it is the one thing here that can be read
+   from half of itself. */
+.p-brand { display: flex; align-items: center; gap: 11px; flex: 0 1 auto; min-width: 0; }
+.p-brand-text { min-width: 0; }
+.p-brand-name, .p-brand-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .p-brand:hover { text-decoration: none; }
 .p-brand .crest { width: 38px; height: 38px; flex-basis: 38px; }
-.p-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.p-brand-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
 .p-brand-name { font-family: var(--serif); font-weight: 700; font-size: .98rem; color: #fff; }
 .p-brand-sub { font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; color: #8fb0cf; }
 body.lang-ne .p-brand-sub { text-transform: none; letter-spacing: 0; font-size: .76rem; }
@@ -105,10 +115,10 @@ body.lang-ne .p-brand-sub { text-transform: none; letter-spacing: 0; font-size: 
 .p-shell { flex: 1; width: 100%; display: flex; align-items: flex-start; }
 
 .p-rail {
-  flex: 0 0 232px; width: 232px;
+  flex: 0 0 var(--p-rail); width: var(--p-rail);
   align-self: stretch;
-  position: sticky; top: 64px;
-  max-height: calc(100vh - 64px); overflow-y: auto;
+  position: sticky; top: var(--p-head-h);
+  max-height: calc(100vh - var(--p-head-h)); overflow-y: auto;
   background: #fff;
   border-inline-end: 1px solid var(--line);
   padding: 18px 12px 34px;
@@ -124,6 +134,10 @@ body.lang-ne .p-brand-sub { text-transform: none; letter-spacing: 0; font-size: 
 body.lang-ne .p-rail a { font-size: 1rem; }
 
 .p-rail-scrim { display: none; }
+
+/* No rail — the sign-in and registration pages. A plain block, so the single
+   column centres itself exactly as it did before the rail existed. */
+.p-shell-bare { display: block; }
 
 /* ------------------------------------------------------------------ main -- */
 
@@ -376,27 +390,34 @@ body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .
 
 /* ------------------------------------------------------------ responsive -- */
 
-/* Narrow enough that 232px of rail would be a third of the screen: it becomes
-   a drawer over the page, opened by the button in the header. */
+/* Narrow enough that the rail would be a third of the screen: it becomes a
+   drawer over the page, opened by the button in the header. */
 @media (max-width: 900px) {
   .p-nav-toggle { display: inline-flex; }
   .p-rail {
-    position: fixed; top: 64px; inset-inline-start: 0; bottom: 0;
-    z-index: 60; width: 268px; flex-basis: 268px; max-height: none;
+    position: fixed; top: var(--p-head-h); inset-inline-start: 0; bottom: 0;
+    z-index: 60; width: var(--p-rail-drawer); flex-basis: var(--p-rail-drawer);
+    max-height: none;
     transform: translateX(-100%);
-    transition: transform .2s ease;
+    /* visibility, not just the transform: slid off-screen alone, the eight
+       links stay in the tab order and in the accessibility tree, so tabbing
+       from the menu button walks through a rail nobody can see. It is delayed
+       by the length of the slide so the drawer still animates shut. */
+    visibility: hidden;
+    transition: transform .2s ease, visibility 0s linear .2s;
     box-shadow: var(--shadow);
   }
-  .p-rail.open { transform: none; }
+  .p-rail.open {
+    transform: none; visibility: visible;
+    transition: transform .2s ease, visibility 0s;
+  }
   .p-rail a { padding: 12px 14px; }
   .p-rail-scrim {
-    display: block; position: fixed; top: 64px; inset-inline: 0; bottom: 0;
+    display: block; position: fixed; top: var(--p-head-h); inset-inline: 0; bottom: 0;
     z-index: 55; background: rgba(11, 37, 69, .42);
   }
   .p-rail-scrim[hidden] { display: none; }
-}
 
-@media (max-width: 900px) {
   .p-user-meta { display: none; }
   .p-field-row { grid-template-columns: 1fr; }
 }

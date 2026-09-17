@@ -198,6 +198,7 @@ return [
     'creds_intro'      => 'This is what %s signs in with. It is shown once and cannot be looked up again — reset the password from their row if it is lost. They will be asked to choose their own the first time they sign in.',
     'creds_emailed'    => 'It has also been emailed to them.',
     'creds_not_emailed'=> 'Email notifications are off, so it has not been sent — give it to them yourself.',
+    'creds_send_failed'=> 'Notifications are on but this one could not be sent — give it to them yourself, and check the email settings under System.',
     'copy'             => 'Copy',
     'copied'           => 'Copied',
     'first_password'   => 'First password',
