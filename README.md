@@ -316,6 +316,40 @@ access — and served inline through `download.php?photo=<id>`, which lets a
 person see their own photo, an administrator see any, and a lecturer see the
 students enrolled in a course they teach. Nobody else.
 
+**A photograph is made ready for the card as it is uploaded**, in
+`portal/inc/photos.php`, so what is stored is what the card prints and nothing
+downstream has to think about it:
+
+- **Turned the right way up.** A phone writes the picture in the sensor's
+  orientation and records how it was held in an EXIF tag. CSS knows nothing
+  about that tag, so a portrait taken the usual way used to print on its side.
+  It is now rotated before anything else happens.
+- **Cropped to the card's frame**, 25 × 32. Too wide and the sides come off
+  evenly. Too tall and the crop sits high — a quarter of the excess off the
+  top, three quarters off the bottom — because people stand in the middle of
+  their own photographs, which puts the head in the upper third; centring a
+  full-length photo takes the top of the head off and keeps the knees.
+- **Re-encoded** to 600 px across (about 900 dpi at the size it prints) as
+  JPEG, so a five megabyte original is not sent down the wire every time
+  anyone opens a card. A photograph smaller than that is never enlarged.
+
+The portfolio shows the result in the card's own frame, so the person sees the
+crop that will print rather than a round thumbnail that hides it, and can
+upload another if it is wrong. Nothing here can fail an upload: if GD is
+missing, or the picture is too large to hold in memory on a shared plan, the
+original is stored untouched and the card crops it with `object-fit` as
+before.
+
+**Admin → System → Photographs** brings photographs uploaded before any of
+this into line. It stops after twenty seconds and reports what it did and what
+is left, so a campus with hundreds of them runs it twice rather than watching
+the page die at the host's execution limit; each photograph is committed as it
+goes, and running it again simply continues. A photograph whose file is
+missing, or that GD cannot read, is reported as skipped rather than queued for
+ever. It replaces the original, so a photograph cropped there cannot be
+uncropped — but anyone can upload a new one from their portfolio, and a second
+pass over finished work does nothing.
+
 Both faces come from one function, `id_card_face()` in
 `portal/inc/idcard-view.php`, so the preview on the System page is the same
 markup as the card itself rather than a drawing of it. A colourway is six CSS

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../inc/mail.php';
 require_once __DIR__ . '/../inc/uploads.php';
 require_once __DIR__ . '/../inc/idcard-view.php';
 require_once __DIR__ . '/../inc/signatures.php';
+require_once __DIR__ . '/../inc/photos.php';
 require_once __DIR__ . '/../inc/translate.php';
 
 $admin = require_role(ROLE_ADMIN);
@@ -297,6 +298,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_setting('id_card_session',       mb_substr(trim((string) ($_POST['id_card_session'] ?? '')), 0, 40) ?: null);
             log_activity((int) $admin['id'], 'save_idcard');
             flash('ok', t('idcard_saved'));
+        } elseif ($action === 'recrop_photos') {
+            // Photographs uploaded before the crop existed are still whatever
+            // shape they arrived in. Bring them to the card's frame so a card
+            // printed today looks the same whenever its photo was added.
+            $pass = recrop_stored_photos();
+            log_activity((int) $admin['id'], 'recrop_photos', (string) $pass['done']);
+            flash('ok', t(
+                'photos_done',
+                localize_digits((string) $pass['done']),
+                localize_digits((string) $pass['skipped'])
+            ));
+            if ($pass['left']) {
+                // Stopped on the budget rather than finished. Say so, or the
+                // count simply looks wrong.
+                flash('info', t('photos_more', localize_digits((string) $pass['left'])));
+            }
         } elseif ($action === 'seed_courses') {
             $added = 0;
             foreach (starter_courses() as [$code, $year, $en, $ne, $cr]) {
@@ -322,7 +339,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Come back to the section that was being edited, not the top of a
         // long page.
-        $anchor = in_array($action, ['save_design', 'save_idcard'], true) ? '#id-cards' : '';
+        $anchor = [
+            'save_design'   => '#id-cards',
+            'save_idcard'   => '#id-cards',
+            'recrop_photos' => '#photos',
+        ][$action] ?? '';
         header('Location: ' . portal_url('/admin/system.php' . $anchor));
         exit;
     }
@@ -337,6 +358,7 @@ $counts = [
     'courses'  => (int) scalar('SELECT COUNT(*) FROM courses'),
     'students' => (int) scalar('SELECT COUNT(*) FROM users WHERE role = \'student\''),
     'notices'  => (int) scalar('SELECT COUNT(*) FROM notices'),
+    'photos'   => (int) scalar('SELECT COUNT(*) FROM users WHERE avatar_path IS NOT NULL AND avatar_path <> \'\''),
 ];
 
 layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]);
@@ -525,6 +547,22 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
       <button class="p-btn p-btn-primary" type="submit"><?= te('save') ?></button>
       <a class="p-btn p-btn-ghost" href="<?= e(portal_url('/id-card.php')) ?>"><?= te('id_card_preview') ?></a>
     </div>
+  </form>
+</section>
+
+<section class="p-card" id="photos">
+  <h2><?= te('photos_title') ?></h2>
+  <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('photos_intro') ?></p>
+  <?php /* A count, not a survey: working out how many still need cropping
+           means opening every photograph on disk, which is no business of a
+           page opened to change a mail setting. The pass itself reports what
+           it found. */ ?>
+  <p style="font-size:.9rem;color:var(--ink-soft);margin-top:10px;">
+    <?= te('photos_count', localize_digits((string) $counts['photos'])) ?>
+  </p>
+  <form method="post" style="margin-top:14px;">
+    <?= csrf_field() ?>
+    <button class="p-btn p-btn-gold" type="submit" name="action" value="recrop_photos"><?= te('photos_run') ?></button>
   </form>
 </section>
 

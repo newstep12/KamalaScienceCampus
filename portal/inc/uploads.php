@@ -107,15 +107,20 @@ const ALLOWED_IMAGES = [
 
 const MAX_IMAGE_UPLOAD = 5 * 1024 * 1024;
 
+/** The smallest photograph worth printing on a card. */
+const MIN_PHOTO_SIDE = 200;
+
 /**
- * Validate and store one uploaded image under uploads/<subdir>/.
+ * Everything an uploaded image has to satisfy before anything is done with
+ * it, in one place: store_image() and store_card_photo() both come through
+ * here, so the rules cannot drift apart.
  *
  * $minSide rejects an image too small to print sharply on a card — a 25 mm
  * photo at 300 dpi needs roughly 300 px across.
  *
- * @return array{ok:bool, error?:string, path?:string, width?:int, height?:int}
+ * @return array{ok:bool, error?:string, mime?:string, width?:int, height?:int}
  */
-function store_image(array $file, string $subdir, int $minSide = 200): array
+function validate_image_upload(array $file, int $minSide = MIN_PHOTO_SIDE): array
 {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
         return ['ok' => false, 'error' => 'upload'];
@@ -124,8 +129,8 @@ function store_image(array $file, string $subdir, int $minSide = 200): array
         return ['ok' => false, 'error' => 'upload'];
     }
 
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $mime  = (string) $finfo->file($file['tmp_name']);
+    // Trust the sniffed type, never the browser's or the extension.
+    $mime = (string) (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
     if (!isset(ALLOWED_IMAGES[$mime])) {
         return ['ok' => false, 'error' => 'type'];
     }
@@ -139,6 +144,23 @@ function store_image(array $file, string $subdir, int $minSide = 200): array
     if ($size[0] < $minSide || $size[1] < $minSide) {
         return ['ok' => false, 'error' => 'small'];
     }
+
+    return ['ok' => true, 'mime' => $mime, 'width' => $size[0], 'height' => $size[1]];
+}
+
+/**
+ * Validate and store one uploaded image under uploads/<subdir>/, as it is.
+ *
+ * @return array{ok:bool, error?:string, path?:string, width?:int, height?:int}
+ */
+function store_image(array $file, string $subdir, int $minSide = MIN_PHOTO_SIDE): array
+{
+    $check = validate_image_upload($file, $minSide);
+    if (!$check['ok']) {
+        return $check;
+    }
+    $mime = $check['mime'];
+    $size = [$check['width'], $check['height']];
 
     $dir = __DIR__ . '/../uploads/' . $subdir;
     if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
