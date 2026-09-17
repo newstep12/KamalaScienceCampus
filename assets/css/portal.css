@@ -492,30 +492,36 @@ body.lang-ne .idc-holder figcaption { text-transform: none; letter-spacing: 0; }
 }
 body.lang-ne .idc { font-family: var(--deva); line-height: 1.35; }
 
-/* ---- front: crest and campus name ---- */
+/* ---- front: crest and campus name ----
+   The seal sits above the campus name and the whole masthead is centred, the
+   way the campus's own letterhead reads. On a card that is already full to
+   the edges that costs real height, which the blocks below give back: the
+   band, the foot and the photograph are each a little tighter than they were
+   so that no detail is pushed off the card. */
 
 .idc-top {
-  display: flex; align-items: center; gap: .7em;
-  padding: .7em .9em .6em;
+  display: flex; flex-direction: column; align-items: center; gap: .26em;
+  padding: .6em .8em .5em;
+  text-align: center;
   background: var(--idc-head-bg); color: var(--idc-head-fg);
   border-bottom: .12em solid var(--idc-head-rule);
 }
-.idc-crest { width: 3.4em; height: 3.4em; flex: 0 0 3.4em; }
-.idc-top-text { display: flex; flex-direction: column; min-width: 0; }
+.idc-crest { width: 4.15em; height: 4.15em; flex: 0 0 auto; }
+.idc-top-text { display: flex; flex-direction: column; align-items: center; min-width: 0; max-width: 100%; }
 .idc-campus-ne {
-  font-family: var(--deva); font-weight: 700; font-size: 1.05em; line-height: 1.25;
+  font-family: var(--deva); font-weight: 700; font-size: 1.08em; line-height: 1.2;
 }
 .idc-campus-en {
-  font-family: var(--serif); font-weight: 700; font-size: .92em;
-  line-height: 1.2; color: var(--idc-head-sub);
+  font-family: var(--serif); font-weight: 700; font-size: .95em;
+  line-height: 1.16; letter-spacing: .01em; color: var(--idc-head-sub);
 }
-.idc-place { font-size: .68em; color: var(--idc-head-dim); margin-top: .25em; line-height: 1.3; }
+.idc-place { font-size: .63em; color: var(--idc-head-dim); margin-top: .22em; line-height: 1.25; }
 
 .idc-band {
   background: var(--idc-band-bg); color: var(--idc-band-fg);
   font-size: .76em; font-weight: 700;
   letter-spacing: .22em; text-transform: uppercase;
-  text-align: center; padding: .45em .6em;
+  text-align: center; padding: .32em .6em;
   border-block: .16em solid var(--idc-band-rule);
 }
 body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size: .82em; }
@@ -524,7 +530,7 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
 
 .idc-body {
   flex: 1; min-height: 0;
-  padding: .75em .9em .4em;
+  padding: .5em .9em .26em;
   display: flex; flex-direction: column; align-items: stretch;
   overflow: hidden;
 }
@@ -533,14 +539,21 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
 
 .idc-photo {
   flex: 0 0 auto;
-  width: 7.8em; aspect-ratio: 25 / 32;
-  margin: 0 auto .5em;
+  width: 7em; aspect-ratio: 25 / 32;
+  margin: 0 auto .38em;
   border: 1px solid var(--idc-rule); border-radius: .3em;
   overflow: hidden; background: var(--bg-soft);
 }
 .idc-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* The photograph is the one block on the front that can give way. When an
+   unusually long name and a long address together want more room than the
+   card has, the frame crops a few millimetres — object-fit: cover, so the
+   face is cropped and never squashed — instead of the address dropping off
+   the bottom edge, which is what a card too full used to do silently. */
+.idc-front[data-orientation="portrait"] .idc-photo { flex: 0 1 auto; min-height: 5.9em; }
 /* Devanagari sets taller, so the Nepali card gives the type its room back. */
-body.lang-ne .idc-photo { width: 7.4em; }
+body.lang-ne .idc-photo { width: 6.7em; }
 .idc-photo.empty {
   border: 1px dashed #b9c4d1;
   display: grid; place-items: center; text-align: center; padding: .5em;
@@ -554,33 +567,33 @@ body.lang-ne .idc-photo { width: 7.4em; }
 }
 .idc-name-ne {
   font-family: var(--deva); font-size: .9em;
-  line-height: 1.3; color: var(--ink-soft);
+  line-height: 1.22; color: var(--ink-soft);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .idc-role {
   font-size: .78em; font-weight: 700;
   letter-spacing: .1em; text-transform: uppercase;
-  color: var(--idc-accent); margin-top: .2em;
+  color: var(--idc-accent); margin-top: .12em;
 }
 body.lang-ne .idc-role { letter-spacing: 0; text-transform: none; font-size: .84em; }
 
 .idc-rows {
-  margin: .55em 0 0; padding: .5em 0 0;
+  margin: .4em 0 0; padding: .34em 0 0;
   border-top: 1px solid var(--idc-rule);
-  display: flex; flex-direction: column; gap: .26em;
+  display: flex; flex-direction: column; gap: .16em;
   text-align: start;
 }
-.idc-row { display: grid; grid-template-columns: 6.4em 1fr; gap: .4em; align-items: baseline; }
+.idc-row { display: grid; grid-template-columns: 6.25em 1fr; gap: .35em; align-items: baseline; }
 /* The back's values are short, so its longer labels get room not to wrap. */
 .idc-back .idc-row { grid-template-columns: 7.4em 1fr; }
 .idc-row dt {
-  font-size: .68em; font-weight: 700; letter-spacing: .05em;
-  text-transform: uppercase; color: var(--ink-soft); line-height: 1.5;
+  font-size: .68em; font-weight: 700; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--ink-soft); line-height: 1.35;
 }
 body.lang-ne .idc-row dt { text-transform: none; letter-spacing: 0; font-size: .74em; }
 .idc-row dd {
   margin: 0; font-size: .8em; font-weight: 600; color: var(--ink);
-  line-height: 1.35; overflow-wrap: anywhere;
+  line-height: 1.26; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
 /* A detail nobody has filled in prints as a rule, so it can be written on. */
@@ -589,7 +602,7 @@ body.lang-ne .idc-row dt { text-transform: none; letter-spacing: 0; font-size: .
 /* ---- front: card number and the Campus Chief's signature ---- */
 
 .idc-foot {
-  padding: .45em .9em .7em;
+  padding: .26em .9em .42em;
   border-top: 1px solid var(--idc-rule);
   display: flex; align-items: flex-end; justify-content: space-between; gap: .6em;
 }
@@ -605,12 +618,13 @@ body.lang-ne .idc-cardno-label { text-transform: none; letter-spacing: 0; font-s
 }
 
 .idc-sig { display: flex; flex-direction: column; align-items: center; min-width: 8.5em; }
-.idc-sig-img { height: 2.4em; max-width: 9em; object-fit: contain; display: block; }
+.idc-sig-img { height: 1.9em; max-width: 9em; object-fit: contain; display: block; }
 span.idc-sig-img { width: 1px; }
-.idc-sig-rule { display: block; width: 8.5em; border-top: 1px solid var(--ink-soft); margin-top: .15em; }
-.idc-sig-name { font-size: .74em; font-weight: 700; color: var(--navy); line-height: 1.4; }
+.idc-sig-rule { display: block; width: 8.5em; border-top: 1px solid var(--ink-soft); margin-top: .1em; }
+.idc-sig-name { font-size: .74em; font-weight: 700; color: var(--navy); line-height: 1.25; }
 .idc-sig-title {
-  font-size: .68em; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-soft);
+  font-size: .68em; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink-soft); line-height: 1.25;
 }
 body.lang-ne .idc-sig-title { text-transform: none; letter-spacing: 0; font-size: .76em; }
 
@@ -656,15 +670,24 @@ body.lang-ne .idc-back-foot strong { text-transform: none; letter-spacing: 0; fo
    them, and the blocks that only stack vertically are tightened to fit the
    shorter card. Type stays exactly the size it is in portrait. */
 
-.idc[data-orientation="landscape"] .idc-top { padding: .55em .8em .5em; }
-.idc[data-orientation="landscape"] .idc-crest { width: 2.9em; height: 2.9em; flex-basis: 2.9em; }
+/* Turned on its side the card loses two fifths of its height, and a stacked
+   masthead would take a third of what is left. The seal moves beside the name
+   instead and the pair is centred together — still centred, still the larger
+   seal, but lying down with the card. */
+.idc[data-orientation="landscape"] .idc-top {
+  flex-direction: row; justify-content: center; gap: .6em;
+  padding: .45em .8em .42em; text-align: start;
+}
+.idc[data-orientation="landscape"] .idc-crest { width: 3.7em; height: 3.7em; }
+.idc[data-orientation="landscape"] .idc-top-text { align-items: flex-start; }
+.idc[data-orientation="landscape"] .idc-place { margin-top: .16em; }
 .idc[data-orientation="landscape"] .idc-band { padding: .3em .6em; }
 
 .idc-front[data-orientation="landscape"] .idc-body {
   flex-direction: row; align-items: flex-start; gap: .8em; padding: .55em .8em .3em;
 }
-.idc-front[data-orientation="landscape"] .idc-photo { width: 6.4em; margin: 0; }
-body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 6.1em; }
+.idc-front[data-orientation="landscape"] .idc-photo { width: 6.1em; margin: 0; }
+body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em; }
 .idc-front[data-orientation="landscape"] .idc-detail { flex: 1; text-align: start; }
 .idc-front[data-orientation="landscape"] .idc-name { font-size: 1.05em; }
 .idc-front[data-orientation="landscape"] .idc-rows {
@@ -672,8 +695,8 @@ body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 6.1em;
 }
 .idc-front[data-orientation="landscape"] .idc-row { grid-template-columns: 6.2em 1fr; }
 
-.idc[data-orientation="landscape"] .idc-foot { padding: .3em .8em .45em; }
-.idc[data-orientation="landscape"] .idc-sig-img { height: 1.7em; }
+.idc[data-orientation="landscape"] .idc-foot { padding: .25em .8em .38em; }
+.idc[data-orientation="landscape"] .idc-sig-img { height: 1.55em; }
 .idc[data-orientation="landscape"] .idc-sig-name { line-height: 1.25; }
 
 /* The back has room to sit in two columns once it is on its side. */
