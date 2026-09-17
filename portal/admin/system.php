@@ -73,6 +73,11 @@ function column_migrations(): array
             'ALTER TABLE notices ADD COLUMN title_ne_auto TINYINT(1) NOT NULL DEFAULT 0',
         'notice body translation flag' =>
             'ALTER TABLE notices ADD COLUMN body_ne_auto TINYINT(1) NOT NULL DEFAULT 0',
+        // Registration looks a symbol number up on every submission. Adding
+        // the index twice raises "Duplicate key name", which the caller
+        // catches and logs, so this is safe to re-run.
+        'symbol number index' =>
+            'ALTER TABLE users ADD INDEX idx_users_symbol (symbol_no)',
     ];
 }
 

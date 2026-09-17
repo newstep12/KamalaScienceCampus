@@ -218,18 +218,36 @@ the photograph is optional at this point and can be added later from the
 portfolio, and a card printed without one carries a box to paste a photo into.
 
 **Lecturers and admins do not self-register.** An admin creates them in
-**Admin → People → Add a lecturer or administrator**. A temporary password is
-generated and shown to the admin once (and emailed to the new user if
-notifications are on). `must_change_password` then holds that person on the
-change-password page at first sign-in until they choose their own, so the
-temporary password stops working the moment it has served its purpose.
+**Admin → People → Add a lecturer or administrator**. The admin either types a
+first password — one they can read out over the phone — or leaves the field
+empty and one is generated. `must_change_password` then holds that person on
+the change-password page at first sign-in until they choose their own, so
+whatever the office knows stops working the moment it has served its purpose.
+
+Either way the password is handed over in **a panel of its own** on the next
+page: on its own line, in a monospace face that tells `I` from `l` and `0`
+from `O`, with a button that copies it. It used to be a value buried in a
+sentence, between a colon and an em dash, and the failure that produces is
+invisible — a trailing space or the dash caught along with it reaches the login
+page as the wrong password, and the login page cannot say which of the two
+went wrong. It is shown once and there is no way to look it up
+afterwards, so if it is lost, use **Reset password** on that row. It does
+spend the moment between the redirect and that page in the administrator's
+session file in the clear — the cost of the post-redirect-get every form here
+uses — and the first page that shows it clears it.
 
 **Reset password** on any row issues a fresh temporary password under the same
-flag — for a locked-out lecturer.
+flag, hands it over the same way, and emails it if notifications are on.
 
 **Students cannot sign in until an admin approves them.** Registration creates
 the account with status `pending`; a sign-in attempt tells them they are still
 waiting. Approve from **Admin → Approvals**.
+
+**A symbol number can only be registered once.** Two accounts on one TU
+symbol number are two people claiming to be the same student, which the office
+discovers at examination time. Registration refuses the second one. It is a
+check rather than a unique key, because registrations predating it may already
+collide and a constraint would refuse to apply to the table.
 
 **Everything is year-aware.** A student's `year_level` (1–4) decides which
 notices they see; enrolments decide which courses. Admin → Courses has a
@@ -534,6 +552,31 @@ parity. Courses and notices carry `_en` and `_ne` columns so an admin publishes
 each notice in both languages; where a Nepali value is blank the English one
 shows instead — except on notices, which are translated automatically (above).
 The language toggle sits in the portal header.
+
+### Getting around the portal
+
+The bar across the top carries only what belongs to the campus and to the
+person reading: the crest and name, the language switch, who is signed in, and
+Sign out. The sections are a rail down the left, one under the other.
+
+They used to be tabs across the header. That works for a student's seven, but
+an administrator has eight — Dashboard, Approvals, People, Courses, Notices,
+Signatures, Documents, System — and eight tabs wrap onto a second row and
+still cannot be read at a glance. A rail reads top to bottom, shows where you
+are without having to squint at a highlight, and has somewhere to grow.
+
+The rail sticks under the header rather than scrolling away, so however far
+down a list of notices somebody is, every other section is one click off.
+Below 900px it becomes a drawer over the page, opened by the button in the
+header and closed by tapping away from it, by Escape, or by following a link.
+It is hidden when printing, so identity cards and documents come out as they
+did.
+
+The round portrait in the header is the one the public site gives the
+campus's people: a white ring with a thin gold line outside it. The photograph
+fills the circle rather than being letterboxed into it, and is anchored high —
+what is stored is a card portrait, taller than it is wide with the head in the
+upper third, and centring that in a circle cuts the forehead off.
 
 ### Security notes
 

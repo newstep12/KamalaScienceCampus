@@ -264,6 +264,61 @@ function verify_csrf(): void
     }
 }
 
+/**
+ * The one rule for a password somebody chooses: at registration, when an
+ * administrator sets one for a new member of staff, and when a temporary one
+ * is replaced. Written once so the three cannot drift apart.
+ */
+function password_is_strong(string $pw): bool
+{
+    return mb_strlen($pw) >= 8
+        && preg_match('/\p{L}/u', $pw) === 1
+        && preg_match('/\d/', $pw) === 1;
+}
+
+/* ---------------------------------------------------------- credentials --- */
+
+/**
+ * A password an administrator has to pass on, held for exactly one page load.
+ *
+ * Deliberately not a flash. A flash is a sentence; this is a value somebody
+ * copies by hand, and thirteen random characters buried mid-sentence between a
+ * colon and an em dash is how a brand-new account ends up unable to sign in —
+ * a trailing space or the dash caught with it reads to the login page as the
+ * wrong password, which is the one thing it cannot explain.
+ *
+ * It does mean the password sits in the administrator's session file, in the
+ * clear, from the redirect until the page that shows it is loaded. That is the
+ * cost of a POST-redirect-GET, which is how every form in this portal works;
+ * the alternative is rendering the panel straight out of the POST and leaving
+ * a reload to re-create the account. It is read and cleared by the first page
+ * that asks for it.
+ */
+function stash_credentials(
+    string $name,
+    string $email,
+    string $password,
+    bool $emailed,
+    bool $mailOn = false
+): void {
+    start_session();
+    $_SESSION['new_credentials'] = [
+        'name'    => $name,
+        'email'   => $email,
+        'password' => $password,
+        'emailed' => $emailed,
+        'mail_on' => $mailOn,
+    ];
+}
+
+function take_credentials(): ?array
+{
+    start_session();
+    $c = $_SESSION['new_credentials'] ?? null;
+    unset($_SESSION['new_credentials']);
+    return is_array($c) ? $c : null;
+}
+
 /* ---------------------------------------------------------------- flash --- */
 
 function flash(string $type, string $message): void

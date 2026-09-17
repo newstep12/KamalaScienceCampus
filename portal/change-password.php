@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new     = (string) ($_POST['new_password'] ?? '');
     $confirm = (string) ($_POST['password_confirm'] ?? '');
 
-    if (mb_strlen($new) < 8 || !preg_match('/\p{L}/u', $new) || !preg_match('/\d/', $new)) {
+    if (!password_is_strong($new)) {
         $error = t('err_pw_weak');
     } elseif ($new !== $confirm) {
         $error = t('err_pw_match');
