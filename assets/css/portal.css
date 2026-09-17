@@ -491,6 +491,8 @@ body.lang-ne .idc-holder figcaption { text-transform: none; letter-spacing: 0; }
   --idc-band-bg: #d99a2b;
   --idc-band-fg: #2b1d02;
   --idc-band-rule: transparent;
+  /* the line outside the photograph's white ring */
+  --idc-ring: #c9d4e0;
   --idc-accent: #0b6564;
   --idc-strip: #eef4f8;
   --idc-rule: #e2e8ef;
@@ -600,11 +602,16 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
    head survives it. */
 .idc-photo {
   flex: 0 0 auto;
-  width: 7.6em; aspect-ratio: 1;
-  margin: 0 auto .4em;
+  width: 6.9em; aspect-ratio: 1;
+  margin: 0 auto .34em;
   border-radius: 50%;
-  border: .14em solid #fff;
-  box-shadow: 0 0 0 .07em var(--idc-rule);
+  /* A white ring drawn by the border, and the line outside it drawn by an
+     outline rather than a box-shadow: browsers treat a shadow as background
+     decoration and drop it when background graphics are off, which is exactly
+     how this project tells people to print the Ink on white colourway. An
+     outline is foreground and survives. */
+  border: .16em solid #fff;
+  outline: .08em solid var(--idc-ring); outline-offset: 0;
   overflow: hidden; background: var(--bg-soft);
 }
 /* Anchored above centre, not in the middle. A stored photo already has the
@@ -618,17 +625,17 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
   object-fit: cover; object-position: 50% 10%;
 }
 
-/* The photograph is the one block on the front that can give way. When an
-   unusually long name and a long address together want more room than the
-   card has, the frame gives up height — as much as a third of it, cropping
-   from the bottom per the rule above — instead of the address dropping off
-   the bottom edge, which is what a card too full used to do silently. */
-.idc-front[data-orientation="portrait"] .idc-photo { flex: 0 1 auto; min-height: 5.9em; }
+/* The frame used to give up height when the card was too full. It cannot any
+   more: its width is fixed and its height came from aspect-ratio, so shrinking
+   one and not the other turns the circle into an ellipse. It holds its shape,
+   and the room a long name and a long address need is found by the type below
+   closing up instead. */
+.idc-front[data-orientation="portrait"] .idc-photo { flex: 0 0 auto; }
 /* Devanagari sets taller, so the Nepali card gives the type its room back. */
-body.lang-ne .idc-photo { width: 7.3em; }
+body.lang-ne .idc-photo { width: 6.6em; }
 .idc-photo.empty {
   border: .14em dashed #b9c4d1;
-  box-shadow: none;
+  outline: 0;
   display: grid; place-items: center; text-align: center; padding: .9em;
 }
 .idc-photo.empty span { font-size: .6em; color: #8a97a6; line-height: 1.35; }
@@ -675,7 +682,7 @@ body.lang-ne .idc-row dt { text-transform: none; letter-spacing: 0; font-size: .
 /* ---- front: card number and the Campus Chief's signature ---- */
 
 .idc-foot {
-  padding: .26em .9em .42em;
+  padding: .2em .9em .34em;
   border-top: 1px solid var(--idc-rule);
   display: flex; align-items: flex-end; justify-content: space-between; gap: .6em;
 }
@@ -691,7 +698,7 @@ body.lang-ne .idc-cardno-label { text-transform: none; letter-spacing: 0; font-s
 }
 
 .idc-sig { display: flex; flex-direction: column; align-items: center; min-width: 8.5em; }
-.idc-sig-img { height: 1.9em; max-width: 9em; object-fit: contain; display: block; }
+.idc-sig-img { height: 1.7em; max-width: 9em; object-fit: contain; display: block; }
 span.idc-sig-img { width: 1px; }
 .idc-sig-rule { display: block; width: 8.5em; border-top: 1px solid var(--ink-soft); margin-top: .1em; }
 .idc-sig-name { font-size: .74em; font-weight: 700; color: var(--navy); line-height: 1.25; }
@@ -709,10 +716,15 @@ body.lang-ne .idc-sig-title { text-transform: none; letter-spacing: 0; font-size
   border-bottom: 1px solid var(--idc-rule);
 }
 .idc-back .idc-body { padding-top: .75em; }
-.idc-back .idc-rows { gap: .3em; }
-.idc-back .idc-terms { margin-top: 1.2em; }
-.idc-back .idc-terms li { line-height: 1.55; margin-bottom: .34em; }
 .idc-back .idc-rows { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* 15: only the portrait back gained room when the holder's signature went.
+   In landscape the terms already spanned both rows of the grid, so they got
+   nothing, and loosening them there would push the last condition off a card
+   whose body is overflow: hidden. */
+.idc-back[data-orientation="portrait"] .idc-rows { gap: .3em; }
+.idc-back[data-orientation="portrait"] .idc-terms { margin-top: 1.2em; }
+.idc-back[data-orientation="portrait"] .idc-terms li { line-height: 1.55; margin-bottom: .34em; }
 
 .idc-terms { margin-top: .9em; }
 .idc-terms h4 {
@@ -1088,13 +1100,16 @@ span.p-doc-sig-img { width: 1px; }
   .p-doc-sign { break-inside: avoid; page-break-inside: avoid; }
 }
 
-/* The photograph as the card will print it — the card's own frame rather than
-   a round thumbnail, which is the one shape that hides what the crop did. */
+/* The photograph as the card will print it. It has to be the card's own frame
+   — round, since that is what the card is now — or the preview shows somebody
+   a crop the card will never produce, which is the surprise it exists to
+   prevent. */
 .p-photo-preview { display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; }
 .p-photo-preview .hint { margin: 0; }
 .p-photo-frame {
-  flex: 0 0 auto; width: 84px; aspect-ratio: 25 / 32;
-  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  flex: 0 0 auto; width: 92px; aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid #fff; outline: 1px solid var(--line);
   overflow: hidden; background: var(--bg-soft);
 }
 .p-photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }

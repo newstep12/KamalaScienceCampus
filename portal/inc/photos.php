@@ -7,8 +7,8 @@ require_once __DIR__ . '/uploads.php';
 /**
  * Photographs, made ready for the identity card as they are uploaded.
  *
- * A card has one photo frame, 25 × 32 — the proportions of a passport photo —
- * and whatever arrives has to end up in it. Leaving that to the browser meant
+ * A card has one photo frame, a circle, and whatever arrives has to end up in
+ * it. Leaving that to the browser meant
  * three things went wrong quietly: a photo taken on a phone printed on its
  * side, because the rotation lives in an EXIF tag the CSS knows nothing about;
  * a wide holiday snap was centre-cropped to a strip of shoulder; and a five
@@ -20,13 +20,22 @@ require_once __DIR__ . '/uploads.php';
  * its own.
  */
 
-/** The card's photo frame — .idc-photo is `aspect-ratio: 25 / 32`. */
-const CARD_PHOTO_RATIO = 25 / 32;
+/**
+ * The card's photo frame — .idc-photo is `aspect-ratio: 1` and round.
+ *
+ * This has to be the frame's ratio and not a passport photo's, because the
+ * point of cropping at upload is that the card prints what was stored. Store
+ * 25 × 32 for a round frame and the card crops it a second time at render,
+ * silently, on top of the crop done here: two head-placement heuristics
+ * stacked, and is_card_shaped() certifying photographs as matching a frame
+ * they no longer match.
+ */
+const CARD_PHOTO_RATIO = 1.0;
 
 /**
- * The stored size. The frame prints about 17 mm wide, so 600 px across is
- * roughly 900 dpi — more than any campus printer resolves, and small enough
- * that a card page stays quick to open.
+ * The stored size. The frame prints about 18 mm across, so 600 px is roughly
+ * 850 dpi — more than any campus printer resolves, and small enough that a
+ * card page stays quick to open.
  */
 const CARD_PHOTO_WIDTH   = 600;
 const CARD_PHOTO_QUALITY = 88;
@@ -42,7 +51,8 @@ const CARD_PHOTO_MAX_PIXELS       = 50000000;
 const CARD_PHOTO_UNMETERED_PIXELS = 30000000;
 
 /**
- * Where the crop sits when a photo is taller than the frame.
+ * Where the crop sits when a photo is taller than the frame — which, the
+ * frame being square, is nearly every photograph anyone uploads.
  *
  * Not the middle. People stand in the middle of their own photographs, which
  * puts the head in the upper third; centring the crop on a full-length photo

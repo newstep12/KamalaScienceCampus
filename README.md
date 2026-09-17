@@ -315,9 +315,17 @@ address — prints as a rule to write on rather than disappearing, and the page
 says what is missing with a link to fix it.
 
 **The photograph is round**, framed the way the public site frames the
-campus's people: a white ring with a thin line outside it. The stored photo is
-25 × 32, so filling a circle crops the sides; it is anchored high, which is
-why the head survives that.
+campus's people: a white ring with a thin line outside it. The ring is drawn
+with an outline rather than a shadow, because browsers drop a shadow when
+background graphics are off — which is how this project tells people to print
+the Ink on white colourway.
+
+The photograph is **stored square**, because the frame is. Storing a 25 × 32
+portrait for a round frame would mean the card cropped it a second time at
+render, on top of the crop done at upload: two head-placement rules stacked,
+and `is_card_shaped()` certifying photographs as fitting a frame they no
+longer fit. The crop still sits high — a quarter of the excess off the top,
+three quarters off the bottom — so the head survives it.
 
 The back used to carry a blood group, an emergency contact and a line for the
 holder's signature. Nothing in the portal asks anybody for the first two, so
