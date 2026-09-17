@@ -1018,3 +1018,14 @@ span.p-doc-sig-img { width: 1px; }
   .p-doc-head { break-after: avoid; page-break-after: avoid; }
   .p-doc-sign { break-inside: avoid; page-break-inside: avoid; }
 }
+
+/* The photograph as the card will print it — the card's own frame rather than
+   a round thumbnail, which is the one shape that hides what the crop did. */
+.p-photo-preview { display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; }
+.p-photo-preview .hint { margin: 0; }
+.p-photo-frame {
+  flex: 0 0 auto; width: 84px; aspect-ratio: 25 / 32;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  overflow: hidden; background: var(--bg-soft);
+}
+.p-photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }

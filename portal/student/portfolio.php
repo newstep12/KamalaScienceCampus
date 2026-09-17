@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
 require_once __DIR__ . '/../inc/uploads.php';
+require_once __DIR__ . '/../inc/photos.php';
 require_once __DIR__ . '/../inc/idcard.php';
 
 $user = require_login();
@@ -32,7 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // A new photograph replaces the old one, and the old file is removed
         // rather than left in the uploads directory for ever.
         if (upload_present($_FILES['photo'] ?? null)) {
-            $stored = store_image($_FILES['photo'], 'photos');
+            // Cropped to the card's frame and turned the right way up as it
+            // is stored, so what is kept is what the card prints.
+            $stored = store_card_photo($_FILES['photo'], 'photos');
             if ($stored['ok']) {
                 delete_upload($user['avatar_path']);
                 q('UPDATE users SET avatar_path = ? WHERE id = ?', [$stored['path'], $user['id']]);
@@ -126,6 +129,14 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
 
       <div class="p-field">
         <label for="photo"><?= te('photo') ?> <span class="hint"><?= te('photo_hint') ?></span></label>
+        <?php if ($src = photo_src($user)): ?>
+          <?php /* The frame is the card's own, so this is the crop that prints
+                   rather than a round thumbnail that hides it. */ ?>
+          <div class="p-photo-preview">
+            <div class="p-photo-frame"><img src="<?= e($src) ?>" alt="<?= te('photo') ?>"></div>
+            <p class="hint"><?= te('photo_card_preview') ?></p>
+          </div>
+        <?php endif; ?>
         <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
         <span class="hint"><?= te('photo_idcard_note') ?></span>
       </div>

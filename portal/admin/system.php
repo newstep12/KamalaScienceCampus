@@ -5,6 +5,7 @@ require_once __DIR__ . '/../inc/mail.php';
 require_once __DIR__ . '/../inc/uploads.php';
 require_once __DIR__ . '/../inc/idcard-view.php';
 require_once __DIR__ . '/../inc/signatures.php';
+require_once __DIR__ . '/../inc/photos.php';
 require_once __DIR__ . '/../inc/translate.php';
 
 $admin = require_role(ROLE_ADMIN);
@@ -297,6 +298,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_setting('id_card_session',       mb_substr(trim((string) ($_POST['id_card_session'] ?? '')), 0, 40) ?: null);
             log_activity((int) $admin['id'], 'save_idcard');
             flash('ok', t('idcard_saved'));
+        } elseif ($action === 'recrop_photos') {
+            // Photographs uploaded before the crop existed are still whatever
+            // shape they arrived in. Bring them to the card's frame so a card
+            // printed today looks the same whenever its photo was added.
+            $done = $skipped = 0;
+            foreach (all('SELECT id, avatar_path FROM users WHERE avatar_path IS NOT NULL') as $person) {
+                if (is_card_shaped($person['avatar_path'])) {
+                    continue;
+                }
+                $new = recrop_stored_photo($person['avatar_path']);
+                if ($new === null) {
+                    $skipped++;
+                    continue;
+                }
+                q('UPDATE users SET avatar_path = ? WHERE id = ?', [$new, (int) $person['id']]);
+                $done++;
+            }
+            log_activity((int) $admin['id'], 'recrop_photos', (string) $done);
+            flash(
+                $done || !$skipped ? 'ok' : 'error',
+                t('photos_done', localize_digits((string) $done), localize_digits((string) $skipped))
+            );
         } elseif ($action === 'seed_courses') {
             $added = 0;
             foreach (starter_courses() as [$code, $year, $en, $ne, $cr]) {
@@ -323,6 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Come back to the section that was being edited, not the top of a
         // long page.
         $anchor = in_array($action, ['save_design', 'save_idcard'], true) ? '#id-cards' : '';
+        if ($action === 'recrop_photos') { $anchor = '#photos'; }
         header('Location: ' . portal_url('/admin/system.php' . $anchor));
         exit;
     }
@@ -525,6 +549,28 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
       <button class="p-btn p-btn-primary" type="submit"><?= te('save') ?></button>
       <a class="p-btn p-btn-ghost" href="<?= e(portal_url('/id-card.php')) ?>"><?= te('id_card_preview') ?></a>
     </div>
+  </form>
+</section>
+
+<section class="p-card" id="photos">
+  <h2><?= te('photos_title') ?></h2>
+  <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('photos_intro') ?></p>
+  <?php
+    $withPhoto = (int) scalar('SELECT COUNT(*) FROM users WHERE avatar_path IS NOT NULL');
+    $toCrop = 0;
+    foreach (all('SELECT avatar_path FROM users WHERE avatar_path IS NOT NULL') as $row) {
+        if (!is_card_shaped($row['avatar_path'])) { $toCrop++; }
+    }
+  ?>
+  <p style="font-size:.9rem;color:var(--ink-soft);margin-top:10px;">
+    <?= te('photos_count', localize_digits((string) $withPhoto), localize_digits((string) $toCrop)) ?>
+  </p>
+  <form method="post" style="margin-top:14px;">
+    <?= csrf_field() ?>
+    <button class="p-btn <?= $toCrop ? 'p-btn-primary' : 'p-btn-ghost' ?>" type="submit" name="action" value="recrop_photos"
+            <?= $toCrop ? '' : 'disabled' ?>>
+      <?= te('photos_run') ?>
+    </button>
   </form>
 </section>
 

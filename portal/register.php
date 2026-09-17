@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/inc/layout.php';
 require_once __DIR__ . '/inc/mail.php';
 require_once __DIR__ . '/inc/uploads.php';
+require_once __DIR__ . '/inc/photos.php';
 
 if ($u = current_user()) {
     header('Location: ' . home_for($u));
@@ -75,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // rather than something to drop silently. Stored only once the rest of
     // the form is good, so a rejected registration leaves no orphan file.
     if (!$errors && !$isBot && upload_present($_FILES['photo'] ?? null)) {
-        $stored = store_image($_FILES['photo'], 'photos');
+        $stored = store_card_photo($_FILES['photo'], 'photos');
         if ($stored['ok']) {
             $photoPath = $stored['path'];
         } else {
