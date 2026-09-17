@@ -594,11 +594,17 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
 .idc-body > * { flex: 0 0 auto; }
 .idc-detail { display: flex; flex-direction: column; min-width: 0; text-align: center; }
 
+/* Round, the way the public site frames the campus's people: a white ring
+   with a thin line outside it. The stored photograph is 25 × 32, so filling a
+   circle crops the sides — anchored high by the rule below, which is why the
+   head survives it. */
 .idc-photo {
   flex: 0 0 auto;
-  width: 7em; aspect-ratio: 25 / 32;
-  margin: 0 auto .38em;
-  border: 1px solid var(--idc-rule); border-radius: .3em;
+  width: 7.6em; aspect-ratio: 1;
+  margin: 0 auto .4em;
+  border-radius: 50%;
+  border: .14em solid #fff;
+  box-shadow: 0 0 0 .07em var(--idc-rule);
   overflow: hidden; background: var(--bg-soft);
 }
 /* Anchored above centre, not in the middle. A stored photo already has the
@@ -619,10 +625,11 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
    the bottom edge, which is what a card too full used to do silently. */
 .idc-front[data-orientation="portrait"] .idc-photo { flex: 0 1 auto; min-height: 5.9em; }
 /* Devanagari sets taller, so the Nepali card gives the type its room back. */
-body.lang-ne .idc-photo { width: 6.7em; }
+body.lang-ne .idc-photo { width: 7.3em; }
 .idc-photo.empty {
-  border: 1px dashed #b9c4d1;
-  display: grid; place-items: center; text-align: center; padding: .5em;
+  border: .14em dashed #b9c4d1;
+  box-shadow: none;
+  display: grid; place-items: center; text-align: center; padding: .9em;
 }
 .idc-photo.empty span { font-size: .6em; color: #8a97a6; line-height: 1.35; }
 
@@ -702,6 +709,9 @@ body.lang-ne .idc-sig-title { text-transform: none; letter-spacing: 0; font-size
   border-bottom: 1px solid var(--idc-rule);
 }
 .idc-back .idc-body { padding-top: .75em; }
+.idc-back .idc-rows { gap: .3em; }
+.idc-back .idc-terms { margin-top: 1.2em; }
+.idc-back .idc-terms li { line-height: 1.55; margin-bottom: .34em; }
 .idc-back .idc-rows { margin-top: 0; padding-top: 0; border-top: 0; }
 
 .idc-terms { margin-top: .9em; }
@@ -712,12 +722,6 @@ body.lang-ne .idc-sig-title { text-transform: none; letter-spacing: 0; font-size
 body.lang-ne .idc-terms h4 { font-family: var(--deva); text-transform: none; letter-spacing: 0; font-size: .8em; }
 .idc-terms ul { margin: 0; padding-inline-start: 1.1em; }
 .idc-terms li { font-size: .7em; line-height: 1.45; color: var(--ink-soft); margin-bottom: .2em; }
-
-.idc-holder-sig {
-  margin-top: auto; padding-top: 1.2em;
-  display: flex; flex-direction: column; align-items: flex-start;
-}
-.idc-holder-sig .idc-sig-rule { width: 11em; }
 
 .idc-back-foot {
   background: var(--idc-strip); border-top: 1px solid var(--idc-rule);
@@ -752,8 +756,8 @@ body.lang-ne .idc-back-foot strong { text-transform: none; letter-spacing: 0; fo
 .idc-front[data-orientation="landscape"] .idc-body {
   flex-direction: row; align-items: flex-start; gap: .8em; padding: .55em .8em .3em;
 }
-.idc-front[data-orientation="landscape"] .idc-photo { width: 6.1em; margin: 0; }
-body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em; }
+.idc-front[data-orientation="landscape"] .idc-photo { width: 6.4em; margin: 0; }
+body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 6.2em; }
 .idc-front[data-orientation="landscape"] .idc-detail { flex: 1; text-align: start; }
 .idc-front[data-orientation="landscape"] .idc-name { font-size: 1.05em; }
 .idc-front[data-orientation="landscape"] .idc-rows {
@@ -770,15 +774,12 @@ body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em;
 .idc-back[data-orientation="landscape"] .idc-body {
   display: grid; padding: .55em .8em .45em;
   grid-template-columns: 1.05fr 1fr; gap: .1em .9em;
-  grid-template-areas: "rows terms" "sig terms";
+  grid-template-areas: "rows terms";
   align-content: start;
 }
 .idc-back[data-orientation="landscape"] .idc-rows { grid-area: rows; gap: .16em; }
 .idc-back[data-orientation="landscape"] .idc-row { grid-template-columns: 7.2em 1fr; }
 .idc-back[data-orientation="landscape"] .idc-terms { grid-area: terms; margin-top: 0; }
-.idc-back[data-orientation="landscape"] .idc-holder-sig {
-  grid-area: sig; margin-top: 0; padding-top: .7em; align-self: end;
-}
 .idc-back[data-orientation="landscape"] .idc-back-foot { padding: .4em .8em .5em; }
 
 /* ---- the panel that sends people here from their portfolio ---- */

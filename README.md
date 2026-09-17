@@ -312,9 +312,20 @@ way twice, and they work without JavaScript through an **Apply** button.
 Details come from the person's own portfolio, so a card is only as complete as
 the profile behind it. Anything still blank — photograph, date of birth,
 address — prints as a rule to write on rather than disappearing, and the page
-says what is missing with a link to fix it. Blood group and emergency contact
-are always rules: nobody records them, and they are there to be filled in by
-hand.
+says what is missing with a link to fix it.
+
+**The photograph is round**, framed the way the public site frames the
+campus's people: a white ring with a thin line outside it. The stored photo is
+25 × 32, so filling a circle crops the sides; it is anchored high, which is
+why the head survives that.
+
+The back used to carry a blood group, an emergency contact and a line for the
+holder's signature. Nothing in the portal asks anybody for the first two, so
+they printed as two empty rules on every card the campus issued with no way to
+fill them in, and they are gone until something collects them — as is the
+holder's signature line. What is left is what the campus actually knows: when
+the card was issued, how long it is valid, the academic session, the card
+number, the conditions, and where to return it.
 
 That same section sets the name and title printed beneath the signature, how
 long cards are valid, and the academic session. **The signature itself lives in
@@ -577,6 +588,23 @@ campus's people: a white ring with a thin gold line outside it. The photograph
 fills the circle rather than being letterboxed into it, and is anchored high —
 what is stored is a card portrait, taller than it is wide with the head in the
 upper third, and centring that in a circle cuts the forehead off.
+
+### When a page fails
+
+A page that throws shows a short reference — six characters, like `BE124A` —
+and writes the same reference into the host's error log beside what actually
+went wrong. Without one, "Something went wrong" is the whole of what anybody
+can report, and the line that would explain it cannot be found again among a
+day's worth of others. Ask for the reference, then look it up in hPanel →
+Advanced → error log.
+
+A missing table or column is named rather than left to the log: it means a
+deploy has landed and **Admin → System → Run database updates** has not been
+run since, which is one click. The page says so.
+
+The error page is deliberately self-contained — no stylesheet, no translation,
+nothing else from the portal — because what broke may be the database, the
+language files, or whatever was half-way through writing the real page.
 
 ### Security notes
 

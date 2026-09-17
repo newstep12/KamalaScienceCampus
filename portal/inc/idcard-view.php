@@ -106,9 +106,11 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
             <?php id_card_row(t('id_card_session'), localize_digits((string) $card['session'])); ?>
           <?php endif; ?>
           <?php id_card_row(t('id_card_no'), id_card_number($holder)); ?>
-          <?php /* Nobody records these, so they print as rules to fill in by hand. */ ?>
-          <?php id_card_row(t('id_card_blood'), null); ?>
-          <?php id_card_row(t('id_card_emergency'), null); ?>
+          <?php /* Blood group and emergency contact used to print here as
+                   empty rules. The portal never asks anybody for either, so
+                   they were two blank lines on every card the campus issued
+                   and no way to fill them in. Gone until something collects
+                   them. */ ?>
         </dl>
 
         <div class="idc-terms">
@@ -120,10 +122,6 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
           </ul>
         </div>
 
-        <div class="idc-holder-sig">
-          <span class="idc-sig-rule"></span>
-          <span class="idc-sig-title"><?= te('id_card_holder_sig') ?></span>
-        </div>
       </div>
 
       <footer class="idc-back-foot">
