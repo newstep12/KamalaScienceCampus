@@ -314,6 +314,18 @@ the profile behind it. Anything still blank — photograph, date of birth,
 address — prints as a rule to write on rather than disappearing, and the page
 says what is missing with a link to fix it.
 
+**The name is printed twice only when there are two names to print.** A name on
+a Nepali identity document is written in both scripts, and the line under the
+name is the Devanagari one — but the profile asks for "full name in Nepali",
+and somebody typed their name into it the way they had just typed it above. The
+card then showed Binish Parajuli and, under it in lighter type, Binish
+Parajuli. So that line prints only for a name actually in the other script, and
+only when it is not simply the first name again — compared the way a reader
+would, where case, spacing and a full stop after an initial are not
+differences. Nothing is discarded: the field still holds what was typed, and
+every page that shows one name or the other still prefers it when the portal is
+read in Nepali.
+
 **The front reads in one order**, whoever the card belongs to: what identifies
 the holder within the campus, then the two government numbers, then the details
 that are true of the person rather than of the post or the enrolment.

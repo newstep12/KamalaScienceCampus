@@ -67,8 +67,8 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
 
         <div class="idc-detail">
           <div class="idc-name"><?= e($holder['full_name']) ?></div>
-          <?php if (!empty($holder['full_name_ne'])): ?>
-            <div class="idc-name-ne"><?= e($holder['full_name_ne']) ?></div>
+          <?php if ($nameNe = id_card_name_ne($holder)): ?>
+            <div class="idc-name-ne"><?= e($nameNe) ?></div>
           <?php endif; ?>
           <?php
           /**

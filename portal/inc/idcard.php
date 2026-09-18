@@ -98,6 +98,50 @@ function id_number(?string $value, int $max = 30): string
 }
 
 /**
+ * The name to print beneath the name, or null when there is nothing to add.
+ *
+ * The card carries a name twice because a name on a Nepali identity document
+ * is written in both scripts, and the second line is the Devanagari one. What
+ * it is not for is the same name a second time — which is what it printed,
+ * because the profile asks for "full name in Nepali" and somebody typed their
+ * name into it the way they had just typed it above. The card then showed
+ * Binish Parajuli, and under it, in lighter type, Binish Parajuli.
+ *
+ * So the line prints only for a name that is actually in the other script, and
+ * only when it is not simply the first name again. Nothing is discarded: the
+ * field still holds whatever was typed, and every page that shows one name or
+ * the other still prefers it when the portal is being read in Nepali.
+ */
+function id_card_name_ne(array $u): ?string
+{
+    $ne = trim((string) ($u['full_name_ne'] ?? ''));
+    if ($ne === '' || !preg_match('/\p{Devanagari}/u', $ne)) {
+        return null;
+    }
+    return same_name($ne, (string) $u['full_name']) ? null : $ne;
+}
+
+/**
+ * Whether two spellings are the same name, compared the way somebody reading
+ * the card would: case is not a difference, nor is spacing, nor a full stop
+ * after an initial.
+ *
+ * Marks are kept, and that is not a detail. A vowel sign in Devanagari is a
+ * combining mark rather than a letter, so a fold that keeps only letters and
+ * digits reduces मुना शर्मा and मीना शर्मा to the same four bare consonants —
+ * two different people, and the card would have quietly stopped printing the
+ * Devanagari line for one of them on the grounds that it was a duplicate.
+ */
+function same_name(string $a, string $b): bool
+{
+    $fold = static function (string $name): string {
+        $bare = preg_replace('/[^\p{L}\p{N}\p{M}]+/u', ' ', mb_strtolower(trim($name)));
+        return trim((string) $bare);
+    };
+    return $fold($a) === $fold($b);
+}
+
+/**
  * The card number. Derived from the account id rather than stored, so it is
  * stable for the life of the account and cannot drift out of step with it:
  * KSC-S-0042 for students, KSC-T-0007 for teaching staff, KSC-A-0001 for
