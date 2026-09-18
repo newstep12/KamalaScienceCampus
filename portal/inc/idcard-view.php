@@ -70,21 +70,57 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
           <?php if (!empty($holder['full_name_ne'])): ?>
             <div class="idc-name-ne"><?= e($holder['full_name_ne']) ?></div>
           <?php endif; ?>
-          <div class="idc-role"><?= e(id_card_role_line($holder)) ?></div>
+          <?php
+          /**
+           * The line under the name says what this person is — but only when
+           * no row below is already saying it.
+           *
+           * A staff card now carries the office title as a labelled row, so
+           * printing it here as well would put Assistant Professor on the card
+           * twice, once with a label and once without. A student card has no
+           * such row, so the line is what identifies them.
+           */
+          ?>
+          <?php if ($holder['role'] === ROLE_STUDENT): ?>
+            <div class="idc-role"><?= e(id_card_role_line($holder)) ?></div>
+          <?php endif; ?>
 
+          <?php
+          /**
+           * Six rows, in the order the office reads them off the card.
+           *
+           * The first two are what identifies the holder within the campus:
+           * the office title for staff, the year and symbol number for a
+           * student, who has no designation and whose symbol number is the one
+           * detail an examination hall asks for. Then the two government
+           * numbers, then the details that are true of the person rather than
+           * of the enrolment.
+           *
+           * Six is the design's limit — the front is measured against the
+           * fullest card it accepts — which is why the phone number sits on a
+           * staff card and not on a student's, where the year and the symbol
+           * number have the space it would need.
+           */
+          ?>
           <dl class="idc-rows">
             <?php if ($holder['role'] === ROLE_STUDENT): ?>
               <?php id_card_row(t('id_card_year'), $holder['year_level'] ? year_label((int) $holder['year_level']) : null); ?>
               <?php id_card_row(t('id_card_symbol'), $holder['symbol_no'] ?: null); ?>
             <?php else: ?>
-              <?php id_card_row(t('phone'), $holder['phone'] ? localize_digits($holder['phone']) : null); ?>
+              <?php /* id_card_role_line(), not the designation on its own: the
+                       column is optional and often unset, and the line under
+                       the name no longer covers for it. A card with nothing at
+                       all where the holder's position goes is worse than one
+                       naming the role the account holds. */ ?>
+              <?php id_card_row(t('designation'), id_card_role_line($holder)); ?>
             <?php endif; ?>
-            <?php /* The two government numbers, beside the campus's own. Both
-                     in the card's own digits, as the phone number above is. */ ?>
             <?php id_card_row(t('id_card_nid'), !empty($holder['national_id']) ? localize_digits($holder['national_id']) : null); ?>
             <?php id_card_row(t('id_card_pan'), !empty($holder['pan_no']) ? localize_digits($holder['pan_no']) : null); ?>
             <?php id_card_row(t('date_of_birth'), $holder['date_of_birth'] ? format_date($holder['date_of_birth']) : null); ?>
             <?php id_card_row(t('address'), $holder['address'] ?: null); ?>
+            <?php if ($holder['role'] !== ROLE_STUDENT): ?>
+              <?php id_card_row(t('phone'), $holder['phone'] ? localize_digits($holder['phone']) : null); ?>
+            <?php endif; ?>
           </dl>
         </div>
       </div>
@@ -115,7 +151,18 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
       <div class="idc-body">
         <dl class="idc-rows">
           <?php id_card_row(t('id_card_issued'), format_date($ctx['issued'])); ?>
-          <?php id_card_row(t('id_card_valid'), $card['valid_until'] ? format_date($card['valid_until']) : null); ?>
+          <?php
+          /**
+           * How long the card is valid is a student's question: a programme
+           * ends, and a card issued against it expires with it. A member of
+           * staff holds theirs for as long as they hold the post, so the row
+           * was either a date the office had to keep moving or an empty rule,
+           * and neither says anything true about a staff card.
+           */
+          ?>
+          <?php if ($holder['role'] === ROLE_STUDENT): ?>
+            <?php id_card_row(t('id_card_valid'), $card['valid_until'] ? format_date($card['valid_until']) : null); ?>
+          <?php endif; ?>
           <?php if ($card['session']): ?>
             <?php id_card_row(t('id_card_session'), localize_digits((string) $card['session'])); ?>
           <?php endif; ?>

@@ -314,9 +314,42 @@ the profile behind it. Anything still blank — photograph, date of birth,
 address — prints as a rule to write on rather than disappearing, and the page
 says what is missing with a link to fix it.
 
-**The front carries the two government numbers** beside the campus's own: the
-national identity card number and the PAN number, in the card's own digits as
-the phone number above them is. Both are typed into the portfolio, and what is
+**The front reads in one order**, whoever the card belongs to: what identifies
+the holder within the campus, then the two government numbers, then the details
+that are true of the person rather than of the post or the enrolment.
+
+| | Staff card | Student card |
+| --- | --- | --- |
+| 1 | Designation | Year |
+| 2 | NID no. | Symbol no. |
+| 3 | PAN no. | NID no. |
+| 4 | Date of birth | PAN no. |
+| 5 | Address | Date of birth |
+| 6 | Phone number | Address |
+
+Six rows is the design's limit, which is why the phone number is on a staff
+card and not on a student's: the year and the symbol number have the space it
+would need, and a symbol number is the one detail an examination hall asks for.
+The office title is a labelled row on a staff card, so the line under the name
+no longer repeats it — that line is there to say what somebody is when no row
+below is already saying it, which on a student card it is not.
+
+**How long the card is valid is on a student card only.** A programme ends and
+a card issued against it expires with it; a member of staff holds theirs for as
+long as they hold the post, so the row was either a date the office had to keep
+moving or an empty rule, and neither said anything true about a staff card.
+
+**The front spreads its rows to fill it.** What was left over used to collect
+at the bottom as a band of nothing above the card number — a sixth of the card
+on a staff card, which reads as a mistake rather than as air. The rows take the
+slack evenly instead, and the row gap is still the floor, so a card too full to
+have any slack packs exactly as it did. The rows are also stopped from
+shrinking: left to it, an over-filled front would squeeze them and cut a value
+through the middle of its own line instead of overflowing, which is the one
+failure that cannot be measured.
+
+**The two government numbers** are the national identity card number and the
+PAN number, in the card's own digits as the phone number is. Both are typed into the portfolio, and what is
 stored is digits and the separators people write between them — a `-`, a space,
 a `/` — and nothing else. Not to validate: the campus office is in no position
 to check somebody's NID against the register, and a card that refused a number
@@ -335,26 +368,85 @@ shallow), and removed again from the same page. None of these is counted as
 missing — a card without them is a perfectly good card, signed by hand — so
 leaving them blank never produces a notice.
 
-**Six rows is what the front now holds**, and it is full: a student card
-carries the year, the symbol number, both government numbers, the date of birth
-and the address. The seal and the photograph gave up about a tenth of their
-width to make room, and the leading came in where it was not being used — a
-one-line label was set at 1.35, and a blank row was measurably taller than a
-filled one because a box with nothing in it has no baseline to align on. Every
-face is measured against the fullest card the design accepts (a name over two
-lines, an address over two, every row filled, in both languages and both
-orientations), because the card's body is `overflow: hidden`: a face that does
-not fit does not complain, it just prints without its last line.
+Every face is measured against the fullest card the design accepts — a name
+over two lines, an address over two, every row filled, in both languages and
+both orientations — because the card's body is `overflow: hidden`: a face that
+does not fit does not complain, it just prints without its last line. Making
+room for the sixth row took a tenth of the seal's and the photograph's width,
+and the leading where it was not being used: a one-line label was set at 1.35,
+and a blank row was measurably taller than a filled one, because a box with
+nothing in it has no baseline to align on.
 
-A signature photographed rather than scanned is **turned the right way up and
-re-encoded** as it is stored, exactly as a photograph is: a phone records how
-it was held in an EXIF tag instead of rotating the picture, and a signature
-lying on its side is not something anyone looks twice at a squiggle to notice.
-Only a JPEG is touched, because it is the only format that carries that tag and
-the only one a camera produces — a PNG or WebP is stored exactly as it arrived,
-so a scan with a transparent background stays transparent, which is what prints
-best on a card. The campus's own signature library stores its scans the same
-way.
+**The ink is lifted off the paper** when a card holder uploads their signature.
+What people have to hand is a photograph of a page — grey-white paper, a shadow
+across one corner, the ink some shade of dark blue — and printed as it arrived
+that is a rectangle of somebody's desk sitting on the card. So every pixel
+becomes black at an opacity taken from how dark it was: ink stays, paper goes,
+and the greys between keep the smooth edge of the stroke instead of turning it
+into a staircase. The result is trimmed to the writing and stored as a PNG.
+
+**Each pixel is judged against the paper around it, not against a number.**
+One cutoff for the whole picture cannot survive a photograph: the shadowed end
+of a page is darker than the lit end, so a threshold dark enough to clear the
+shadow loses the ink in the light, and one light enough to keep the ink turns
+the shadow into a grey haze. So the paper is estimated locally — a coarse grid
+holding the lightest tone in each part of the picture — and the depths are
+fractions of that, which holds whether the page photographed white or grey.
+
+**The desk is ruled out before the ink is looked for.** A picture taken over a
+page usually has the desk in it, and a desk is darker than anything here counts
+as paper: judged against the sheet beside it, it is indistinguishable from ink
+by tone, and it printed as a solid black bar down the side of the signature.
+Tone cannot separate them, but extent can. A desk is a wide dark area, so most
+of what surrounds any part of it is dark as well; a stroke is a line with paper
+on both sides of it however thick it is. Cells that are dark *and* mostly
+surrounded by dark are the desk — a test that had to be written that way round,
+because ruling out dark cells alone took the signature with them and the whole
+picture came back blank.
+
+A cell is a share of the picture rather than a fixed number of pixels, because
+this runs at two very different scales — a whole page to find the writing, then
+the crop to render it — and a cell that is small at one of them is smaller than
+a stroke is thick at the other. Cells inside the stroke then look exactly like
+cells of desk, and a thick signature came out shredded.
+
+The cells next to the desk go too. One on the edge of the sheet holds some of
+each, its lightest tone is the paper's, so the desk inside it gets measured
+against paper and comes out as ink: a one-pixel rectangle drawn around the
+sheet, which is nothing to look at but spans nearly the whole frame, so the
+trim box grew to the edges and the signature printed small in the middle of a
+box drawn round the page. That costs a cell of paper around the rim of the
+sheet, where nobody signs.
+
+**The order is what makes it usable.** Writing first, the size a card prints
+afterwards — never the other way round. Shrinking first is the obvious way
+round and throws away almost all of the signature's resolution before anything
+has looked at where the signature is: an A4 photograph 3000 px across holds a
+signature perhaps 600 px wide, and bounding the whole page to 900 px first
+leaves that signature 180 px across, below what the card wants and below what
+the portal accepts as an upload. A 4000 × 3000 photograph takes under half a
+second through all of it.
+
+Transparency in what was uploaded is composited onto white before any of this,
+which turns a cut-out somebody made by hand into what the rest expects — ink on
+paper. A blue cut-out comes out black, a black one comes out unchanged, and
+paper left inside a cut-out is treated as paper rather than as a block of ink.
+
+A picture with no ink and paper to tell apart — a blank page, or something that
+is not a signature — is stored exactly as it arrived rather than thresholded
+into a smear, **and the portfolio says so** rather than leaving somebody
+looking at a photograph of a page on their card with no explanation.
+
+It also means the form no longer has to ask for "a PNG with a transparent
+background", which is a thing most people have no way to produce.
+
+**The campus's own signature library is deliberately not treated this way.** It
+holds a black-ink version and a blue-ink version of the same signature, so the
+colour it was signed in is information rather than noise. A JPEG uploaded there
+is turned the right way up (a phone records how it was held in an EXIF tag
+instead of rotating the picture, and nobody looks twice at a squiggle to notice
+it is lying down) and brought down in size, and a PNG — very often already a
+cut-out — is stored exactly as it arrived.
 
 **The photograph is round**, framed the way the public site frames the
 campus's people: a white ring with a thin line outside it. The ring is drawn

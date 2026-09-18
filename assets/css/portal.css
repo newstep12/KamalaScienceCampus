@@ -596,6 +596,25 @@ body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size:
 .idc-body > * { flex: 0 0 auto; }
 .idc-detail { display: flex; flex-direction: column; min-width: 0; text-align: center; }
 
+/* ---- the front's spacing ------------------------------------------------
+   The front is one fixed height with a variable amount in it, and what was
+   left over used to collect at the bottom as a band of nothing above the card
+   number — a sixth of the card on a staff card, which reads as a mistake
+   rather than as air.
+
+   So the rows take the slack instead, spread evenly between the details above
+   them and the foot below. gap is still the floor, so this only ever opens the
+   rows up: a card too full to have any slack falls back to the gap and packs
+   exactly as it did, which is what keeps the fullest front fitting. */
+.idc-front .idc-detail { flex: 1; min-height: 0; }
+.idc-front .idc-rows { flex: 1; justify-content: space-between; }
+/* A row keeps its own height. Left to shrink — which is what a flex item does
+   by default — a front with more in it than fits would not overflow at all:
+   the rows would be squeezed instead, and a value would be cut through the
+   middle of its own line rather than the last row going missing. Both are
+   silent, but the second at least shows up in a measurement. */
+.idc-front .idc-row { flex: 0 0 auto; }
+
 /* Round, the way the public site frames the campus's people: a white ring
    with a thin line outside it. The stored photograph is square, because this
    frame is — photos.php crops it to the frame as it is uploaded, keeping the
@@ -783,7 +802,11 @@ body.lang-ne .idc-back-foot strong { text-transform: none; letter-spacing: 0; fo
 }
 .idc-front[data-orientation="landscape"] .idc-photo { width: 6em; margin: 0; }
 body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em; }
-.idc-front[data-orientation="landscape"] .idc-detail { flex: 1; text-align: start; }
+/* The details take the body's full height beside the photograph, so the rows
+   spread the same way they do in portrait. The body aligns its children to the
+   top — right for the photograph, which would otherwise stretch into an
+   ellipse, and wrong for the column of text beside it. */
+.idc-front[data-orientation="landscape"] .idc-detail { flex: 1; text-align: start; align-self: stretch; }
 .idc-front[data-orientation="landscape"] .idc-name { font-size: .95em; }
 .idc-front[data-orientation="landscape"] .idc-rows {
   margin-top: .2em; padding-top: 0; border-top: 0; gap: .05em;

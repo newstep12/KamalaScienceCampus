@@ -302,6 +302,68 @@ const SIGNATURE_WIDTH        = 900;
 const SIGNATURE_QUALITY      = 88;
 
 /**
+ * Lifting a signature off the paper it was written on.
+ *
+ * What people upload is a photograph of a page: grey-white paper, a shadow
+ * across one corner, a desk at the edges, the ink some shade of dark blue or
+ * black. Printed on a card as it arrived, that is a rectangle of somebody's
+ * desk sitting on the card — which is why the form used to have to ask for "a
+ * PNG with a transparent background", a thing most people have no way to
+ * produce.
+ *
+ * The ink is lifted from the paper instead: every pixel becomes black at an
+ * opacity taken from how much darker it is than the paper around it, which
+ * leaves the greys of the stroke's own edge as partial opacity rather than a
+ * staircase.
+ *
+ * "Than the paper around it" is the whole design. A single cutoff for the
+ * whole picture cannot survive a photograph: the shadowed end of a page is
+ * darker than the lit end, so any threshold dark enough to clear the shadow
+ * loses the ink in the light, and any threshold light enough to keep the ink
+ * turns the shadow into a grey haze. So the paper is estimated locally, as a
+ * coarse grid of the lightest tone in each part of the picture, and each pixel
+ * is judged against its own cell. A dark desk at the edge of the frame has a
+ * dark local paper too, so it comes out as background rather than as a solid
+ * black bar.
+ *
+ * The depths below are fractions of that local paper rather than absolute
+ * tones, so they hold whether the page photographed white or grey.
+ */
+const SIGNATURE_ANALYSIS_SIDE = 420;    // the copy the page is measured on
+const SIGNATURE_PAPER_CELLS    = 52;    // cells across the longest side
+const SIGNATURE_PAPER_BLUR     = 3;     // cells each way the paper is read over
+const SIGNATURE_INK_DEPTH     = 0.45;   // this far below local paper: solid ink
+const SIGNATURE_INK_EDGE      = 0.10;   // this far below local paper: still paper
+
+/**
+ * How dark a part of the picture has to be before it is not paper at all, as a
+ * share of the lightest paper in it.
+ *
+ * This is the desk a page gets photographed on. Its tone cannot be told from
+ * ink — judged against the sheet beside it, it printed as a solid black bar
+ * down the side of the signature — so it is ruled out by where it is instead,
+ * cell by cell.
+ *
+ * Deliberately low. Paper in deep shadow is still paper and must stay in:
+ * ruling it out at three fifths cropped the shaded end of a page away and took
+ * a third of the signature with it. And nothing is lost by admitting a desk
+ * that is merely mid-toned, because the paper found there is then its own
+ * tone, against which nothing on it reads as ink.
+ */
+const SIGNATURE_SHEET_FLOOR   = 0.45;
+
+/**
+ * The least ink worth treating as a signature, counted on the analysis copy.
+ * Below this the picture is a blank page, or a photograph of something that is
+ * not a signature at all, and thresholding it would hand back a smear. Such an
+ * image is stored exactly as it arrived instead.
+ */
+const SIGNATURE_MIN_INK_PX    = 24;
+
+/** Kept clear around the ink when the paper around it is trimmed away. */
+const SIGNATURE_INK_MARGIN    = 0.04;
+
+/**
  * Validate and store one uploaded signature, turned the right way up.
  *
  * The form asks people to photograph a signature on white paper, and a phone
@@ -311,32 +373,49 @@ const SIGNATURE_QUALITY      = 88;
  * photographs, and worse here, because nobody looks twice at a squiggle to
  * notice it is lying down. The chance to fix it is at upload, once.
  *
- * Only a JPEG is touched. It is the only format that carries the orientation
- * tag and the only one a camera produces, and a PNG or WebP is very often a
- * scan with a transparent background — which is what prints best on a card
- * and what re-encoding would flatten to a white box. Those are stored exactly
- * as they arrived.
+ * $ink decides which of two jobs this does.
  *
- * Same contract as store_image(), and the same fallback: if GD is missing or
- * the picture is too large to decode, the original is stored untouched rather
- * than the upload failing.
+ * With $ink false — the campus's own signature library — only a JPEG is
+ * touched, and only to turn it the right way up and bring its size down. The
+ * library deliberately holds a black-ink version and a blue-ink version of the
+ * same signature, so the colour it was signed in is information, not noise,
+ * and a PNG uploaded there is very often already a cut-out and is left exactly
+ * as it arrived.
+ *
+ * With $ink true — a card holder's own signature — every format is decoded and
+ * the ink is lifted off the paper: black on a transparent ground, trimmed to
+ * the writing, stored as a PNG. That is the one form that sits on a card
+ * without a rectangle of somebody's desk around it, and asking people to
+ * produce it themselves was asking for something most of them cannot do.
+ *
+ * Same contract as store_image(), and the same fallback throughout: if GD is
+ * missing, the picture is too large to decode, or it turns out to have no ink
+ * and paper to tell apart, the original is stored untouched rather than the
+ * upload failing. 'inked' says which of those happened, so a caller that has
+ * promised somebody the paper would come off can say when it did not.
  */
-function store_signature_image(array $file, string $subdir): array
+function store_signature_image(array $file, string $subdir, bool $ink = false): array
 {
     $check = validate_image_upload($file, MIN_SIGNATURE_SIDE);
     if (!$check['ok']) {
         return $check;
     }
-    if ($check['mime'] !== 'image/jpeg' || !image_can_be_processed($check['width'], $check['height'])) {
-        return store_image($file, $subdir, MIN_SIGNATURE_SIDE);
+    $decodable = image_can_be_processed($check['width'], $check['height']);
+    if (!$decodable || (!$ink && $check['mime'] !== 'image/jpeg')) {
+        return store_signature_as_it_came($file, $subdir);
     }
 
     $src = load_photo($file['tmp_name'], $check['mime']);
     if (!$src) {
-        return store_image($file, $subdir, MIN_SIGNATURE_SIDE);
+        return store_signature_as_it_came($file, $subdir);
     }
-    $out = shrink_within($src, SIGNATURE_WIDTH);
+    $out = $ink ? lift_signature_ink($src) : shrink_within($src, SIGNATURE_WIDTH);
     imagedestroy($src);
+    if ($out === null) {
+        // Nothing here to tell ink from paper: a blank page, or a picture of
+        // something that is not a signature.
+        return store_signature_as_it_came($file, $subdir);
+    }
 
     $dir = __DIR__ . '/../uploads/' . $subdir;
     if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
@@ -344,8 +423,10 @@ function store_signature_image(array $file, string $subdir): array
         return ['ok' => false, 'error' => 'upload'];
     }
 
-    $stored = bin2hex(random_bytes(16)) . '.jpg';
-    $ok     = imagejpeg($out, $dir . '/' . $stored, SIGNATURE_QUALITY);
+    $stored = bin2hex(random_bytes(16)) . ($ink ? '.png' : '.jpg');
+    $ok     = $ink
+        ? imagepng($out, $dir . '/' . $stored)
+        : imagejpeg($out, $dir . '/' . $stored, SIGNATURE_QUALITY);
     $w      = imagesx($out);
     $h      = imagesy($out);
     imagedestroy($out);
@@ -354,11 +435,353 @@ function store_signature_image(array $file, string $subdir): array
         // A failed write can leave a truncated file nothing will ever point
         // at. Out of the way before the fallback stores the original.
         @unlink($dir . '/' . $stored);
-        return store_image($file, $subdir, MIN_SIGNATURE_SIDE);
+        return store_signature_as_it_came($file, $subdir);
     }
     @chmod($dir . '/' . $stored, 0644);
 
-    return ['ok' => true, 'path' => $subdir . '/' . $stored, 'width' => $w, 'height' => $h];
+    return [
+        'ok'     => true,
+        'path'   => $subdir . '/' . $stored,
+        'inked'  => $ink,
+        'width'  => $w,
+        'height' => $h,
+    ];
+}
+
+/** The picture kept exactly as it arrived, and said to be. */
+function store_signature_as_it_came(array $file, string $subdir): array
+{
+    $stored = store_image($file, $subdir, MIN_SIGNATURE_SIDE);
+    $stored['inked'] = false;
+    return $stored;
+}
+
+/**
+ * Black ink on a transparent ground, trimmed to the writing — or null when the
+ * picture holds no ink to lift, in which case the caller stores what arrived.
+ *
+ * The writing is found first and the picture brought down to the size a card
+ * prints afterwards — never the other way round. Shrinking first, which is the
+ * obvious way round, throws away almost all of the signature's resolution
+ * before anything has looked at where the signature is: an A4 photograph
+ * 3000 px across holds a signature perhaps 600 px wide, and bounding the whole
+ * page to 900 px leaves that signature 180 px across, below what the card
+ * wants and below what this file accepts as an upload.
+ *
+ * The box is measured on a small copy and expressed as fractions of the
+ * picture, so it can be applied to the picture itself without a scale factor
+ * to get wrong.
+ *
+ * Transparency in the source is composited onto white first. That turns a
+ * cut-out somebody made by hand into what the rest of this expects — ink on
+ * paper — so a blue cut-out comes out black, a black one comes out unchanged,
+ * and paper left inside a cut-out is treated as paper rather than as ink.
+ */
+function lift_signature_ink(GdImage $src): ?GdImage
+{
+    $page = flatten_onto_paper($src);
+
+    $small   = shrink_within($page, SIGNATURE_ANALYSIS_SIDE);
+    $writing = ink_box($small, paper_grid($small, true));
+    imagedestroy($small);
+    if ($writing === null) {
+        imagedestroy($page);
+        return null;
+    }
+
+    $page = crop_fraction($page, $writing);
+    $ink  = shrink_within($page, SIGNATURE_WIDTH);
+    imagedestroy($page);
+
+    // Checked again on the way out, not only on the way in. The box was found
+    // on a small copy, and if what the full-size pass makes of the same area
+    // is blank — or nearly — then storing it would put an empty rectangle on
+    // the card, delete the photograph it came from, and report success.
+    return ink_to_alpha($ink, paper_grid($ink));
+}
+
+/**
+ * The picture composited onto white, so everything after this can assume it is
+ * looking at ink on paper. An opaque photograph comes through unchanged.
+ */
+function flatten_onto_paper(GdImage $src): GdImage
+{
+    $w   = imagesx($src);
+    $h   = imagesy($src);
+    $out = imagecreatetruecolor($w, $h);
+    imagealphablending($out, true);
+    imagefilledrectangle($out, 0, 0, $w - 1, $h - 1, imagecolorallocate($out, 255, 255, 255));
+    imagecopy($out, $src, 0, 0, 0, 0, $w, $h);
+    return $out;
+}
+
+/** A box given as fractions of the picture, cut out of it. */
+function crop_fraction(GdImage $im, array $box): GdImage
+{
+    $w  = imagesx($im);
+    $h  = imagesy($im);
+    $x1 = (int) max(0, floor($box[0] * $w));
+    $y1 = (int) max(0, floor($box[1] * $h));
+    $x2 = (int) min($w - 1, ceil($box[2] * $w));
+    $y2 = (int) min($h - 1, ceil($box[3] * $h));
+    if ($x2 <= $x1 || $y2 <= $y1) {
+        return $im;
+    }
+    $crop = imagecrop($im, ['x' => $x1, 'y' => $y1, 'width' => $x2 - $x1 + 1, 'height' => $y2 - $y1 + 1]);
+    if (!$crop) {
+        return $im;
+    }
+    imagedestroy($im);
+    return $crop;
+}
+
+/**
+ * How light the paper is in each part of the picture, and which parts are
+ * paper at all.
+ *
+ * A grid of small cells, each holding the lightest tone found in it — the
+ * lightest rather than the average, because a cell the stroke passes through
+ * would otherwise report the ink as part of its own paper and stop reading as
+ * ink. What comes back is read over a window of cells either way, so a cell
+ * the stroke fills completely borrows its paper from around it instead of
+ * reporting the darkest thing in the picture as white.
+ *
+ * A cell far darker than the lightest paper in the picture is not paper: it is
+ * the desk the page is lying on. Those come back as nought, which
+ * ink_opacity() reads as "no ink here". The cells are small so that the line
+ * where desk meets paper — where one cell holds some of each, and the paper in
+ * it makes the desk beside it look like ink — is a few pixels wide instead of
+ * a bar across the card.
+ *
+ * @return array{paper: list<int>, gw: int, gh: int, cw: int, ch: int}
+ */
+function paper_grid(GdImage $im, bool $findDesk = false): array
+{
+    $w = imagesx($im);
+    $h = imagesy($im);
+    // A cell is a share of the picture, not a fixed number of pixels. This
+    // runs at two very different scales — a whole page at 420 px across to
+    // find the writing, then the crop at up to 900 px to render it — and a
+    // cell that is small at one of them is smaller than a stroke is thick at
+    // the other. Cells inside the stroke then look exactly like cells of desk,
+    // and a thick signature came out shredded, or gone altogether.
+    $cell = max(4, (int) round(max($w, $h) / SIGNATURE_PAPER_CELLS));
+    $gw   = max(1, (int) ceil($w / $cell));
+    $gh   = max(1, (int) ceil($h / $cell));
+    $cw   = (int) ceil($w / $gw);
+    $ch   = (int) ceil($h / $gh);
+
+    $max = array_fill(0, $gw * $gh, 0);
+    for ($y = 0; $y < $h; $y++) {
+        $row = ((int) ($y / $ch)) * $gw;
+        for ($x = 0; $x < $w; $x++) {
+            $lum = luminance_of(imagecolorat($im, $x, $y));
+            $i   = $row + (int) ($x / $cw);
+            if ($lum > $max[$i]) {
+                $max[$i] = $lum;
+            }
+        }
+    }
+
+    // The lightest paper in the picture, read a little inside the very top so
+    // that one glaring highlight cannot set the level for everything else.
+    $sorted = $max;
+    sort($sorted);
+    $floor = $sorted[(int) (count($sorted) * 0.98)] * SIGNATURE_SHEET_FLOOR;
+
+    /**
+     * Which cells are the desk rather than the sheet, in two passes.
+     *
+     * Dark on its own is not enough to say. A cell the stroke fills completely
+     * is as dark as a cell of desk, and ruling those out took the signature
+     * with them — the whole picture came back blank. What separates them is
+     * how far the dark goes: a desk is a wide dark area, so most of what
+     * surrounds a cell of it is dark as well, while a stroke is a line with
+     * paper on both sides of it however thick it is.
+     *
+     * Then the same again for the cells next to it. A cell on the edge of the
+     * sheet holds some desk and some paper; its lightest tone is the paper's,
+     * so it is not dark and survives the first pass, and the desk inside it is
+     * measured against paper and comes out as ink. What that draws is a
+     * one-pixel rectangle around the sheet — not much in itself, but it spans
+     * nearly the whole frame, so the trim box grew to the edges and the
+     * signature printed small in the middle of a box drawn round the page. So
+     * every cell touching the desk goes with the desk, which costs a cell of
+     * paper around the rim of the sheet. Nobody signs there.
+     */
+    $dark = [];
+    foreach ($max as $i => $lightest) {
+        // Only the pass that goes looking for the writing rules anything out.
+        // By the time the crop is rendered the desk is outside it, and running
+        // the test again there can only take ink away.
+        $dark[$i] = $findDesk && $lightest < $floor;
+    }
+    $desk = [];
+    for ($gy = 0; $gy < $gh; $gy++) {
+        for ($gx = 0; $gx < $gw; $gx++) {
+            $i = $gy * $gw + $gx;
+            $desk[$i] = $dark[$i] && neighbours_dark($dark, $gw, $gh, $gx, $gy) >= 5;
+        }
+    }
+    $onSheet = [];
+    for ($gy = 0; $gy < $gh; $gy++) {
+        for ($gx = 0; $gx < $gw; $gx++) {
+            $i = $gy * $gw + $gx;
+            $onSheet[$i] = !$desk[$i] && neighbours_dark($desk, $gw, $gh, $gx, $gy) === 0;
+        }
+    }
+
+    $paper = $max;
+    for ($gy = 0; $gy < $gh; $gy++) {
+        for ($gx = 0; $gx < $gw; $gx++) {
+            if (!$onSheet[$gy * $gw + $gx]) {
+                $paper[$gy * $gw + $gx] = 0;          // not paper: the desk, or its edge
+                continue;
+            }
+            $sum = 0;
+            $n   = 0;
+            for ($dy = -SIGNATURE_PAPER_BLUR; $dy <= SIGNATURE_PAPER_BLUR; $dy++) {
+                for ($dx = -SIGNATURE_PAPER_BLUR; $dx <= SIGNATURE_PAPER_BLUR; $dx++) {
+                    $nx = $gx + $dx;
+                    $ny = $gy + $dy;
+                    if ($nx >= 0 && $nx < $gw && $ny >= 0 && $ny < $gh) {
+                        $sum += $max[$ny * $gw + $nx];
+                        $n++;
+                    }
+                }
+            }
+            $paper[$gy * $gw + $gx] = (int) round($sum / $n);
+        }
+    }
+    return ['paper' => $paper, 'gw' => $gw, 'gh' => $gh, 'cw' => $cw, 'ch' => $ch];
+}
+
+/** How many of a cell's eight neighbours are set in $flags. */
+function neighbours_dark(array $flags, int $gw, int $gh, int $gx, int $gy): int
+{
+    $n = 0;
+    for ($dy = -1; $dy <= 1; $dy++) {
+        for ($dx = -1; $dx <= 1; $dx++) {
+            if ($dx === 0 && $dy === 0) {
+                continue;
+            }
+            $nx = $gx + $dx;
+            $ny = $gy + $dy;
+            if ($nx >= 0 && $nx < $gw && $ny >= 0 && $ny < $gh && $flags[$ny * $gw + $nx]) {
+                $n++;
+            }
+        }
+    }
+    return $n;
+}
+
+/** Rec. 709 luminance of a packed colour, without the cost of unpacking it. */
+function luminance_of(int $colour): int
+{
+    return (int) (0.2126 * (($colour >> 16) & 255)
+                + 0.7152 * (($colour >> 8) & 255)
+                + 0.0722 * ($colour & 255));
+}
+
+/** How opaque a tone is, against the paper the grid found around it. */
+function ink_opacity(int $lum, int $paper): float
+{
+    if ($paper < 8) {
+        return 0.0;                       // nothing here is paper, so nothing is ink
+    }
+    $dark  = $paper * (1 - SIGNATURE_INK_DEPTH);
+    $light = $paper * (1 - SIGNATURE_INK_EDGE);
+    if ($lum <= $dark) {
+        return 1.0;
+    }
+    if ($lum >= $light) {
+        return 0.0;
+    }
+    return ($light - $lum) / ($light - $dark);
+}
+
+/**
+ * Where the writing is, as fractions of the picture with a little air around
+ * it — or null when there is not enough ink to be a signature.
+ *
+ * @return array{0:float,1:float,2:float,3:float}|null
+ */
+function ink_box(GdImage $im, array $grid): ?array
+{
+    $paper = $grid['paper'];
+    $gw    = $grid['gw'];
+    $cw    = $grid['cw'];
+    $ch    = $grid['ch'];
+    $w     = imagesx($im);
+    $h     = imagesy($im);
+
+    $minX = $w; $minY = $h; $maxX = -1; $maxY = -1; $ink = 0;
+    for ($y = 0; $y < $h; $y++) {
+        $row = ((int) ($y / $ch)) * $gw;
+        for ($x = 0; $x < $w; $x++) {
+            if (ink_opacity(luminance_of(imagecolorat($im, $x, $y)), $paper[$row + (int) ($x / $cw)]) < 0.5) {
+                continue;
+            }
+            $ink++;
+            $minX = min($minX, $x); $maxX = max($maxX, $x);
+            $minY = min($minY, $y); $maxY = max($maxY, $y);
+        }
+    }
+    if ($ink < SIGNATURE_MIN_INK_PX) {
+        return null;
+    }
+
+    $margin = max($maxX - $minX, $maxY - $minY) * SIGNATURE_INK_MARGIN;
+    return [
+        max(0.0, ($minX - $margin) / $w),
+        max(0.0, ($minY - $margin) / $h),
+        min(1.0, ($maxX + 1 + $margin) / $w),
+        min(1.0, ($maxY + 1 + $margin) / $h),
+    ];
+}
+
+/**
+ * The picture as black ink at the opacity the grid gives each pixel, or null
+ * when what comes out has next to nothing in it.
+ */
+function ink_to_alpha(GdImage $im, array $grid): ?GdImage
+{
+    $paper = $grid['paper'];
+    $gw    = $grid['gw'];
+    $cw    = $grid['cw'];
+    $ch    = $grid['ch'];
+    $w     = imagesx($im);
+    $h     = imagesy($im);
+
+    $out = imagecreatetruecolor($w, $h);
+    imagealphablending($out, false);
+    imagesavealpha($out, true);
+    imagefilledrectangle($out, 0, 0, $w - 1, $h - 1, imagecolorallocatealpha($out, 0, 0, 0, 127));
+
+    // One allocation per level of opacity, rather than one per pixel.
+    $inks = [];
+    $ink  = 0;
+    for ($y = 0; $y < $h; $y++) {
+        $row = ((int) ($y / $ch)) * $gw;
+        for ($x = 0; $x < $w; $x++) {
+            $lum = luminance_of(imagecolorat($im, $x, $y));
+            $a   = (int) round(127 * (1 - ink_opacity($lum, $paper[$row + (int) ($x / $cw)])));
+            if ($a >= 126) {
+                continue;
+            }
+            if ($a <= 63) {
+                $ink++;
+            }
+            $inks[$a] ??= imagecolorallocatealpha($out, 0, 0, 0, $a);
+            imagesetpixel($out, $x, $y, $inks[$a]);
+        }
+    }
+    imagedestroy($im);
+    if ($ink < SIGNATURE_MIN_INK_PX) {
+        imagedestroy($out);
+        return null;
+    }
+    return $out;
 }
 
 /**
@@ -372,27 +795,33 @@ function store_signature_image(array $file, string $subdir): array
  * than being blown up into a blurry one. It is still copied, because the
  * caller destroys both this and the image it passed in, and handing back the
  * same image would have it destroyed twice.
+ *
+ * The copy is laid on white. Nothing here needs transparency carried through:
+ * a photograph is printed on white card stock and cannot carry it through a
+ * JPEG anyway, and a signature has been composited onto white before it gets
+ * this far, precisely so that one recipe serves both.
  */
 function shrink_within(GdImage $src, int $max): GdImage
 {
     $sw = imagesx($src);
     $sh = imagesy($src);
-    if ($sw <= $max && $sh <= $max) {
-        // The caller destroys what comes back, and must not be handed the
-        // image it still holds — so this is a copy, not the original.
-        $same = imagecreatetruecolor($sw, $sh);
-        imagefill($same, 0, 0, imagecolorallocate($same, 255, 255, 255));
-        imagecopy($same, $src, 0, 0, 0, 0, $sw, $sh);
-        return $same;
-    }
-    $scale = $max / max($sw, $sh);
-    $w     = max(1, (int) round($sw * $scale));
-    $h     = max(1, (int) round($sh * $scale));
-    $out   = imagecreatetruecolor($w, $h);
-    // Paper, not black: a JPEG cannot carry transparency anyway, and a card is
-    // printed on white card stock.
+    $bounded = $sw <= $max && $sh <= $max;
+
+    $scale = $bounded ? 1.0 : $max / max($sw, $sh);
+    $w     = $bounded ? $sw : max(1, (int) round($sw * $scale));
+    $h     = $bounded ? $sh : max(1, (int) round($sh * $scale));
+
+    $out = imagecreatetruecolor($w, $h);
     imagefill($out, 0, 0, imagecolorallocate($out, 255, 255, 255));
-    imagecopyresampled($out, $src, 0, 0, 0, 0, $w, $h, $sw, $sh);
+
+    // The caller destroys what comes back and must not be handed the image it
+    // still holds, so an already-bounded picture is copied rather than passed
+    // straight through.
+    if ($bounded) {
+        imagecopy($out, $src, 0, 0, 0, 0, $sw, $sh);
+    } else {
+        imagecopyresampled($out, $src, 0, 0, 0, 0, $w, $h, $sw, $sh);
+    }
     return $out;
 }
 

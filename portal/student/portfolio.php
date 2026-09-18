@@ -79,10 +79,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // because it described where the frame sat on the last one. A
                 // setting carried over from a picture nobody is looking at any
                 // more is a worse starting point than the rule.
+                //
+                // Written out rather than left null, because null means "the
+                // default" and the default is a figure that can change. It has
+                // already changed once: a photograph cut at the old bias would
+                // have had the slider showing today's, reporting a crop the
+                // card was not printing. What is stored now is the placement
+                // the photograph on the card was actually cut at.
                 q(
-                    'UPDATE users SET avatar_path = ?, avatar_source_path = ?, avatar_focus = NULL
+                    'UPDATE users SET avatar_path = ?, avatar_source_path = ?, avatar_focus = ?
                       WHERE id = ?',
-                    [$stored['path'], $stored['source'], $user['id']]
+                    [$stored['path'], $stored['source'], card_photo_focus(null), $user['id']]
                 );
                 delete_upload($user['avatar_path']);
                 delete_upload($user['avatar_source_path'] ?? null);
@@ -97,13 +104,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // like the photograph: a signature is wide and shallow, and the card
         // fits it to the line with object-fit instead.
         if (upload_present($_FILES['signature'] ?? null)) {
-            // Turned the right way up as it is stored, because the hint on
-            // the form asks people to photograph one and a phone records how
-            // it was held rather than rotating the picture.
-            $stored = store_signature_image($_FILES['signature'], 'holder-signature');
+            // Turned the right way up, and the ink lifted off the paper:
+            // black on a transparent ground, trimmed to the writing. What
+            // people have to hand is a photograph of a page, and a page is
+            // what would otherwise print on the card.
+            $stored = store_signature_image($_FILES['signature'], 'holder-signature', true);
             if ($stored['ok']) {
                 q('UPDATE users SET signature_path = ? WHERE id = ?', [$stored['path'], $user['id']]);
                 delete_upload($user['signature_path'] ?? null);
+                if (!$stored['inked']) {
+                    // The form promised the paper would come off. When it
+                    // could not — GD missing on the host, a picture too large
+                    // to decode, or one with no ink and paper to tell apart —
+                    // saying nothing would leave somebody looking at a
+                    // photograph of a page on their card and no reason for it.
+                    flash('info', t('holder_signature_kept'));
+                }
             } else {
                 flash('error', $stored['error'] === 'small'
                     ? t('err_signature_small')
@@ -291,14 +307,14 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
       /**
        * Where the round frame sits on the photograph.
        *
-       * Offered only when it can do something. A photograph that arrived
-       * already square — a picture cut to a circle for a website, which is
-       * what people reach for first — has no excess for the frame to take off
-       * one end or the other, so the slider would move nothing however far it
-       * was dragged. That case gets the reason instead, because it is also the
-       * one thing that makes a head sit hard against the ring: a photograph
-       * cropped to the top of somebody's hair has no room above it to show,
-       * and no frame can invent any.
+       * Offered only when it can do something. A photograph no taller than
+       * the frame — one already cut square for a website or a round avatar,
+       * which is what people reach for first, or a landscape shot — has no
+       * excess for the frame to take off one end or the other, so the slider
+       * would move nothing however far it was dragged. Those get the reason
+       * instead, because it is also the one thing that makes a head sit hard
+       * against the ring: a photograph cropped to the top of somebody's hair
+       * has no room above it to show, and no frame can invent any.
        */
       $source   = resolve_upload($user['avatar_source_path'] ?? null);
       $canPlace = $user['avatar_path'] && $source !== null
@@ -324,7 +340,7 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
                      about their own picture. */ ?>
             <span class="hint"><?= te('photo_place_no_source') ?></span>
           <?php else: ?>
-            <span class="hint"><?= te('photo_place_square') ?></span>
+            <span class="hint"><?= te('photo_place_no_room') ?></span>
           <?php endif; ?>
         </div>
       <?php endif; ?>
