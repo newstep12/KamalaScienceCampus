@@ -79,15 +79,18 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
            * face with it, because the line above is set in the card's Latin
            * one and would otherwise fall back to whatever the system offers.
            */
-          // not $names: that is the campus's. Resolved once in
-          // id_card_context(), because both faces and the page's own text
-          // ask — but only where that context was built for this holder. A
-          // page drawing a batch of cards from one context would otherwise
-          // print the first holder's name over everybody else's details, and
-          // nothing in the markup would show it.
-          $holderNames = (($ctx['holder_id'] ?? null) === (int) $holder['id'])
-              ? $ctx['holder_names']
-              : id_card_names($holder);
+          // not $names: that is the campus's.
+          //
+          // Read from $holder, not from $ctx. A guard here that took the
+          // context's names only when its holder id matched looked like it
+          // made one context safe for a batch of cards, and it did not: the
+          // photograph, the holder's signature and the issue date on this
+          // same face all come from $ctx and none of them is checked. One
+          // field quietly right among five quietly wrong is worse than the
+          // honest rule, which is that a context belongs to one holder. The
+          // page's own text reads $ctx['holder_names']; a face reads the
+          // person it was handed.
+          $holderNames = id_card_names($holder);
           $primary = $holderNames['latin'] ?? $holderNames['deva'];
           $second  = $holderNames['latin'] !== null ? $holderNames['deva'] : null;
           ?>

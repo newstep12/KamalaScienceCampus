@@ -238,13 +238,16 @@ function transliterate_to_devanagari(string $word): string
              * गङ्गा — but not when it opens the word, where Ngima is ङिमा and
              * the ग would be a consonant the name does not have.
              *
-             * Before a consonant it is not a pair at all. Reading it as one
+             * Before a consonant — and only a consonant; tested as "anything
+             * follows", a digit stuck on the end of an imported surname was
+             * enough to turn Gurung into गुरुङ्ग — it is not a pair at all.
+             * Reading it as one
              * consumed the g and wrote neither it nor anything in its place:
              * Jangbahadur came out जङ्बहदुर, Sangh सङ्ह with the घ degraded to
              * a ह. So the match is given back, the n is written on its own,
              * and the g is read again on the next turn as the consonant it is.
              */
-            if ($roman === 'ng' && $vowel === null && $pos < $length) {
+            if ($roman === 'ng' && $vowel === null && devanagari_consonant_at($word, $pos) !== null) {
                 $pos--;                              // hand the g back
                 // The velar nasal, the same letter the vowel case writes, so
                 // Sangroula and Ganga do not spell one sound two ways.
@@ -349,6 +352,24 @@ function devanagari_vowel_at(string $word, int $pos): ?array
 }
 
 /**
+ * The letters of the alphabet as they are said, for a name written with an
+ * initial.
+ *
+ * A single letter standing on its own is not a syllable to transliterate, it
+ * is a letter being named — and read as a syllable, two different initials
+ * came out as one Devanagari letter, because 'c' and 'k' are both क. "K C
+ * Sharma" printed as क क शर्मा.
+ */
+const DEVANAGARI_LETTER_NAMES = [
+    'a' => 'ए',  'b' => 'बी', 'c' => 'सी', 'd' => 'डी', 'e' => 'ई',
+    'f' => 'एफ', 'g' => 'जी', 'h' => 'एच', 'i' => 'आई', 'j' => 'जे',
+    'k' => 'के', 'l' => 'एल', 'm' => 'एम', 'n' => 'एन', 'o' => 'ओ',
+    'p' => 'पी', 'q' => 'क्यू', 'r' => 'आर', 's' => 'एस', 't' => 'टी',
+    'u' => 'यू', 'v' => 'भी', 'w' => 'डब्ल्यू', 'x' => 'एक्स', 'y' => 'वाई',
+    'z' => 'जेड',
+];
+
+/**
  * One word of a name, looked up and otherwise transliterated.
  *
  * Tried as written, then with its punctuation taken out — so the surname
@@ -368,6 +389,7 @@ function devanagari_word(string $core, array $dictionary): string
     $plain = preg_replace('/\p{P}+/u', '', $key) ?? $key;
     if (isset($dictionary[$key]))   { return $dictionary[$key]; }
     if (isset($dictionary[$plain])) { return $dictionary[$plain]; }
+    if (isset(DEVANAGARI_LETTER_NAMES[$plain])) { return DEVANAGARI_LETTER_NAMES[$plain]; }
 
     // Split on the punctuation that joins names, keeping it in place.
     $parts = preg_split("/([\\-.'])/u", $core, -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -381,7 +403,10 @@ function devanagari_word(string $core, array $dictionary): string
             // Transliterated whether or not it is purely letters. Copied
             // through on that test, a part like "Kumar2" reached the card as
             // Latin text inside the line it sets in a Devanagari face.
-            $joined .= $dictionary[strtolower($part)] ?? transliterate_to_devanagari($part);
+            $lower   = strtolower($part);
+            $joined .= $dictionary[$lower]
+                    ?? DEVANAGARI_LETTER_NAMES[$lower]
+                    ?? transliterate_to_devanagari($part);
         }
         return $joined;
     }
@@ -403,19 +428,21 @@ function devanagari_word(string $core, array $dictionary): string
  */
 function nepali_name(string $latin): ?string
 {
-    // "K. C." is "K.C." is "KC". Closed up before the split on whitespace,
-    // or the surname arrived as two lone letters, missed the dictionary, and
-    // printed as क. क. — two different initials as the same Devanagari
-    // letter, and the same surname spelt two ways on two students' cards.
-    $latin = preg_replace('/\b([A-Za-z])\.\s+(?=[A-Za-z]\.)/', '$1.', $latin) ?? $latin;
-
     // Typographic spacing and quotes folded to their ASCII equivalents first,
-    // so a name is judged on its letters rather than on how it was pasted.
+    // so a name is judged on its letters rather than on how it was pasted —
+    // and genuinely first, because the initials below are found with \s,
+    // which does not match a non-breaking space. Read in the other order, a
+    // name pasted out of a spreadsheet kept its NBSP between the initials and
+    // went the long way round to क. क. anyway.
     $latin = trim(strtr($latin, [
         "\u{00A0}" => ' ', "\u{2007}" => ' ', "\u{202F}" => ' ', "\u{2009}" => ' ',
         "\u{2018}" => "'", "\u{2019}" => "'", "\u{2032}" => "'",
         "\u{2010}" => '-', "\u{2011}" => '-', "\u{2013}" => '-', "\u{2014}" => '-',
     ]));
+
+    // "K. C." is "K.C." is "KC": closed up before the split on whitespace, or
+    // the surname arrives as two lone letters and misses the dictionary.
+    $latin = preg_replace('/\b([A-Za-z])\.\s+(?=[A-Za-z]\b)/', '$1.', $latin) ?? $latin;
 
     // Nothing to work from: no Latin letter to read.
     if ($latin === '' || !preg_match('/[A-Za-z]/', $latin)) {

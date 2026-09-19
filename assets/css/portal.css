@@ -684,7 +684,14 @@ body.lang-ne .idc-photo { width: 5.90em; }
    the rows do not compress, so what does not fit leaves silently. */
 .idc-name-ne {
   font-family: var(--deva); font-size: .86em;
-  line-height: 1.1; color: var(--ink-soft);
+  /* Not tighter than the script needs. Devanagari hangs marks above the line
+     and below it — the chandrabindu of कुँवर, the ौ of पौडेल, a ु underneath —
+     and this box is overflow: hidden with its height set by the line box, so
+     a line-height under what the face actually occupies does not crowd the
+     type, it cuts the tops and bottoms off it. Noto Sans Devanagari wants
+     about 1.24 here; 1.3 leaves the marks whole and still costs the front
+     half a pixel less than the .9em/1.18 this replaced. */
+  line-height: 1.3; color: var(--ink-soft);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .idc-role {
@@ -866,11 +873,12 @@ body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em;
    missing-details line had been rendering in --ink-soft rather than --warn,
    so there was no contrast for the note below it to be calmer than. */
 .p-idcard-cta p.p-idcard-missing { color: var(--warn); }
-/* Not a warning. The card is complete; this says the Nepali name on it was
+/* Not a warning, so it keeps the panel's own colour and is set apart only by
+   the italic — the card is complete; this says the Nepali name on it was
    written from the English rather than typed, which is worth reading and is
    not worth alarming anybody about. (.hint is styled only inside a form
    field, so it does nothing out here.) */
-.p-idcard-cta p.p-idcard-note { color: var(--ink-soft); font-style: italic; }
+.p-idcard-cta p.p-idcard-note { font-style: italic; }
 
 .p-btn-link {
   background: none; border: 0; padding: 0; cursor: pointer;

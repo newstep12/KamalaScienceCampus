@@ -222,9 +222,11 @@ function id_card_settings(): array
  * only the holder and an administrator can open a card page at all, so in
  * practice it is on every card that has one.
  *
- * 'holder_names' is resolved here rather than in the face, because a card
- * page draws two faces and asks the same question again in its own text, and
- * id_card_names() may have to transliterate a name to answer it.
+ * 'holder_names' is resolved here for the page's own text — which says
+ * whether the Nepali name on the card was derived — and for the missing-
+ * details list beside it, because id_card_names() may have to transliterate a
+ * name to answer and both ask at once. The faces do not read it: a context
+ * belongs to one holder, and a face reads the holder it was handed.
  */
 function id_card_context(array $holder, ?array $viewer = null): array
 {
@@ -246,7 +248,6 @@ function id_card_context(array $holder, ?array $viewer = null): array
         'chief_title' => designation_label(
             ($named['owner_title'] ?? '') ?: ($card['chief_title'] ?: 'campus_chief')
         ),
-        'holder_id'    => (int) $holder['id'],
         'holder_names' => id_card_names($holder),
         'names'       => campus_names(),
         'issued'      => $holder['approved_at'] ?: $holder['created_at'],
