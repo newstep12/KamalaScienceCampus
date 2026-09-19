@@ -68,8 +68,9 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
         <div class="idc-detail">
           <?php
           /**
-           * Two lines, one per script — name_by_script() says which name is in
-           * which, whichever column the campus record keeps it in.
+           * Two lines, one per script — id_card_names() says which name is in
+           * which, whichever column the campus record keeps it in, and writes
+           * the Devanagari one from the English where the record has none.
            *
            * A holder with only a Devanagari name gets it on the line the
            * English name would have had, rather than in the smaller type
@@ -78,7 +79,7 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
            * face with it, because the line above is set in the card's Latin
            * one and would otherwise fall back to whatever the system offers.
            */
-          $holderNames = name_by_script($holder);   // not $names: that is the campus's
+          $holderNames = id_card_names($holder);   // not $names: that is the campus's
           $primary = $holderNames['latin'] ?? $holderNames['deva'];
           $second  = $holderNames['latin'] !== null ? $holderNames['deva'] : null;
           ?>

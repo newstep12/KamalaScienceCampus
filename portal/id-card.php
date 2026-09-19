@@ -61,6 +61,22 @@ layout_head([
   </div>
 <?php endif; ?>
 
+<?php
+/* A derived Nepali name is not a missing detail — the card is complete and
+   prints two names. It is a spelling the campus wrote rather than one the
+   holder gave, and saying so is the difference between offering somebody a
+   suggestion and telling them this is their name. */
+$cardNames = id_card_names($holder);
+?>
+<?php if ($cardNames['deva_derived']): ?>
+  <div class="p-flash p-flash-info p-noprint">
+    <?= e(t($own ? 'id_card_name_derived' : 'id_card_name_derived_other', $cardNames['deva'])) ?>
+    <?php if ($own): ?>
+      <a href="<?= e(portal_url('/student/portfolio.php')) ?>"><?= te('id_card_missing_link') ?></a>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
+
 <?php if (!$ctx['signature']): ?>
   <div class="p-flash p-flash-info p-noprint">
     <?php if (signature_withheld('id_card', $viewer)): ?>

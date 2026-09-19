@@ -5,6 +5,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/settings.php';
 require_once __DIR__ . '/signatures.php';
+require_once __DIR__ . '/devanagari.php';
 
 /**
  * Identity cards.
@@ -95,6 +96,41 @@ function id_number(?string $value, int $max = 30): string
     $value = preg_replace('/[^0-9\- \/]+/u', '', ascii_digits(trim((string) $value))) ?? '';
     $value = trim((string) preg_replace('/\s+/', ' ', $value));
     return preg_match('/[0-9]/', $value) ? mb_substr($value, 0, $max) : '';
+}
+
+/**
+ * The two names the card prints: what the record holds, and — where it holds
+ * no Nepali name — one written from the English.
+ *
+ * The campus asks for one name and prints two. Only the English box is
+ * required, because that is the one every student can type on any keyboard,
+ * and the Nepali box beside it is optional and mostly skipped; a card with one
+ * name on it was the result, on a document whose whole design is a line per
+ * script. So the second line is derived when it has to be. nepali_name() does
+ * the writing — a dictionary of the names these students have, and a
+ * syllable-by-syllable transliterator behind it.
+ *
+ * 'deva_derived' says which of the two the card is printing, and it is not
+ * decoration: a spelling the campus holds and a spelling the campus guessed
+ * are different claims to make about somebody's name, and the pages that show
+ * this card say which one this is. A student who disagrees types theirs into
+ * the optional box, and from then on nothing is derived for them — it is read
+ * from the record like any other detail, here and everywhere else in the
+ * portal.
+ *
+ * @return array{latin: ?string, deva: ?string, deva_derived: bool}
+ */
+function id_card_names(array $u): array
+{
+    $names = name_by_script($u) + ['deva_derived' => false];
+    if ($names['deva'] === null && $names['latin'] !== null) {
+        $derived = nepali_name($names['latin']);
+        if ($derived !== null) {
+            $names['deva'] = $derived;
+            $names['deva_derived'] = true;
+        }
+    }
+    return $names;
 }
 
 /**
@@ -297,15 +333,20 @@ function id_card_missing(array $u): array
 {
     $missing = [];
     if (empty($u['avatar_path']))   { $missing[] = t('photo'); }
-    // In the order the card is read, so the Nepali name sits with the name
-    // rather than at the end of the sentence.
-    // By script, not by column — see name_by_script(). A student who typed
-    // their Devanagari name into the required "full name" box is missing the
-    // English line, not the Nepali one, and was told nothing at all while the
-    // question was which column was empty.
-    $names = name_by_script($u);
+    // By script, not by column — see name_by_script() — and in the order the
+    // card is read, so a name sits with the name rather than at the end of
+    // the sentence. A student who typed their Devanagari name into the
+    // required "full name" box is missing the English line, not the Nepali
+    // one, and was told nothing at all while the question was which column
+    // was empty.
+    //
+    // The Nepali name is not on this list any more, whether or not the record
+    // holds one: id_card_names() writes one from the English when it has to,
+    // so the line is never blank and there is nothing to ask for. What the
+    // card page says instead is that the name it printed was derived, which
+    // is a different thing from a detail being missing — see id_card_names().
+    $names = id_card_names($u);
     if ($names['latin'] === null)   { $missing[] = t('full_name_en'); }
-    if ($names['deva'] === null)    { $missing[] = t('full_name_ne'); }
     if (empty($u['date_of_birth'])) { $missing[] = t('date_of_birth'); }
     if (empty($u['address']))       { $missing[] = t('address'); }
     if ($u['role'] === ROLE_STUDENT) {

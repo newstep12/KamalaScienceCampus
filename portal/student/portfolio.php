@@ -448,6 +448,10 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
       <?php if ($missing = id_card_missing($user)): ?>
         <p class="p-idcard-missing"><?= e(t('id_card_missing', join_list($missing))) ?></p>
       <?php endif; ?>
+      <?php $cardNames = id_card_names($user); ?>
+      <?php if ($cardNames['deva_derived']): ?>
+        <p class="hint"><?= e(t('id_card_name_derived', $cardNames['deva'])) ?></p>
+      <?php endif; ?>
       <a class="p-btn p-btn-primary" href="<?= e(portal_url('/id-card.php')) ?>"><?= te('id_card_open') ?></a>
     </div>
   </aside>

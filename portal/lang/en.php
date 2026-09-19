@@ -73,6 +73,12 @@ return [
     // there was nothing to find. 'full_name' stays as it is for the column
     // headings above a list of people, which is not a box to fill in.
     'full_name_en'     => 'Full name in English',
+    // Said on the card page when the Devanagari on the card was written
+    // from the English rather than typed by the holder — see
+    // id_card_names(). It is a different claim from a missing detail, so
+    // it is not on the missing list and does not read like one.
+    'id_card_name_derived'      => 'The Nepali spelling on this card — %s — was written from the English name automatically. Check it: if it is not how you write your name, type your own in “Full name in Nepali” and the card will use that instead.',
+    'id_card_name_derived_other'=> 'The Nepali spelling on this card — %s — was written from the English name automatically, not entered by the holder.',
     'year_of_study'    => 'Year of study',
     'choose_year'      => 'Choose your year',
     'symbol_no'        => 'TU symbol / registration number',
