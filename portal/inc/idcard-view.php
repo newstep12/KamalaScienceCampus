@@ -66,9 +66,25 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
         </div>
 
         <div class="idc-detail">
-          <div class="idc-name"><?= e($holder['full_name']) ?></div>
-          <?php if ($nameNe = id_card_name_ne($holder)): ?>
-            <div class="idc-name-ne"><?= e($nameNe) ?></div>
+          <?php
+          /**
+           * Two lines, one per script — name_by_script() says which name is in
+           * which, whichever column the campus record keeps it in.
+           *
+           * A holder with only a Devanagari name gets it on the line the
+           * English name would have had, rather than in the smaller type
+           * underneath an empty space: the big line is the name, and a card
+           * that has one name prints it as the name. It takes the Devanagari
+           * face with it, because the line above is set in the card's Latin
+           * one and would otherwise fall back to whatever the system offers.
+           */
+          $holderNames = name_by_script($holder);   // not $names: that is the campus's
+          $primary = $holderNames['latin'] ?? $holderNames['deva'];
+          $second  = $holderNames['latin'] !== null ? $holderNames['deva'] : null;
+          ?>
+          <div class="idc-name<?= $holderNames['latin'] === null ? ' idc-name-deva' : '' ?>"><?= e((string) $primary) ?></div>
+          <?php if ($second !== null): ?>
+            <div class="idc-name-ne"><?= e($second) ?></div>
           <?php endif; ?>
           <?php
           /**

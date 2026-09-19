@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lang.php';
 
 /** Extensions teachers may upload, mapped from the real MIME type we detect. */
@@ -89,6 +90,74 @@ function delete_upload(?string $relPath): void
     $full = realpath($root . '/' . $relPath);
     if ($full && str_starts_with($full, $root . DIRECTORY_SEPARATOR) && is_file($full)) {
         @unlink($full);
+    }
+}
+
+/**
+ * Which of the users table's file-bearing columns this install actually has.
+ *
+ * Only avatar_path is in every install: the working copy and the holder's
+ * signature arrived as database updates, and an install that has not run them
+ * does without. Read once per request, the way notices_track_auto_translation()
+ * reads the notice flags, because the answer cannot change under us.
+ */
+function user_file_columns(): array
+{
+    static $columns = null;
+    if ($columns === null) {
+        $wanted = ['avatar_path', 'avatar_source_path', 'signature_path'];
+        // Not caught and degraded to a shorter list. Guessing here is the
+        // silent orphaning this whole pair exists to refuse — the signature
+        // left behind, nothing logged, the delete reporting success — and it
+        // would arrive through the code written to prevent it. A delete that
+        // cannot establish what it owns fails instead, having destroyed
+        // nothing, because user_file_paths() runs before the row is removed.
+        $columns = array_values(array_intersect(
+            $wanted,
+            array_column(all('SHOW COLUMNS FROM users'), 'Field')
+        ));
+    }
+    return $columns;
+}
+
+/**
+ * Every upload a user row owns, as paths — read before the row is deleted.
+ *
+ * Three columns name a file, and a delete that listed them by hand kept only
+ * the ones whoever wrote it remembered: the signature arrived after the
+ * delete was written, so deleting an account left a scan of a real person's
+ * signature in the uploads directory for ever, with no row naming it and
+ * nothing to find it by. The list belongs in one place, beside the code that
+ * removes what is on it.
+ *
+ * A row the caller selected columns from rather than SELECT *ing is refused
+ * outright. Read with ?? it would be indistinguishable from an account that
+ * simply has no files, and the difference is every one of them orphaned —
+ * which is the failure this exists to prevent, arriving silently through the
+ * thing written to prevent it. A column this install has not got is not that
+ * case, and is not an error.
+ */
+function user_file_paths(array $u): array
+{
+    $paths = [];
+    foreach (user_file_columns() as $column) {
+        if (!array_key_exists($column, $u)) {
+            throw new InvalidArgumentException(
+                'user_file_paths() needs a whole users row; ' . $column . ' was not selected'
+            );
+        }
+        if (!empty($u[$column])) {
+            $paths[] = (string) $u[$column];
+        }
+    }
+    return $paths;
+}
+
+/** Remove several uploads — what user_file_paths() gathered, once the row has gone. */
+function delete_uploads(array $paths): void
+{
+    foreach ($paths as $path) {
+        delete_upload($path);
     }
 }
 

@@ -22,12 +22,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($target && $action === 'delete') {
         // Only ever a pending registration, and never an admin account.
         if ($target['role'] !== ROLE_ADMIN && (int) $target['id'] !== (int) $admin['id']) {
-            // Take the photograph with the account, rather than leaving it in
-            // the uploads directory with nothing pointing at it — and the
-            // working copy the frame was cut from with it.
-            delete_upload($target['avatar_path']);
-            delete_upload($target['avatar_source_path'] ?? null);
+            // The paths first, then the row, then the files — the order
+            // admin/notices.php sets out. A DELETE can throw (a lost
+            // connection, a lock-wait timeout, a read-only replica), and
+            // unlinking first would leave the registration standing with its
+            // photograph and signature already gone. Reading the paths up
+            // front also refuses a row from a narrower SELECT than this one
+            // while the account is still whole. user_file_paths() holds the
+            // list, so a column added later — the signature was one — is not
+            // missed.
+            $files = user_file_paths($target);
             q('DELETE FROM users WHERE id = ?', [$id]);
+            delete_uploads($files);
             log_activity((int) $admin['id'], 'delete_user', $target['email']);
             flash('ok', t('deleted_ok', $target['full_name']));
         }

@@ -27,6 +27,20 @@ require_once __DIR__ . '/lang.php';
  * afterwards. A corrected translation is never overwritten: the *_ne_auto
  * flags record which text this file wrote and which a person did.
  *
+ * Translating is something the campus does, never something a visitor's page
+ * load does. It happens where somebody is already waiting for it — as a
+ * notice is saved, and in backfill_notice_translations() for the ones
+ * published before any of this existed — and every page renders through
+ * bilingual() in lang.php, which only ever reads what those two left behind.
+ * A page that translated as it rendered made an anonymous GET of the public
+ * notice board into a writer and an outbound HTTP client, which is not a
+ * thing a notice board should be.
+ *
+ * Because nothing repairs a row on the next visit any more, a translation
+ * that fails has to be visible: admin/notices.php says so when a save could
+ * not produce the Nepali, and untranslated_notice_count() puts a number
+ * beside the backfill button so the System page says how many are waiting.
+ *
  * Nothing here ever throws. A translation that cannot be made is not an error
  * — the page falls back to English exactly as it did before.
  */
@@ -43,6 +57,22 @@ const TRANSLATE_BACKOFF_SECONDS = 900;
  * always ends with a count on screen rather than a dead page.
  */
 const BACKFILL_SECONDS = 20;
+
+/**
+ * How long one call may spend waiting on a translation service.
+ *
+ * The budget counts requests; this counts seconds, and only this keeps a save
+ * inside the host's max_execution_time. A long body splits into chunks sent
+ * one after another at up to TRANSLATE_TIMEOUT each, and admin/notices.php
+ * translates BEFORE it writes the row — so a pass that runs over does not
+ * merely lose the Nepali, it loses the notice, with the attachment already
+ * stored and nothing left pointing at it.
+ *
+ * Half of the 30 seconds shared hosting usually allows, which leaves the save
+ * itself room. Running out is not an error: the text stays in English, the
+ * admin is told, and the backfill can take another run at it later.
+ */
+const TRANSLATE_DEADLINE_SECONDS = 15;
 
 function translation_enabled(): bool
 {
@@ -97,14 +127,6 @@ function translate_to_nepali(string $text): ?array
 
     $offline = glossary_translate($text);
     return $offline === null ? null : ['text' => $offline, 'source' => 'glossary'];
-}
-
-/** True when the text is already mostly Nepali, so there is nothing to do. */
-function is_devanagari(string $text): bool
-{
-    $devanagari = preg_match_all('/\p{Devanagari}/u', $text);
-    $latin      = preg_match_all('/\p{Latin}/u', $text);
-    return $devanagari > 0 && $devanagari >= $latin;
 }
 
 /* ---------------------------------------------------------------- glossary -- */
@@ -398,10 +420,18 @@ function remote_translate(string $text): ?string
     }
 
     $out = [];
+    $deadline = microtime(true) + TRANSLATE_DEADLINE_SECONDS;
     foreach ($chunks as $chunk) {
         if (trim($chunk) === '') {
             $out[] = $chunk;
             continue;
+        }
+        // Stop before the chunk that would take us past the deadline, not
+        // after it. Half a body in Nepali is refused the same way a failed
+        // chunk is, so the caller gets English and a reason rather than a
+        // page PHP killed mid-request.
+        if (microtime(true) > $deadline) {
+            return null;
         }
         translation_budget(translation_budget() - 1);
         $piece = match ($provider) {
@@ -579,16 +609,26 @@ const TRANSLATABLE_FIELDS = ['title', 'body'];
 
 /**
  * How many pieces of text this request may still send to a translation
- * service. The public board lists up to sixty notices, and sixty round trips
- * would turn one page load into a minute of waiting. Whatever the budget does
- * not cover stays in English and is picked up by a later visit, or all at once
- * from "Translate every notice now" on the System page — which raises this.
+ * service.
+ *
+ * It used to be six, because a public page load translated as it rendered and
+ * sixty notices meant sixty round trips. Nothing renders and translates any
+ * more, so six is no longer a ceiling protecting a visitor — it is a ceiling
+ * on the only automatic translation left, the one an admin sets off by saving
+ * a notice, and a three-thousand-character body splits into more chunks than
+ * that. remote_translate() checks the whole job up front and refuses rather
+ * than half-translating, so the body simply stayed in English with nothing to
+ * retry it.
+ *
+ * The default is now a long notice's worth, and it is still a ceiling: a
+ * runaway is one admin action taking too long, not a day of visitors. The
+ * backfill raises it again for a whole pass.
  *
  * The glossary is not counted: it makes no request at all.
  */
 function translation_budget(?int $newBudget = null): int
 {
-    static $budget = 6;
+    static $budget = 60;
     if ($newBudget !== null) {
         $budget = max(0, $newBudget);
     }
@@ -618,61 +658,11 @@ function notices_track_auto_translation(): bool
     return $has;
 }
 
-/** Notice ids translated during this request, so the page can say so. */
-function translated_this_request(?int $add = null): array
-{
-    static $ids = [];
-    if ($add !== null) {
-        $ids[$add] = true;
-    }
-    return $ids;
-}
-
-/**
- * The notice text for the viewer's language, translating it on the spot when
- * the Nepali column is empty.
- *
- * This is bilingual() with the English fallback replaced by a translation, so
- * notices published before any of this existed become readable in Nepali
- * without anyone having to edit them. The result is written back to the row,
- * so the work happens once rather than on every visit.
- */
-function notice_bilingual(array $n, string $field): string
-{
-    $english = trim((string) ($n[$field . '_en'] ?? ''));
-    if (!is_nepali()) {
-        return $english;
-    }
-
-    $nepali = trim((string) ($n[$field . '_ne'] ?? ''));
-    if ($nepali !== '') {
-        return $nepali;
-    }
-    if ($english === '' || !in_array($field, TRANSLATABLE_FIELDS, true)) {
-        return $english;
-    }
-
-    $made = translate_to_nepali($english);
-    if ($made === null) {
-        return $english;
-    }
-
-    $id = (int) ($n['id'] ?? 0);
-    if ($id > 0) {
-        store_notice_translation($id, $field, $made['text']);
-        translated_this_request($id);
-    }
-    return $made['text'];
-}
-
 /** True when the Nepali a viewer is reading was produced by this file. */
 function notice_is_machine_translated(array $n): bool
 {
     if (!is_nepali()) {
         return false;
-    }
-    if (isset(translated_this_request()[(int) ($n['id'] ?? 0)])) {
-        return true;
     }
     return !empty($n['title_ne_auto']) || !empty($n['body_ne_auto']);
 }
@@ -696,6 +686,43 @@ function store_notice_translation(int $id, string $field, string $nepali): void
         q($sql, [$nepali, $id]);
     } catch (Throwable $e) {
         error_log('Could not store the Nepali ' . $field . ' of notice ' . $id . ': ' . $e->getMessage());
+    }
+}
+
+/**
+ * How many notices the backfill would still have work on, or null when that
+ * cannot be determined.
+ *
+ * Scoped to exactly what backfill_notice_translations() scans — the newest
+ * $limit rows, in the same order — because a count the button cannot act on
+ * is a warning that never clears: an install with more notices than the pass
+ * reads would have shown a number in red for ever, with nothing in the
+ * interface able to reach those rows.
+ *
+ * Null rather than 0 when the query fails. 0 renders as "every notice has
+ * Nepali text", and saying that because we could not look is the one answer
+ * worse than saying nothing.
+ */
+function untranslated_notice_count(int $limit = 200): ?int
+{
+    $columns    = ['id'];
+    $conditions = [];
+    foreach (TRANSLATABLE_FIELDS as $field) {
+        $columns[] = $field . '_en';
+        $columns[] = $field . '_ne';
+        // A field with no English text is nothing to translate, not a gap.
+        $conditions[] = "({$field}_en IS NOT NULL AND TRIM({$field}_en) <> ''"
+                      . " AND ({$field}_ne IS NULL OR TRIM({$field}_ne) = ''))";
+    }
+    try {
+        return (int) scalar(
+            'SELECT COUNT(*) FROM (SELECT ' . implode(', ', $columns)
+            . ' FROM notices ORDER BY published_at DESC LIMIT ' . (int) $limit
+            . ') AS scanned WHERE ' . implode(' OR ', $conditions)
+        );
+    } catch (Throwable $e) {
+        error_log('Could not count untranslated notices: ' . $e->getMessage());
+        return null;
     }
 }
 

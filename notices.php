@@ -154,8 +154,8 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
             <?php endif; ?>
             <span class="p-item-meta"><?= e(format_date($n['published_at'])) ?></span>
           </div>
-          <h3><?= e(notice_bilingual($n, 'title')) ?></h3>
-          <?php if ($body = notice_bilingual($n, 'body')): ?>
+          <h3><?= e(bilingual($n, 'title')) ?></h3>
+          <?php if ($body = bilingual($n, 'body')): ?>
             <div class="p-notice-body"><?= e($body) ?></div>
           <?php endif; ?>
 
@@ -195,9 +195,9 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
               <summary><?= $ne ? 'यहीँ पढ्नुहोस्' : 'Read it here' ?></summary>
               <div class="p-preview-frame">
                 <?php if ($kind === 'image'): ?>
-                  <img src="<?= e($file) ?>" alt="<?= e(notice_bilingual($n, 'title')) ?>" loading="lazy">
+                  <img src="<?= e($file) ?>" alt="<?= e(bilingual($n, 'title')) ?>" loading="lazy">
                 <?php else: ?>
-                  <iframe title="<?= e(notice_bilingual($n, 'title')) ?>" loading="lazy"></iframe>
+                  <iframe title="<?= e(bilingual($n, 'title')) ?>" loading="lazy"></iframe>
                   <noscript>
                     <p><a href="<?= e($file) ?>" target="_blank" rel="noopener">
                       <?= $ne ? 'सूचना (PDF) खोल्नुहोस्' : 'Open the notice (PDF)' ?> ↗</a></p>

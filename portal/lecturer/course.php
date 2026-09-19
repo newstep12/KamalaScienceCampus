@@ -192,7 +192,7 @@ layout_head(['title' => bilingual($course, 'title'), 'active' => 'home', 'wide' 
         <tbody>
           <?php foreach ($students as $s): ?>
             <tr>
-              <td><?= e(is_nepali() && $s['full_name_ne'] ? $s['full_name_ne'] : $s['full_name']) ?></td>
+              <td><?= e(display_name($s)) ?></td>
               <td class="nowrap"><?= e($s['symbol_no'] ?: '—') ?></td>
               <td><?= e($s['email']) ?></td>
               <td class="nowrap"><?= e(year_label((int) $s['year_level'])) ?></td>

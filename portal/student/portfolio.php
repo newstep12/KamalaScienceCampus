@@ -226,7 +226,7 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
       <h2><?= te('personal_details') ?></h2>
 
       <div class="p-field">
-        <label for="full_name"><?= te('full_name') ?></label>
+        <label for="full_name"><?= te('full_name_en') ?></label>
         <input type="text" id="full_name" name="full_name" value="<?= e($user['full_name']) ?>" required>
       </div>
 

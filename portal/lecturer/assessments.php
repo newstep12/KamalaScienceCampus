@@ -140,7 +140,7 @@ layout_head(['title' => t('assessments'), 'active' => 'home', 'wide' => true]);
         <tbody>
           <?php foreach ($students as $s): ?>
             <tr>
-              <td><?= e(is_nepali() && $s['full_name_ne'] ? $s['full_name_ne'] : $s['full_name']) ?></td>
+              <td><?= e(display_name($s)) ?></td>
               <td class="nowrap"><?= e($s['symbol_no'] ?: '—') ?></td>
               <td>
                 <input type="number" step="0.25" min="0" max="<?= e((string) $entering['max_marks']) ?>"

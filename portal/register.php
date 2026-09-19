@@ -159,7 +159,7 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
       <?= csrf_field() ?>
 
       <div class="p-field <?= isset($errors['full_name']) ? 'error' : '' ?>">
-        <label for="full_name"><?= te('full_name') ?></label>
+        <label for="full_name"><?= te('full_name_en') ?></label>
         <input type="text" id="full_name" name="full_name" value="<?= e($in['full_name']) ?>" autocomplete="name" required>
         <?php if (isset($errors['full_name'])): ?><span class="err"><?= e($errors['full_name']) ?></span><?php endif; ?>
       </div>

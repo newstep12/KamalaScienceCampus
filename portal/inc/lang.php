@@ -88,10 +88,16 @@ function e(?string $value): string
  */
 function bilingual(array $row, string $field): string
 {
-    if (is_nepali() && !empty($row[$field . '_ne'])) {
-        return (string) $row[$field . '_ne'];
+    // Trimmed on both sides, so a Nepali column holding nothing but spaces
+    // falls back to English rather than printing as an empty heading.
+    $english = trim((string) ($row[$field . '_en'] ?? ''));
+    if (is_nepali()) {
+        $nepali = trim((string) ($row[$field . '_ne'] ?? ''));
+        if ($nepali !== '') {
+            return $nepali;
+        }
     }
-    return (string) ($row[$field . '_en'] ?? '');
+    return $english;
 }
 
 /** The current URL with the language swapped — powers the language toggle. */
@@ -128,6 +134,86 @@ function ascii_digits(string $text): string
 {
     return strtr($text, ['०'=>'0','१'=>'1','२'=>'2','३'=>'3','४'=>'4',
                          '५'=>'5','६'=>'6','७'=>'7','८'=>'8','९'=>'9']);
+}
+
+/**
+ * Which script a piece of text is in: true when it is mostly Devanagari.
+ *
+ * By majority, never by presence. A single Devanagari character is not a
+ * Nepali name — "Binish Parajuli (बिनिश)" and a name pasted with one stray
+ * danda are both Latin names — and a test that asked only whether the string
+ * contained any Devanagari at all classed them as Nepali, which on the
+ * identity card discarded the real Nepali name in the other column and set
+ * the mixed string in a Devanagari face.
+ */
+function is_devanagari(string $text): bool
+{
+    $devanagari = preg_match_all('/\p{Devanagari}/u', $text);
+    $latin      = preg_match_all('/\p{Latin}/u', $text);
+    return $devanagari > 0 && $devanagari >= $latin;
+}
+
+/**
+ * A person's name in each script: ['latin' => ?string, 'deva' => ?string].
+ *
+ * The portal keeps two name columns and used to read them as what they are
+ * called rather than as what they hold — full_name for English, full_name_ne
+ * for Nepali. That is right only for the person who filled both in the way
+ * the form imagined, and two very ordinary students did not. Someone
+ * registering with the portal in Nepali reads "पूरा नाम" against a required
+ * field and "नेपालीमा पूरा नाम" against an optional one, types their name in
+ * Devanagari into the first and skips the second; someone registering in
+ * English skips the optional field. Read by column, the first has no English
+ * name anywhere and the second no Nepali one — and on the identity card,
+ * which prints a line per script, one of the two lines was simply empty.
+ *
+ * So the scripts are read off the values. full_name is read first, so it wins
+ * its script when both columns hold the same one, which is also what drops
+ * the duplicate the profile invites: somebody typing their name into "full
+ * name in Nepali" the way they had just typed it above is not a second
+ * script, so it is not a second name.
+ *
+ * Majority decides, via is_devanagari(), so a Latin name carrying one
+ * Devanagari character or a stray danda stays Latin. Majority is a preference
+ * and not the only test, though: a name written in both scripts in one box
+ * counts as Latin by majority, and with the Latin slot already taken it would
+ * be discarded entirely — so a value is offered to its majority script, and
+ * to the other if it contains any of that script and nothing has claimed it.
+ *
+ * Either key can be null, and the caller decides what that means: the card
+ * moves a lone Devanagari name up to the line the English one would have had,
+ * display_name() falls back to whichever script it has, and id_card_missing()
+ * asks for the one that is not there.
+ */
+function name_by_script(array $u): array
+{
+    $names = ['latin' => null, 'deva' => null];
+    foreach (['full_name', 'full_name_ne'] as $column) {
+        $name = trim((string) ($u[$column] ?? ''));
+        if ($name === '') {
+            continue;
+        }
+        // Majority first, so a Latin name carrying one Devanagari character
+        // — or one stray danda — stays a Latin name. But majority is a
+        // preference, not the only test: somebody who writes their name in
+        // both scripts in the Nepali box ("बिनिश पराजुली Binish Parajuli")
+        // counts as Latin by majority, and with the Latin line already taken
+        // by the column above, discarding them printed no Devanagari at all
+        // and then asked for the name they were looking at. So a string is
+        // offered to its majority script, and to the other if it has any of
+        // that script in it and nothing else has claimed it.
+        $first  = is_devanagari($name) ? 'deva' : 'latin';
+        $second = $first === 'deva' ? 'latin' : 'deva';
+        $hasOther = $second === 'deva'
+            ? (bool) preg_match('/\p{Devanagari}/u', $name)
+            : (bool) preg_match('/\p{Latin}/u', $name);
+        if ($names[$first] === null) {
+            $names[$first] = $name;
+        } elseif ($hasOther && $names[$second] === null) {
+            $names[$second] = $name;
+        }
+    }
+    return $names;
 }
 
 function format_date(?string $datetime, bool $withTime = false): string
@@ -197,6 +283,16 @@ function program_year_label(?int $year): string
         $ord = (string) $year;
     }
     return t('program_year_n', localize_digits($ord));
+}
+
+/** A list of labels as a sentence fragment: "a, b and c". */
+function join_list(array $items): string
+{
+    if (count($items) <= 1) {
+        return (string) ($items[0] ?? '');
+    }
+    $last = array_pop($items);
+    return implode(', ', $items) . ' ' . t('and') . ' ' . $last;
 }
 
 function format_bytes(?int $bytes): string
