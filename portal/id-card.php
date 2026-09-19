@@ -52,30 +52,35 @@ layout_head([
   <p><?= te('id_card_intro') ?></p>
 </div>
 
-<?php if ($missing): ?>
-  <div class="p-flash p-flash-info p-noprint">
-    <?= e(t($own ? 'id_card_missing' : 'id_card_missing_other', join_list($missing))) ?>
-    <?php if ($own): ?>
-      <a href="<?= e(portal_url('/student/portfolio.php')) ?>"><?= te('id_card_missing_link') ?></a>
-    <?php endif; ?>
-  </div>
-<?php endif; ?>
-
 <?php
-/* A derived Nepali name is not a missing detail — the card is complete and
-   prints two names. It is a spelling the campus wrote rather than one the
-   holder gave, and saying so is the difference between offering somebody a
-   suggestion and telling them this is their name. */
-$cardNames = id_card_names($holder);
+/**
+ * What this page has to say about the card before showing it, in the order it
+ * matters: details the holder has not given, then — separately — the fact that
+ * the Nepali name on the card was written from the English rather than typed.
+ *
+ * The second is not a missing detail. The card is complete and prints two
+ * names; it is a spelling the campus wrote rather than one the holder gave,
+ * and saying which is the difference between offering somebody a suggestion
+ * and telling them this is their name. They are two sentences, drawn the same
+ * way, because each of them ends in the same link to the page that fixes it.
+ */
+$notes = [];
+if ($missing) {
+    $notes[] = t($own ? 'id_card_missing' : 'id_card_missing_other', join_list($missing));
+}
+if ($ctx['holder_names']['deva_derived']) {
+    $notes[] = t($own ? 'id_card_name_derived' : 'id_card_name_derived_other',
+                 $ctx['holder_names']['deva']);
+}
 ?>
-<?php if ($cardNames['deva_derived']): ?>
+<?php foreach ($notes as $note): ?>
   <div class="p-flash p-flash-info p-noprint">
-    <?= e(t($own ? 'id_card_name_derived' : 'id_card_name_derived_other', $cardNames['deva'])) ?>
+    <?= e($note) ?>
     <?php if ($own): ?>
       <a href="<?= e(portal_url('/student/portfolio.php')) ?>"><?= te('id_card_missing_link') ?></a>
     <?php endif; ?>
   </div>
-<?php endif; ?>
+<?php endforeach; ?>
 
 <?php if (!$ctx['signature']): ?>
   <div class="p-flash p-flash-info p-noprint">

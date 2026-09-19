@@ -221,6 +221,10 @@ function id_card_settings(): array
  * The holder's own signature on the back is asked for the same way, though
  * only the holder and an administrator can open a card page at all, so in
  * practice it is on every card that has one.
+ *
+ * 'holder_names' is resolved here rather than in the face, because a card
+ * page draws two faces and asks the same question again in its own text, and
+ * id_card_names() may have to transliterate a name to answer it.
  */
 function id_card_context(array $holder, ?array $viewer = null): array
 {
@@ -242,6 +246,7 @@ function id_card_context(array $holder, ?array $viewer = null): array
         'chief_title' => designation_label(
             ($named['owner_title'] ?? '') ?: ($card['chief_title'] ?: 'campus_chief')
         ),
+        'holder_names' => id_card_names($holder),
         'names'       => campus_names(),
         'issued'      => $holder['approved_at'] ?: $holder['created_at'],
     ];
@@ -340,13 +345,17 @@ function id_card_missing(array $u): array
     // one, and was told nothing at all while the question was which column
     // was empty.
     //
-    // The Nepali name is not on this list any more, whether or not the record
-    // holds one: id_card_names() writes one from the English when it has to,
-    // so the line is never blank and there is nothing to ask for. What the
-    // card page says instead is that the name it printed was derived, which
-    // is a different thing from a detail being missing — see id_card_names().
+    // The Nepali name is asked for only when the card would still have no
+    // second line: id_card_names() writes one from the English wherever it
+    // can, so for almost every holder there is nothing to ask for, and what
+    // the card page says instead is that the name it printed was derived —
+    // a different thing from a detail being missing. But it cannot always.
+    // A name with no romanisation to read — already Devanagari, or in a
+    // script this has no reading for — comes back with nothing, and that
+    // card's second line really is blank, so that holder is asked.
     $names = id_card_names($u);
     if ($names['latin'] === null)   { $missing[] = t('full_name_en'); }
+    if ($names['deva'] === null)    { $missing[] = t('full_name_ne'); }
     if (empty($u['date_of_birth'])) { $missing[] = t('date_of_birth'); }
     if (empty($u['address']))       { $missing[] = t('address'); }
     if ($u['role'] === ROLE_STUDENT) {

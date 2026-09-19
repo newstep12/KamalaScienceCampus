@@ -448,6 +448,7 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
       <?php if ($missing = id_card_missing($user)): ?>
         <p class="p-idcard-missing"><?= e(t('id_card_missing', join_list($missing))) ?></p>
       <?php endif; ?>
+      <?php /* The box that fixes it is on this very page, a few fields up. */ ?>
       <?php $cardNames = id_card_names($user); ?>
       <?php if ($cardNames['deva_derived']): ?>
         <p class="hint"><?= e(t('id_card_name_derived', $cardNames['deva'])) ?></p>

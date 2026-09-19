@@ -88,8 +88,10 @@ function nepali_name_words(): array
 
         /* ---- the names that sit between a given name and a surname ---- */
         'bahadur' => 'बहादुर',       'devi' => 'देवी',            'kumar' => 'कुमार',
-        'kumari' => 'कुमारी',        'lal' => 'लाल',             'maya' => 'माया',
+        'kc' => 'के.सी',             'kumari' => 'कुमारी',        'lal' => 'लाल',
+        'maya' => 'माया',
         'prasad' => 'प्रसाद',        'raj' => 'राज',             'man' => 'मान',
+        'hemanta' => 'हेमन्त',       'hemant' => 'हेमन्त',
 
         /* ---- given names ---- */
         'aayush' => 'आयुष',         'abhishek' => 'अभिषेक',      'aditya' => 'आदित्य',
@@ -139,7 +141,13 @@ const DEVANAGARI_CONSONANTS = [
     'chh' => 'छ',  'shh' => 'ष',  'gy'  => 'ज्ञ', 'ksh' => 'क्ष',
     'kh'  => 'ख',  'gh'  => 'घ',  'ng'  => 'ङ',  'ch'  => 'च',  'jh' => 'झ',
     'th'  => 'थ',  'dh'  => 'ध',  'ph'  => 'फ',  'bh'  => 'भ',  'sh' => 'श',
-    'ny'  => 'ञ',  'tt'  => 'ट',  'dd'  => 'ड',
+    // No 'tt', 'dd' or 'ny'. Each looked like a digraph and was not: a
+    // doubled letter in a romanised name is gemination, so Uttara is उत्तरा
+    // and not उटरा, Buddha बुद्ध and not बुड्हा; and 'ny' is न् followed by य,
+    // so Punya is पुन्य, not पुञ — which had eaten the य outright. Taking them
+    // out lets the single-letter rules below produce the conjunct on their
+    // own. Retroflex ट and ड simply are not written in plain romanisation;
+    // names that turn on them are in the dictionary.
     'k' => 'क', 'g' => 'ग', 'c' => 'क', 'j' => 'ज', 't' => 'त', 'd' => 'द',
     'n' => 'न', 'p' => 'प', 'f' => 'फ', 'b' => 'ब', 'm' => 'म', 'y' => 'य',
     'r' => 'र', 'l' => 'ल', 'v' => 'व', 'w' => 'व', 's' => 'स', 'h' => 'ह',
@@ -166,14 +174,18 @@ const DEVANAGARI_HALANTA = '्';
  * rather than the long ा — Mahendra is महेन्द्र, not महेन्द्रा.
  *
  * Romanised Nepali writes both with the same letter and there is no rule in
- * the spelling that separates them, so what separates them is that these
- * clusters are how Sanskrit-derived names end. Everything else takes the ा of
- * Sharma and Lama, which is the commoner case by a wide margin.
+ * the spelling that separates them, so this list is kept to the clusters
+ * where the answer is not in doubt — the -ndra of Mahendra and Rajendra, and
+ * Krishna.
+ *
+ * Deliberately short. It once held every two-consonant cluster that ends a
+ * Sanskrit-derived masculine name, and those same clusters end a great many
+ * ordinary Nepali names that do take the ा: it printed Sumitra as सुमित्र,
+ * Chanda as चन्द and Diksha as दिक्ष, dropping the last syllable of the
+ * holder's name off their card. Where the two readings collide the ा is far
+ * the commoner, so the ा is what an unlisted ending gets.
  */
-const DEVANAGARI_INHERENT_ENDINGS = [
-    'ndra', 'ntra', 'mbra', 'dra', 'tra', 'kra', 'gra', 'bra', 'shra',
-    'nta', 'nda', 'mba', 'nga', 'nka', 'shna', 'shma', 'ksha', 'tva', 'sya',
-];
+const DEVANAGARI_INHERENT_ENDINGS = ['ndra', 'ntra', 'mbra', 'shna'];
 
 /**
  * One romanised word, transliterated syllable by syllable.
@@ -206,27 +218,44 @@ function transliterate_to_devanagari(string $word): string
                 continue;
             }
             $pos += $n;
-            $out .= $letter;
+            $vowel = devanagari_vowel_at($word, $pos);
+
+            // 'ng' is the velar nasal on its own at the end of a word —
+            // Gurung is गुरुङ — but between vowels it is that nasal joined to
+            // a ग: Ganga is गङ्गा, and reading it as the bare ङ swallowed the
+            // second g and left गङ.
+            $out .= ($roman === 'ng' && $vowel !== null) ? 'ङ्ग' : $letter;
 
             // What comes after decides how this consonant is finished off.
-            $vowel = devanagari_vowel_at($word, $pos);
             if ($vowel !== null) {
                 [$roman2, $sign] = $vowel;
                 $atEnd = ($pos + strlen($roman2)) >= $length;
                 if ($atEnd && $roman2 === 'a') {
                     $sign = devanagari_ends_inherent($word)
-                        ? ''                        // Mahendra, Hemanta
+                        ? ''                        // Mahendra, Krishna
                         : 'ा';                      // Sharma, Lama, Namuna
                 } elseif ($atEnd && $roman2 === 'i') {
                     $sign = 'ी';                    // Adhikari, Joshi, Giri
                 }
                 $out .= $sign;
                 $pos += strlen($roman2);
-            } elseif ($pos < $length) {
-                $out .= DEVANAGARI_HALANTA;          // joined to the next consonant
+                // The syllable is closed. Leaving this true hung a second
+                // vowel sign on the same consonant — Deo came out देो, two
+                // matras stacked on one letter — instead of opening the
+                // syllable the second vowel is.
+                $afterConsonant = false;
+            } else {
+                // A halanta joins this consonant to the next one, so it is
+                // written only when a consonant is what follows. Tested
+                // against "anything at all follows", it fell before full
+                // stops and apostrophes too: K.C., one of the commonest
+                // surnames here, printed as क्.क.
+                if (devanagari_consonant_at($word, $pos) !== null) {
+                    $out .= DEVANAGARI_HALANTA;
+                }
+                $afterConsonant = true;
             }
             $matched = true;
-            $afterConsonant = true;
             break;
         }
         if ($matched) {
@@ -252,6 +281,17 @@ function transliterate_to_devanagari(string $word): string
     }
 
     return $out;
+}
+
+/** The consonant written at $pos, or null when there is not one there. */
+function devanagari_consonant_at(string $word, int $pos): ?string
+{
+    foreach (DEVANAGARI_CONSONANTS as $roman => $letter) {
+        if (substr($word, $pos, strlen($roman)) === $roman) {
+            return $letter;
+        }
+    }
+    return null;
 }
 
 /** Whether this word ends in one of the clusters that keep their built-in 'a'. */
@@ -294,7 +334,25 @@ function devanagari_vowel_at(string $word, int $pos): ?array
 function nepali_name(string $latin): ?string
 {
     $latin = trim($latin);
-    if ($latin === '' || !preg_match('/\p{Latin}/u', $latin)) {
+
+    // Nothing to work from: no Latin letter to read.
+    if ($latin === '' || !preg_match('/[A-Za-z]/', $latin)) {
+        return null;
+    }
+    // Already carries Devanagari. Transliterating it would put a name the
+    // record already holds on the card a second time — "Binish Parajuli
+    // बिनिश" came back as बिनिश पराजुली बिनिश — and under a notice telling
+    // the holder the campus had written it.
+    if (preg_match('/\p{Devanagari}/u', $latin)) {
+        return null;
+    }
+    // A letter this scheme has no reading for. The tables are ASCII, so an
+    // accented or non-Latin letter fell through the loop and was emitted
+    // unchanged: José came out जोस्é, a Latin letter inside the line the card
+    // sets in its Devanagari face. There is no honest transliteration to
+    // offer here, so none is offered and id_card_missing() asks for the name
+    // instead.
+    if (preg_match('/[^\x00-\x7F]/', $latin) || preg_match('/\p{L}/u', preg_replace('/[A-Za-z]/', '', $latin) ?? '')) {
         return null;
     }
 
@@ -315,8 +373,13 @@ function nepali_name(string $latin): ?string
             $out[] = $word;
             continue;
         }
-        $key = mb_strtolower($core);
-        $out[] = $before . ($dictionary[$key] ?? transliterate_to_devanagari($core)) . $after;
+        // Tried as written and then with the full stops taken out, so the
+        // surname written K.C., KC and K.C. all reach the one entry.
+        $key   = strtolower($core);
+        $plain = preg_replace('/\p{P}+/u', '', $key) ?? $key;
+        $out[] = $before
+               . ($dictionary[$key] ?? $dictionary[$plain] ?? transliterate_to_devanagari($core))
+               . $after;
     }
 
     $name = trim(implode(' ', $out));
