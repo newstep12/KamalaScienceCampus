@@ -92,6 +92,23 @@ function delete_upload(?string $relPath): void
     }
 }
 
+/**
+ * Every file a user row owns, removed with the row.
+ *
+ * Three columns name a file, and a delete that lists them by hand keeps only
+ * the ones whoever wrote it remembered: the signature was added after the
+ * delete was written, so deleting an account left a scan of a real person's
+ * signature in the uploads directory for ever, with no row naming it and
+ * nothing to find it by. The list belongs in one place, beside the code that
+ * knows what a person's record carries.
+ */
+function delete_user_files(array $u): void
+{
+    foreach (['avatar_path', 'avatar_source_path', 'signature_path'] as $column) {
+        delete_upload($u[$column] ?? null);
+    }
+}
+
 /* -------------------------------------------------------------- pictures -- */
 
 /**

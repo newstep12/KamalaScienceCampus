@@ -666,6 +666,10 @@ body.lang-ne .idc-photo { width: 5.90em; }
   line-height: 1.2; color: var(--navy);
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
+/* The big line is set in the card's Latin face; a holder whose only name is
+   in Devanagari needs the other one, or the line falls back to whatever the
+   system happens to offer for the script. */
+.idc-name-deva { font-family: var(--deva); }
 .idc-name-ne {
   font-family: var(--deva); font-size: .9em;
   line-height: 1.18; color: var(--ink-soft);

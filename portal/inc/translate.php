@@ -27,6 +27,15 @@ require_once __DIR__ . '/lang.php';
  * afterwards. A corrected translation is never overwritten: the *_ne_auto
  * flags record which text this file wrote and which a person did.
  *
+ * Translating is something the campus does, never something a visitor's page
+ * load does. It happens where somebody is already waiting for it — as a
+ * notice is saved, and in backfill_notice_translations() for the ones
+ * published before any of this existed — and notice_bilingual(), which every
+ * page renders through, only ever reads what those two left behind. A page
+ * that translated as it rendered made an anonymous GET of the public notice
+ * board into a writer and an outbound HTTP client, which is not a thing a
+ * notice board should be.
+ *
  * Nothing here ever throws. A translation that cannot be made is not an error
  * — the page falls back to English exactly as it did before.
  */
@@ -618,24 +627,28 @@ function notices_track_auto_translation(): bool
     return $has;
 }
 
-/** Notice ids translated during this request, so the page can say so. */
-function translated_this_request(?int $add = null): array
-{
-    static $ids = [];
-    if ($add !== null) {
-        $ids[$add] = true;
-    }
-    return $ids;
-}
-
 /**
- * The notice text for the viewer's language, translating it on the spot when
- * the Nepali column is empty.
+ * The notice text for the viewer's language.
  *
- * This is bilingual() with the English fallback replaced by a translation, so
- * notices published before any of this existed become readable in Nepali
- * without anyone having to edit them. The result is written back to the row,
- * so the work happens once rather than on every visit.
+ * A reader, and nothing else. It used to translate on the spot when the
+ * Nepali column was empty and write the result back, which made every render
+ * of the public notice board a writer too: an anonymous GET of notices.php
+ * could open up to translation_budget() outbound requests, each with a
+ * twelve-second timeout, and issue an UPDATE per field — unauthenticated,
+ * unthrottled, and billed to whatever service the campus had configured.
+ * A visitor arriving while that service was slow waited on the whole chain
+ * before a byte of the page was sent.
+ *
+ * It was also doing the work more than once per notice. The row is a local
+ * array, and storing a translation never put it back, so the second call for
+ * the same notice — the <h3> and then the iframe title — found the column
+ * still empty and translated it again.
+ *
+ * Nothing is lost by reading only. A notice published from now on is
+ * translated as it is saved (portal/admin/notices.php), and everything
+ * published before that is covered by backfill_notice_translations(), which
+ * an administrator runs from Admin -> System. Both write to the same columns
+ * this reads, at a moment when somebody is waiting for exactly that work.
  */
 function notice_bilingual(array $n, string $field): string
 {
@@ -643,26 +656,8 @@ function notice_bilingual(array $n, string $field): string
     if (!is_nepali()) {
         return $english;
     }
-
     $nepali = trim((string) ($n[$field . '_ne'] ?? ''));
-    if ($nepali !== '') {
-        return $nepali;
-    }
-    if ($english === '' || !in_array($field, TRANSLATABLE_FIELDS, true)) {
-        return $english;
-    }
-
-    $made = translate_to_nepali($english);
-    if ($made === null) {
-        return $english;
-    }
-
-    $id = (int) ($n['id'] ?? 0);
-    if ($id > 0) {
-        store_notice_translation($id, $field, $made['text']);
-        translated_this_request($id);
-    }
-    return $made['text'];
+    return $nepali !== '' ? $nepali : $english;
 }
 
 /** True when the Nepali a viewer is reading was produced by this file. */
@@ -670,9 +665,6 @@ function notice_is_machine_translated(array $n): bool
 {
     if (!is_nepali()) {
         return false;
-    }
-    if (isset(translated_this_request()[(int) ($n['id'] ?? 0)])) {
-        return true;
     }
     return !empty($n['title_ne_auto']) || !empty($n['body_ne_auto']);
 }

@@ -65,6 +65,10 @@ return [
     'reg_intro'        => 'Register with the details on your campus record. An administrator checks every registration before it is activated — you will be able to sign in once yours is approved.',
     'full_name'        => 'Full name',
     'full_name_ne'     => 'Full name in Nepali',
+    // Named on the card's missing list when the record holds a Devanagari
+    // name and no Latin one — which is not what any form asks for, so it
+    // needs a label of its own rather than the bare 'Full name' above.
+    'full_name_en'     => 'Full name in English',
     'year_of_study'    => 'Year of study',
     'choose_year'      => 'Choose your year',
     'symbol_no'        => 'TU symbol / registration number',

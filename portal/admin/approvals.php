@@ -22,11 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($target && $action === 'delete') {
         // Only ever a pending registration, and never an admin account.
         if ($target['role'] !== ROLE_ADMIN && (int) $target['id'] !== (int) $admin['id']) {
-            // Take the photograph with the account, rather than leaving it in
-            // the uploads directory with nothing pointing at it — and the
-            // working copy the frame was cut from with it.
-            delete_upload($target['avatar_path']);
-            delete_upload($target['avatar_source_path'] ?? null);
+            // Every file the account owns goes with it, rather than being
+            // left in the uploads directory with nothing pointing at it.
+            // delete_user_files() holds the list, so a column added later —
+            // the holder's signature was one — is not missed here.
+            delete_user_files($target);
             q('DELETE FROM users WHERE id = ?', [$id]);
             log_activity((int) $admin['id'], 'delete_user', $target['email']);
             flash('ok', t('deleted_ok', $target['full_name']));
