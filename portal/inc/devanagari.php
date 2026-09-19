@@ -99,8 +99,8 @@ function nepali_name_words(): array
         'vishal' => 'विशाल',        'vivek' => 'विवेक',          'vikash' => 'विकास',
         'vikram' => 'विक्रम',        'vinod' => 'विनोद',          'kirana' => 'किरण',
         'shresth' => 'श्रेष्ठ',        'nyaupane' => 'न्यौपाने',     'subedee' => 'सुवेदी',
-        'bhattarai' => 'भट्टराई',    'sapkotta' => 'सापकोटा',     'pandit' => 'पण्डित',
-        'gyawali' => 'ज्ञवाली',       'upreti' => 'उप्रेती',        'shahi' => 'शाही',
+        'sapkotta' => 'सापकोटा',     'pandit' => 'पण्डित',        'gyawali' => 'ज्ञवाली',
+        'upreti' => 'उप्रेती',
 
         /* ---- given names ---- */
         'aayush' => 'आयुष',         'abhishek' => 'अभिषेक',      'aditya' => 'आदित्य',
