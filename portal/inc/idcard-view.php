@@ -34,9 +34,11 @@ function id_card_row(string $label, ?string $value): void
 /**
  * One face of the card. $side is 'front' or 'back'; $ctx comes from
  * id_card_context(), optionally with 'theme' and 'orientation' overridden for
- * a preview.
+ * a preview. $holderNames is id_card_names($holder) when the caller already
+ * has it — a card page draws two faces and asks the same question in its own
+ * text — and is worked out here when it does not.
  */
-function id_card_face(array $holder, array $ctx, string $side = 'front'): void
+function id_card_face(array $holder, array $ctx, string $side = 'front', ?array $holderNames = null): void
 {
     $theme  = id_card_theme($ctx['theme'] ?? null);
     $orient = id_card_orientation($ctx['orientation'] ?? null);
@@ -81,16 +83,17 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
            */
           // not $names: that is the campus's.
           //
-          // Read from $holder, not from $ctx. A guard here that took the
-          // context's names only when its holder id matched looked like it
-          // made one context safe for a batch of cards, and it did not: the
-          // photograph, the holder's signature and the issue date on this
-          // same face all come from $ctx and none of them is checked. One
-          // field quietly right among five quietly wrong is worse than the
-          // honest rule, which is that a context belongs to one holder. The
-          // page's own text reads $ctx['holder_names']; a face reads the
-          // person it was handed.
-          $holderNames = id_card_names($holder);
+          // Passed in where the caller already has them, worked out here when
+          // it does not — and never lifted out of $ctx on the quiet. A guard
+          // that took the context's names only when its holder id matched
+          // made this function look safe to draw a batch of cards from one
+          // context, and it is not: the photograph, the holder's signature
+          // and the issue date on this same face all come from $ctx and none
+          // of them is checked. One field quietly right among five quietly
+          // wrong is worse than the honest rule, which is that a context
+          // belongs to one holder. An argument says so where a lookup did
+          // not.
+          $holderNames ??= id_card_names($holder);
           $primary = $holderNames['latin'] ?? $holderNames['deva'];
           $second  = $holderNames['latin'] !== null ? $holderNames['deva'] : null;
           ?>

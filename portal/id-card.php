@@ -149,7 +149,7 @@ if ($ctx['holder_names']['deva_derived']) {
 <div class="idc-sheet" data-sides="<?= e($sides) ?>" data-print-target="<?= e($target) ?>"
      data-orientation="<?= e($ctx['orientation']) ?>">
   <figure class="idc-holder">
-    <?php id_card_face($holder, $ctx, 'front'); ?>
+    <?php id_card_face($holder, $ctx, 'front', $ctx['holder_names']); ?>
     <figcaption class="p-noprint"><?= te('id_card_front') ?></figcaption>
   </figure>
 

@@ -354,10 +354,13 @@ function id_card_missing(array $u, ?array $names = null): array
     // second line: id_card_names() writes one from the English wherever it
     // can, so for almost every holder there is nothing to ask for, and what
     // the card page says instead is that the name it printed was derived —
-    // a different thing from a detail being missing. But it cannot always.
-    // A name with no romanisation to read — already Devanagari, or in a
-    // script this has no reading for — comes back with nothing, and that
-    // card's second line really is blank, so that holder is asked.
+    // a different thing from a detail being missing.
+    //
+    // It cannot always. A name already in Devanagari never gets here (it
+    // fills the Devanagari line itself, and what is asked for is the English
+    // one), but a name in a script this has no reading for, or one mixing
+    // Latin and Devanagari in a single value, comes back with nothing — and
+    // that card's second line really is blank, so that holder is asked.
     // Taken from the caller where it already has them — a card page resolves
     // them in id_card_context() and asks this in the same breath, and
     // id_card_names() may have had to transliterate a name to answer.

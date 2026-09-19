@@ -93,6 +93,15 @@ function nepali_name_words(): array
         'prasad' => 'प्रसाद',        'raj' => 'राज',             'man' => 'मान',
         'hemanta' => 'हेमन्त',       'hemant' => 'हेमन्त',
 
+        /* ---- the same names as other people spell them ---- */
+        'aakash' => 'आकाश',        'aashish' => 'आशिष',        'ayush' => 'आयुष',
+        'choudhary' => 'चौधरी',     'panday' => 'पाण्डे',        'karkee' => 'कार्की',
+        'vishal' => 'विशाल',        'vivek' => 'विवेक',          'vikash' => 'विकास',
+        'vikram' => 'विक्रम',        'vinod' => 'विनोद',          'kirana' => 'किरण',
+        'shresth' => 'श्रेष्ठ',        'nyaupane' => 'न्यौपाने',     'subedee' => 'सुवेदी',
+        'bhattarai' => 'भट्टराई',    'sapkotta' => 'सापकोटा',     'pandit' => 'पण्डित',
+        'gyawali' => 'ज्ञवाली',       'upreti' => 'उप्रेती',        'shahi' => 'शाही',
+
         /* ---- given names ---- */
         'aayush' => 'आयुष',         'abhishek' => 'अभिषेक',      'aditya' => 'आदित्य',
         'ajay' => 'अजय',           'akash' => 'आकाश',          'alisha' => 'आलिशा',
@@ -221,6 +230,17 @@ function transliterate_to_devanagari(string $word): string
     while ($pos < $length) {
         $matched = false;
 
+        // A 'y' ending a word is the vowel that closes it, not a य to hang
+        // the letter before it off. Read as a consonant it took a halanta
+        // with it and Adhikary came out अधिकर्य, Ghimirey घिमिरेय — a dead
+        // conjunct where a name should end. -y is ी, -ey is े, which is what
+        // those spellings are for.
+        if ($pos === $length - 1 && $word[$pos] === 'y' && $pos > 0) {
+            $out .= str_ends_with(substr($word, 0, $pos), 'e') ? '' : 'ी';
+            $pos++;
+            continue;
+        }
+
         foreach (DEVANAGARI_CONSONANTS as $roman => $letter) {
             $n = strlen($roman);
             if (substr($word, $pos, $n) !== $roman) {
@@ -240,17 +260,20 @@ function transliterate_to_devanagari(string $word): string
              *
              * Before a consonant — and only a consonant; tested as "anything
              * follows", a digit stuck on the end of an imported surname was
-             * enough to turn Gurung into गुरुङ्ग — it is not a pair at all.
-             * Reading it as one
-             * consumed the g and wrote neither it nor anything in its place:
-             * Jangbahadur came out जङ्बहदुर, Sangh सङ्ह with the घ degraded to
-             * a ह. So the match is given back, the n is written on its own,
-             * and the g is read again on the next turn as the consonant it is.
+             * enough to turn Gurung into गुरुङ्ग — it is the nasal alone, and
+             * the branch below says why.
              */
             if ($roman === 'ng' && $vowel === null && devanagari_consonant_at($word, $pos) !== null) {
-                $pos--;                              // hand the g back
-                // The velar nasal, the same letter the vowel case writes, so
-                // Sangroula and Ganga do not spell one sound two ways.
+                // The nasal alone, and the g not read again.
+                //
+                // Handing the g back made it a ग in its own right, and ङ्ग
+                // followed by a third consonant is a cluster that occurs in
+                // no Nepali word: Wangdi came out वङ्ग्दी, Sangpo सङ्ग्पो.
+                // Whether the g here is a letter of its own (Jangbahadur,
+                // जङ्गबहादुर) or part of the nasal (Wangdi, वाङ्दी) is not
+                // something the spelling says, so this takes the reading that
+                // is always a real word and loses a ग in the other — a name
+                // spelt slightly short beats a name spelt impossibly.
                 $out .= 'ङ' . DEVANAGARI_HALANTA;
                 $matched = true;
                 break;
@@ -280,7 +303,13 @@ function transliterate_to_devanagari(string $word): string
                 // against "anything at all follows", it fell before full
                 // stops and apostrophes too: K.C., one of the commonest
                 // surnames here, printed as क्.क.
-                if (devanagari_consonant_at($word, $pos) !== null) {
+                //
+                // A word-final 'y' is read as a vowel a few lines up, so it
+                // is not a consonant to be joined to either — without this,
+                // Adhikary took the halanta and then the vowel sign as well
+                // and came out अधिकर्ी.
+                $finalY = ($pos === $length - 1 && $word[$pos] === 'y');
+                if (!$finalY && devanagari_consonant_at($word, $pos) !== null) {
                     $out .= DEVANAGARI_HALANTA;
                 }
             }
@@ -374,7 +403,9 @@ const DEVANAGARI_LETTER_NAMES = [
  *
  * Tried as written, then with its punctuation taken out — so the surname
  * written K.C., KC and K.C. all reach the one entry — and then, if it is
- * joined by a hyphen or a stop, part by part: Poudel-Sharma is two names the
+ * joined by a hyphen, a stop or a comma, part by part: a record typed
+ * surname-first and closed up — "Devkota,Manoj" — is two names the dictionary
+ * knows and matched as one that it does not. Poudel-Sharma is two names the
  * dictionary knows, and read whole it matched neither and fell through to the
  * transliterator as पोउदेल-शर्मा, losing the very conjuncts the dictionary is
  * there for.
@@ -392,7 +423,7 @@ function devanagari_word(string $core, array $dictionary): string
     if (isset(DEVANAGARI_LETTER_NAMES[$plain])) { return DEVANAGARI_LETTER_NAMES[$plain]; }
 
     // Split on the punctuation that joins names, keeping it in place.
-    $parts = preg_split("/([\\-.'])/u", $core, -1, PREG_SPLIT_DELIM_CAPTURE);
+    $parts = preg_split("/([\\-.,;:'])/u", $core, -1, PREG_SPLIT_DELIM_CAPTURE);
     if (count($parts) > 1) {
         $joined = '';
         foreach ($parts as $part) {
@@ -440,9 +471,11 @@ function nepali_name(string $latin): ?string
         "\u{2010}" => '-', "\u{2011}" => '-', "\u{2013}" => '-', "\u{2014}" => '-',
     ]));
 
-    // "K. C." is "K.C." is "KC": closed up before the split on whitespace, or
-    // the surname arrives as two lone letters and misses the dictionary.
-    $latin = preg_replace('/\b([A-Za-z])\.\s+(?=[A-Za-z]\b)/', '$1.', $latin) ?? $latin;
+    // "K. C." is "K.C." is "K C" is "KC": closed up before the split on
+    // whitespace, or the surname arrives as lone letters and misses the
+    // dictionary. Only where both sides are single letters, so the K of
+    // "Ram K Thapa" is not glued to the surname behind it.
+    $latin = preg_replace('/\b([A-Za-z])\.?\s+(?=[A-Za-z](?![A-Za-z]))/', '$1.', $latin) ?? $latin;
 
     // Nothing to work from: no Latin letter to read.
     if ($latin === '' || !preg_match('/[A-Za-z]/', $latin)) {
@@ -471,11 +504,11 @@ function nepali_name(string $latin): ?string
     //
     // A letter, though, and not merely a byte over 127. Tested that way, one
     // invisible character was enough: a name pasted with a non-breaking space
-    // in it, which trim() does not touch, or carrying a typographic
-    // apostrophe, lost its Devanagari line altogether and was reported to the
-    // holder as a missing detail while reading as perfectly ordinary ASCII.
-    // Those are spacing and punctuation, so they are normalised just below
-    // and never reach this test.
+    // in it, or carrying a typographic apostrophe, lost its Devanagari line
+    // altogether and was reported to the holder as a missing detail while
+    // reading as perfectly ordinary ASCII. Those are spacing and punctuation,
+    // and the fold at the top of this function has already turned them into
+    // their plain equivalents, so they never reach this test.
     if (preg_match('/\p{L}/u', preg_replace('/[A-Za-z]/', '', $latin) ?? '')) {
         return null;
     }
