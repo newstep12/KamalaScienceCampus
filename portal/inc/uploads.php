@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lang.php';
 
 /** Extensions teachers may upload, mapped from the real MIME type we detect. */
@@ -93,19 +94,65 @@ function delete_upload(?string $relPath): void
 }
 
 /**
- * Every file a user row owns, removed with the row.
+ * Which of the users table's file-bearing columns this install actually has.
  *
- * Three columns name a file, and a delete that lists them by hand keeps only
- * the ones whoever wrote it remembered: the signature was added after the
+ * Only avatar_path is in every install: the working copy and the holder's
+ * signature arrived as database updates, and an install that has not run them
+ * does without. Read once per request, the way notices_track_auto_translation()
+ * reads the notice flags, because the answer cannot change under us.
+ */
+function user_file_columns(): array
+{
+    static $columns = null;
+    if ($columns === null) {
+        $wanted = ['avatar_path', 'avatar_source_path', 'signature_path'];
+        try {
+            $columns = array_values(array_intersect($wanted, array_column(all('SHOW COLUMNS FROM users'), 'Field')));
+        } catch (Throwable $e) {
+            $columns = ['avatar_path'];
+        }
+    }
+    return $columns;
+}
+
+/**
+ * Every upload a user row owns, as paths — read before the row is deleted.
+ *
+ * Three columns name a file, and a delete that listed them by hand kept only
+ * the ones whoever wrote it remembered: the signature arrived after the
  * delete was written, so deleting an account left a scan of a real person's
  * signature in the uploads directory for ever, with no row naming it and
  * nothing to find it by. The list belongs in one place, beside the code that
- * knows what a person's record carries.
+ * removes what is on it.
+ *
+ * A row the caller selected columns from rather than SELECT *ing is refused
+ * outright. Read with ?? it would be indistinguishable from an account that
+ * simply has no files, and the difference is every one of them orphaned —
+ * which is the failure this exists to prevent, arriving silently through the
+ * thing written to prevent it. A column this install has not got is not that
+ * case, and is not an error.
  */
-function delete_user_files(array $u): void
+function user_file_paths(array $u): array
 {
-    foreach (['avatar_path', 'avatar_source_path', 'signature_path'] as $column) {
-        delete_upload($u[$column] ?? null);
+    $paths = [];
+    foreach (user_file_columns() as $column) {
+        if (!array_key_exists($column, $u)) {
+            throw new InvalidArgumentException(
+                'user_file_paths() needs a whole users row; ' . $column . ' was not selected'
+            );
+        }
+        if (!empty($u[$column])) {
+            $paths[] = (string) $u[$column];
+        }
+    }
+    return $paths;
+}
+
+/** Remove several uploads — what user_file_paths() gathered, once the row has gone. */
+function delete_uploads(array $paths): void
+{
+    foreach ($paths as $path) {
+        delete_upload($path);
     }
 }
 

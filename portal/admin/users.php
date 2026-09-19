@@ -193,7 +193,7 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
     <input type="hidden" name="action" value="create_staff">
     <div class="p-field-row">
       <div class="p-field">
-        <label for="s_name"><?= te('full_name') ?></label>
+        <label for="s_name"><?= te('full_name_en') ?></label>
         <input type="text" id="s_name" name="full_name" required>
       </div>
       <div class="p-field">

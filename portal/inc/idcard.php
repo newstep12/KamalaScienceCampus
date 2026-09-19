@@ -137,7 +137,9 @@ function id_card_names(array $u): array
         if ($name === '') {
             continue;
         }
-        $key = preg_match('/\p{Devanagari}/u', $name) ? 'deva' : 'latin';
+        // is_devanagari() decides by majority script, so a Latin name
+        // carrying one Devanagari character stays a Latin name.
+        $key = is_devanagari($name) ? 'deva' : 'latin';
         $names[$key] ??= $name;
     }
     return $names;
@@ -359,16 +361,6 @@ function id_card_missing(array $u): array
         if (empty($u['symbol_no']))  { $missing[] = t('symbol_no'); }
     }
     return $missing;
-}
-
-/** A list of labels as a sentence fragment: "a, b and c". */
-function join_list(array $items): string
-{
-    if (count($items) <= 1) {
-        return (string) ($items[0] ?? '');
-    }
-    $last = array_pop($items);
-    return implode(', ', $items) . ' ' . t('and') . ' ' . $last;
 }
 
 /**

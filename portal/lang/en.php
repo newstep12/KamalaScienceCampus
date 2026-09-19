@@ -65,9 +65,13 @@ return [
     'reg_intro'        => 'Register with the details on your campus record. An administrator checks every registration before it is activated — you will be able to sign in once yours is approved.',
     'full_name'        => 'Full name',
     'full_name_ne'     => 'Full name in Nepali',
-    // Named on the card's missing list when the record holds a Devanagari
-    // name and no Latin one — which is not what any form asks for, so it
-    // needs a label of its own rather than the bare 'Full name' above.
+    // The label on every box that collects the Latin name, and the line the
+    // card's missing list asks for when it has no Latin name to print. The
+    // two say the same words on purpose: a student told their card is missing
+    // "Full name in English" has to find a field of that name to fix it, and
+    // against a box labelled only "Full name" they had typed Devanagari into,
+    // there was nothing to find. 'full_name' stays as it is for the column
+    // headings above a list of people, which is not a box to fill in.
     'full_name_en'     => 'Full name in English',
     'year_of_study'    => 'Year of study',
     'choose_year'      => 'Choose your year',
@@ -286,6 +290,12 @@ return [
     'translate_key_clear'  => 'Delete the saved key',
     'translate_saved'      => 'Translation settings saved.',
     'translate_backfill_intro' => 'Translates every notice already published that has no Nepali text yet. Run this once after switching on translation, or after changing the service above.',
+    // Nothing translates on a page load any more, so the page has to say
+    // what is waiting — a button nobody is told to press is a button
+    // nobody presses.
+    'translate_backfill_pending' => '%s notice(s) have no Nepali text and will show in English until this is run.',
+    'translate_backfill_none'    => 'Every published notice has Nepali text.',
+    'notice_not_translated' => 'The notice was saved, but %s could not be produced automatically — the translation service did not answer. Nepali readers see the English until you type it in or run “Translate every notice now” on the System page.',
     'translate_redo'        => 'Also redo translations made earlier by the machine (wording you typed yourself is still kept)',
     'translate_backfill_run'=> 'Translate every notice now',
     'translate_done'        => '%s notice field(s) translated. %s could not be translated and stay in English.',

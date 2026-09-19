@@ -129,7 +129,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             log_activity((int) $admin['id'], $id ? 'update_notice' : 'publish_notice', $titleEn);
+
+            /**
+             * Saving is the moment the Nepali is made, and since nothing
+             * repairs the row on a later visit any more, a translation that
+             * did not happen has to be said out loud. Silence here left a
+             * notice English for every Nepali reader for good, on a page that
+             * had just reported success.
+             *
+             * Only where there was English to translate and the box is still
+             * empty: Nepali the admin typed themselves is not a failure, and
+             * a notice with no body is not a gap.
+             */
+            $untranslated = [];
+            if ($titleNe === '')                      { $untranslated[] = t('title_nepali'); }
+            if ($bodyEn !== '' && $bodyNe === '')     { $untranslated[] = t('body_nepali'); }
+
             flash('ok', t('notice_saved'));
+            if ($untranslated) {
+                flash('error', t('notice_not_translated', join_list($untranslated)));
+            }
         }
     } elseif ($action === 'delete_notice') {
         $id = (int) ($_POST['notice_id'] ?? 0);

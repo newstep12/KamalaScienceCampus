@@ -88,10 +88,16 @@ function e(?string $value): string
  */
 function bilingual(array $row, string $field): string
 {
-    if (is_nepali() && !empty($row[$field . '_ne'])) {
-        return (string) $row[$field . '_ne'];
+    // Trimmed on both sides, so a Nepali column holding nothing but spaces
+    // falls back to English rather than printing as an empty heading.
+    $english = trim((string) ($row[$field . '_en'] ?? ''));
+    if (is_nepali()) {
+        $nepali = trim((string) ($row[$field . '_ne'] ?? ''));
+        if ($nepali !== '') {
+            return $nepali;
+        }
     }
-    return (string) ($row[$field . '_en'] ?? '');
+    return $english;
 }
 
 /** The current URL with the language swapped — powers the language toggle. */
@@ -128,6 +134,23 @@ function ascii_digits(string $text): string
 {
     return strtr($text, ['०'=>'0','१'=>'1','२'=>'2','३'=>'3','४'=>'4',
                          '५'=>'5','६'=>'6','७'=>'7','८'=>'8','९'=>'9']);
+}
+
+/**
+ * Which script a piece of text is in: true when it is mostly Devanagari.
+ *
+ * By majority, never by presence. A single Devanagari character is not a
+ * Nepali name — "Binish Parajuli (बिनिश)" and a name pasted with one stray
+ * danda are both Latin names — and a test that asked only whether the string
+ * contained any Devanagari at all classed them as Nepali, which on the
+ * identity card discarded the real Nepali name in the other column and set
+ * the mixed string in a Devanagari face.
+ */
+function is_devanagari(string $text): bool
+{
+    $devanagari = preg_match_all('/\p{Devanagari}/u', $text);
+    $latin      = preg_match_all('/\p{Latin}/u', $text);
+    return $devanagari > 0 && $devanagari >= $latin;
 }
 
 function format_date(?string $datetime, bool $withTime = false): string
@@ -197,6 +220,16 @@ function program_year_label(?int $year): string
         $ord = (string) $year;
     }
     return t('program_year_n', localize_digits($ord));
+}
+
+/** A list of labels as a sentence fragment: "a, b and c". */
+function join_list(array $items): string
+{
+    if (count($items) <= 1) {
+        return (string) ($items[0] ?? '');
+    }
+    $last = array_pop($items);
+    return implode(', ', $items) . ' ' . t('and') . ' ' . $last;
 }
 
 function format_bytes(?int $bytes): string

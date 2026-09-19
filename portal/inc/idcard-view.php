@@ -78,11 +78,11 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
            * face with it, because the line above is set in the card's Latin
            * one and would otherwise fall back to whatever the system offers.
            */
-          $names = id_card_names($holder);
-          $primary = $names['latin'] ?? $names['deva'];
-          $second  = $names['latin'] !== null ? $names['deva'] : null;
+          $holderNames = id_card_names($holder);   // not $names: that is the campus's
+          $primary = $holderNames['latin'] ?? $holderNames['deva'];
+          $second  = $holderNames['latin'] !== null ? $holderNames['deva'] : null;
           ?>
-          <div class="idc-name<?= $names['latin'] === null ? ' idc-name-deva' : '' ?>"><?= e((string) $primary) ?></div>
+          <div class="idc-name<?= $holderNames['latin'] === null ? ' idc-name-deva' : '' ?>"><?= e((string) $primary) ?></div>
           <?php if ($second !== null): ?>
             <div class="idc-name-ne"><?= e($second) ?></div>
           <?php endif; ?>

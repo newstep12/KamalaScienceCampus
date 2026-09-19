@@ -55,8 +55,8 @@ layout_head(['title' => t('notices_title'), 'active' => 'notices']);
         <span class="p-item-meta"><?= e(format_date($n['published_at'])) ?></span>
       </div>
 
-      <h3><?= e(notice_bilingual($n, 'title')) ?></h3>
-      <?php if ($body = notice_bilingual($n, 'body')): ?>
+      <h3><?= e(bilingual($n, 'title')) ?></h3>
+      <?php if ($body = bilingual($n, 'body')): ?>
         <div class="p-notice-body"><?= e($body) ?></div>
       <?php endif; ?>
 
@@ -87,9 +87,9 @@ layout_head(['title' => t('notices_title'), 'active' => 'notices']);
           <summary><?= te('read_it_here') ?></summary>
           <div class="p-preview-frame">
             <?php if ($kind === 'image'): ?>
-              <img src="<?= e($file) ?>&amp;view=1" alt="<?= e(notice_bilingual($n, 'title')) ?>" loading="lazy">
+              <img src="<?= e($file) ?>&amp;view=1" alt="<?= e(bilingual($n, 'title')) ?>" loading="lazy">
             <?php else: ?>
-              <iframe title="<?= e(notice_bilingual($n, 'title')) ?>" loading="lazy"></iframe>
+              <iframe title="<?= e(bilingual($n, 'title')) ?>" loading="lazy"></iframe>
               <noscript><p><a href="<?= e($file) ?>&amp;view=1" target="_blank"
                  rel="noopener"><?= te('open_attachment') ?> ↗</a></p></noscript>
             <?php endif; ?>
