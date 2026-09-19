@@ -34,9 +34,11 @@ function id_card_row(string $label, ?string $value): void
 /**
  * One face of the card. $side is 'front' or 'back'; $ctx comes from
  * id_card_context(), optionally with 'theme' and 'orientation' overridden for
- * a preview.
+ * a preview. $holderNames is id_card_names($holder) when the caller already
+ * has it — a card page draws two faces and asks the same question in its own
+ * text — and is worked out here when it does not.
  */
-function id_card_face(array $holder, array $ctx, string $side = 'front'): void
+function id_card_face(array $holder, array $ctx, string $side = 'front', ?array $holderNames = null): void
 {
     $theme  = id_card_theme($ctx['theme'] ?? null);
     $orient = id_card_orientation($ctx['orientation'] ?? null);
@@ -68,8 +70,9 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
         <div class="idc-detail">
           <?php
           /**
-           * Two lines, one per script — name_by_script() says which name is in
-           * which, whichever column the campus record keeps it in.
+           * Two lines, one per script — id_card_names() says which name is in
+           * which, whichever column the campus record keeps it in, and writes
+           * the Devanagari one from the English where the record has none.
            *
            * A holder with only a Devanagari name gets it on the line the
            * English name would have had, rather than in the smaller type
@@ -78,7 +81,19 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
            * face with it, because the line above is set in the card's Latin
            * one and would otherwise fall back to whatever the system offers.
            */
-          $holderNames = name_by_script($holder);   // not $names: that is the campus's
+          // not $names: that is the campus's.
+          //
+          // Passed in where the caller already has them, worked out here when
+          // it does not — and never lifted out of $ctx on the quiet. A guard
+          // that took the context's names only when its holder id matched
+          // made this function look safe to draw a batch of cards from one
+          // context, and it is not: the photograph, the holder's signature
+          // and the issue date on this same face all come from $ctx and none
+          // of them is checked. One field quietly right among five quietly
+          // wrong is worse than the honest rule, which is that a context
+          // belongs to one holder. An argument says so where a lookup did
+          // not.
+          $holderNames ??= id_card_names($holder);
           $primary = $holderNames['latin'] ?? $holderNames['deva'];
           $second  = $holderNames['latin'] !== null ? $holderNames['deva'] : null;
           ?>

@@ -416,6 +416,12 @@ return [
     'id_card_missing'    => 'Your card is still missing %s. Add it and the card fills in; until then the card prints without it, and where there is a labelled line it comes out blank for you to write on.',
     'id_card_missing_other' => 'This card is missing %s. It prints without it; where there is a labelled line, it comes out blank.',
     'id_card_missing_link'  => 'Complete my profile',
+    // Said on the card page when the Devanagari on the card was written
+    // from the English rather than typed by the holder — see
+    // id_card_names(). It is a different claim from a missing detail, so
+    // it is not on the missing list and does not read like one.
+    'id_card_name_derived'      => 'The Nepali spelling on this card — %s — was written from the English name automatically. Check it: if it is not how you write your name, type your own in Devanagari into “Full name in Nepali” and the card will use that instead. Typing it in English letters there changes nothing — the card reads that box for Devanagari.',
+    'id_card_name_derived_other'=> 'The Nepali spelling on this card — %s — was written from the English name automatically, not entered by the holder.',
     'id_card_no_signature'  => 'No Campus Chief’s signature has been uploaded, so the card prints a blank signature line to be signed by hand. An administrator can add one under System → Identity cards.',
     'campus_place'       => 'Dhungrebas, Kamalamai, Sindhuli',
     'campus_place_full'  => 'Dhungrebas, Kamalamai, Sindhuli, Bagmati Province, Nepal',

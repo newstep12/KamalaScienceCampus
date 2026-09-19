@@ -315,17 +315,41 @@ the profile behind it. Anything still blank — photograph, date of birth,
 address — prints as a rule to write on rather than disappearing, and the page
 says what is missing with a link to fix it.
 
-**The name is printed twice only when there are two names to print.** A name on
-a Nepali identity document is written in both scripts, and the line under the
-name is the Devanagari one — but the profile asks for "full name in Nepali",
-and somebody typed their name into it the way they had just typed it above. The
-card then showed Binish Parajuli and, under it in lighter type, Binish
-Parajuli. So that line prints only for a name actually in the other script, and
-only when it is not simply the first name again — compared the way a reader
-would, where case, spacing and a full stop after an initial are not
-differences. Nothing is discarded: the field still holds what was typed, and
-every page that shows one name or the other still prefers it when the portal is
-read in Nepali.
+**The name is printed twice, in both scripts, on every card.** A name on a
+Nepali identity document is written in both, and only the English one is asked
+for: it is the one every student can type on any keyboard, and the Nepali box
+beside it is optional and mostly skipped. Two cards side by side made the gap
+plain — one student had filled that box in and carried both names, the next had
+not and carried one.
+
+The two lines are two *scripts*, not two columns. Each is filled from whichever
+of `full_name` / `full_name_ne` holds that script, so a student who registered
+with the portal in Nepali — typing Devanagari into the required "full name" box
+and skipping the optional one — still gets their English line asked for rather
+than silently going without. `name_by_script()` in `portal/inc/lang.php` does
+that reading, and `display_name()` and the class lists go through it too.
+
+Where the record holds no Devanagari name at all, the card writes one.
+`portal/inc/devanagari.php` transliterates the romanised name: a dictionary of
+the given names and surnames these students have (romanised Nepali is not a
+spelling system — Paudel and Poudel are one name, Shrestha ends in a conjunct
+no rule would reach from its letters), and a syllable-by-syllable
+transliterator behind it for everything else, which is an approximation and
+reads as one. It is transliteration, not translation — no service, no key,
+nothing to be slow or absent.
+
+Nothing is stored. The Devanagari is written at the moment the card is drawn,
+so every student already on the register has it without a migration, and it
+cannot harden into a spelling the campus appears to hold and never checked.
+`id_card_names()` reports which of the two it returned, and the card page and
+the portfolio say so: a spelling the campus holds and a spelling the campus
+guessed are different claims to make about somebody's name. A student who
+disagrees types their own into the box that is still there, and from then on
+nothing is derived for them.
+
+A name with no romanisation to read — already Devanagari, or in a script this
+has no reading for — comes back with nothing, and that card's second line
+really would be blank, so the missing-details list asks that holder for it.
 
 **The front reads in one order**, whoever the card belongs to: what identifies
 the holder within the campus, then the two government numbers, then the details

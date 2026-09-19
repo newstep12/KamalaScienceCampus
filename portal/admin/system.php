@@ -505,7 +505,7 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
     <div class="idc-design-preview">
       <span><?= te('idcard_preview_label') ?></span>
       <div class="idc-sheet" data-sides="<?= e($design['sides']) ?>" data-orientation="<?= e($design['orientation']) ?>">
-        <figure class="idc-holder"><?php id_card_face($admin, $preview, 'front'); ?></figure>
+        <figure class="idc-holder"><?php id_card_face($admin, $preview, 'front', $preview['holder_names']); ?></figure>
         <figure class="idc-holder idc-holder-back"><?php id_card_face($admin, $preview, 'back'); ?></figure>
       </div>
     </div>

@@ -5,6 +5,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/settings.php';
 require_once __DIR__ . '/signatures.php';
+require_once __DIR__ . '/devanagari.php';
 
 /**
  * Identity cards.
@@ -98,6 +99,41 @@ function id_number(?string $value, int $max = 30): string
 }
 
 /**
+ * The two names the card prints: what the record holds, and — where it holds
+ * no Nepali name — one written from the English.
+ *
+ * The campus asks for one name and prints two. Only the English box is
+ * required, because that is the one every student can type on any keyboard,
+ * and the Nepali box beside it is optional and mostly skipped; a card with one
+ * name on it was the result, on a document whose whole design is a line per
+ * script. So the second line is derived when it has to be. nepali_name() does
+ * the writing — a dictionary of the names these students have, and a
+ * syllable-by-syllable transliterator behind it.
+ *
+ * 'deva_derived' says which of the two the card is printing, and it is not
+ * decoration: a spelling the campus holds and a spelling the campus guessed
+ * are different claims to make about somebody's name, and the pages that show
+ * this card say which one this is. A student who disagrees types theirs into
+ * the optional box, and from then on nothing is derived for them — it is read
+ * from the record like any other detail, here and everywhere else in the
+ * portal.
+ *
+ * @return array{latin: ?string, deva: ?string, deva_derived: bool}
+ */
+function id_card_names(array $u): array
+{
+    $names = name_by_script($u) + ['deva_derived' => false];
+    if ($names['deva'] === null && $names['latin'] !== null) {
+        $derived = nepali_name($names['latin']);
+        if ($derived !== null) {
+            $names['deva'] = $derived;
+            $names['deva_derived'] = true;
+        }
+    }
+    return $names;
+}
+
+/**
  * The card number. Derived from the account id rather than stored, so it is
  * stable for the life of the account and cannot drift out of step with it:
  * KSC-S-0042 for students, KSC-T-0007 for teaching staff, KSC-A-0001 for
@@ -185,6 +221,12 @@ function id_card_settings(): array
  * The holder's own signature on the back is asked for the same way, though
  * only the holder and an administrator can open a card page at all, so in
  * practice it is on every card that has one.
+ *
+ * 'holder_names' is resolved here for the page's own text — which says
+ * whether the Nepali name on the card was derived — and for the missing-
+ * details list beside it, because id_card_names() may have to transliterate a
+ * name to answer and both ask at once. The faces do not read it: a context
+ * belongs to one holder, and a face reads the holder it was handed.
  */
 function id_card_context(array $holder, ?array $viewer = null): array
 {
@@ -206,6 +248,7 @@ function id_card_context(array $holder, ?array $viewer = null): array
         'chief_title' => designation_label(
             ($named['owner_title'] ?? '') ?: ($card['chief_title'] ?: 'campus_chief')
         ),
+        'holder_names' => id_card_names($holder),
         'names'       => campus_names(),
         'issued'      => $holder['approved_at'] ?: $holder['created_at'],
     ];
@@ -292,18 +335,36 @@ function can_view_photo(array $viewer, int $targetId): bool
 /**
  * Details the card needs that the person has not filled in yet, as labels
  * ready to list back to them.
+ *
+ * $names is id_card_names($u) when the caller already has it; left out, it is
+ * worked out here.
  */
-function id_card_missing(array $u): array
+function id_card_missing(array $u, ?array $names = null): array
 {
     $missing = [];
     if (empty($u['avatar_path']))   { $missing[] = t('photo'); }
-    // In the order the card is read, so the Nepali name sits with the name
-    // rather than at the end of the sentence.
-    // By script, not by column — see name_by_script(). A student who typed
-    // their Devanagari name into the required "full name" box is missing the
-    // English line, not the Nepali one, and was told nothing at all while the
-    // question was which column was empty.
-    $names = name_by_script($u);
+    // By script, not by column — see name_by_script() — and in the order the
+    // card is read, so a name sits with the name rather than at the end of
+    // the sentence. A student who typed their Devanagari name into the
+    // required "full name" box is missing the English line, not the Nepali
+    // one, and was told nothing at all while the question was which column
+    // was empty.
+    //
+    // The Nepali name is asked for only when the card would still have no
+    // second line: id_card_names() writes one from the English wherever it
+    // can, so for almost every holder there is nothing to ask for, and what
+    // the card page says instead is that the name it printed was derived —
+    // a different thing from a detail being missing.
+    //
+    // It cannot always. A name already in Devanagari never gets here (it
+    // fills the Devanagari line itself, and what is asked for is the English
+    // one), but a name in a script this has no reading for, or one mixing
+    // Latin and Devanagari in a single value, comes back with nothing — and
+    // that card's second line really is blank, so that holder is asked.
+    // Taken from the caller where it already has them — a card page resolves
+    // them in id_card_context() and asks this in the same breath, and
+    // id_card_names() may have had to transliterate a name to answer.
+    $names ??= id_card_names($u);
     if ($names['latin'] === null)   { $missing[] = t('full_name_en'); }
     if ($names['deva'] === null)    { $missing[] = t('full_name_ne'); }
     if (empty($u['date_of_birth'])) { $missing[] = t('date_of_birth'); }
