@@ -58,6 +58,22 @@ const TRANSLATE_BACKOFF_SECONDS = 900;
  */
 const BACKFILL_SECONDS = 20;
 
+/**
+ * How long one call may spend waiting on a translation service.
+ *
+ * The budget counts requests; this counts seconds, and only this keeps a save
+ * inside the host's max_execution_time. A long body splits into chunks sent
+ * one after another at up to TRANSLATE_TIMEOUT each, and admin/notices.php
+ * translates BEFORE it writes the row — so a pass that runs over does not
+ * merely lose the Nepali, it loses the notice, with the attachment already
+ * stored and nothing left pointing at it.
+ *
+ * Half of the 30 seconds shared hosting usually allows, which leaves the save
+ * itself room. Running out is not an error: the text stays in English, the
+ * admin is told, and the backfill can take another run at it later.
+ */
+const TRANSLATE_DEADLINE_SECONDS = 15;
+
 function translation_enabled(): bool
 {
     return setting_bool('translate_enabled', true);
@@ -404,10 +420,18 @@ function remote_translate(string $text): ?string
     }
 
     $out = [];
+    $deadline = microtime(true) + TRANSLATE_DEADLINE_SECONDS;
     foreach ($chunks as $chunk) {
         if (trim($chunk) === '') {
             $out[] = $chunk;
             continue;
+        }
+        // Stop before the chunk that would take us past the deadline, not
+        // after it. Half a body in Nepali is refused the same way a failed
+        // chunk is, so the caller gets English and a reason rather than a
+        // page PHP killed mid-request.
+        if (microtime(true) > $deadline) {
+            return null;
         }
         translation_budget(translation_budget() - 1);
         $piece = match ($provider) {
@@ -666,24 +690,39 @@ function store_notice_translation(int $id, string $field, string $nepali): void
 }
 
 /**
- * How many notices still have no Nepali text, so the System page can say so.
+ * How many notices the backfill would still have work on, or null when that
+ * cannot be determined.
  *
- * The backfill is the only thing that reaches a notice published before
- * translation existed, and a button nobody is told to press is a button
- * nobody presses. Counted over the same fields the backfill fills.
+ * Scoped to exactly what backfill_notice_translations() scans — the newest
+ * $limit rows, in the same order — because a count the button cannot act on
+ * is a warning that never clears: an install with more notices than the pass
+ * reads would have shown a number in red for ever, with nothing in the
+ * interface able to reach those rows.
+ *
+ * Null rather than 0 when the query fails. 0 renders as "every notice has
+ * Nepali text", and saying that because we could not look is the one answer
+ * worse than saying nothing.
  */
-function untranslated_notice_count(): int
+function untranslated_notice_count(int $limit = 200): ?int
 {
+    $columns    = ['id'];
     $conditions = [];
     foreach (TRANSLATABLE_FIELDS as $field) {
+        $columns[] = $field . '_en';
+        $columns[] = $field . '_ne';
         // A field with no English text is nothing to translate, not a gap.
         $conditions[] = "({$field}_en IS NOT NULL AND TRIM({$field}_en) <> ''"
                       . " AND ({$field}_ne IS NULL OR TRIM({$field}_ne) = ''))";
     }
     try {
-        return (int) scalar('SELECT COUNT(*) FROM notices WHERE ' . implode(' OR ', $conditions));
+        return (int) scalar(
+            'SELECT COUNT(*) FROM (SELECT ' . implode(', ', $columns)
+            . ' FROM notices ORDER BY published_at DESC LIMIT ' . (int) $limit
+            . ') AS scanned WHERE ' . implode(' OR ', $conditions)
+        );
     } catch (Throwable $e) {
-        return 0;
+        error_log('Could not count untranslated notices: ' . $e->getMessage());
+        return null;
     }
 }
 

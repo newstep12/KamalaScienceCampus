@@ -98,54 +98,6 @@ function id_number(?string $value, int $max = 30): string
 }
 
 /**
- * The holder's name in each script, as the card's two lines need it.
- *
- * The card carries a name twice because a name on a Nepali identity document
- * is written in both scripts. It used to get those two lines from the two
- * columns — full_name on top, full_name_ne beneath — which is right only for
- * the person who filled both in as the form imagined. Two very ordinary
- * students did not:
- *
- *   Someone registering with the portal in Nepali reads "पूरा नाम" against a
- *   required field and "नेपालीमा पूरा नाम" against an optional one, types
- *   their name in Devanagari into the first and skips the second. Their card
- *   printed a Devanagari name and no English one at all.
- *
- *   Someone registering in English skips the optional Nepali field, and their
- *   card printed an English name and no Devanagari one.
- *
- * So the two lines are two scripts, not two columns, and each is filled from
- * whichever column happens to hold that script. A card fixes itself when the
- * missing name is added, whichever box it is typed into.
- *
- * full_name is read first, so it wins its script when both columns hold the
- * same one — which is also what drops the duplicate the profile used to
- * invite, somebody typing their name into "full name in Nepali" the way they
- * had just typed it above. The card showed Binish Parajuli, and under it, in
- * lighter type, Binish Parajuli; now the second is simply not a second
- * script, so there is no second line.
- *
- * Either key can be null, and the caller decides what that means: the view
- * moves a lone Devanagari name up to the line the English one would have had,
- * and id_card_missing() asks for whichever script is not there.
- */
-function id_card_names(array $u): array
-{
-    $names = ['latin' => null, 'deva' => null];
-    foreach (['full_name', 'full_name_ne'] as $column) {
-        $name = trim((string) ($u[$column] ?? ''));
-        if ($name === '') {
-            continue;
-        }
-        // is_devanagari() decides by majority script, so a Latin name
-        // carrying one Devanagari character stays a Latin name.
-        $key = is_devanagari($name) ? 'deva' : 'latin';
-        $names[$key] ??= $name;
-    }
-    return $names;
-}
-
-/**
  * The card number. Derived from the account id rather than stored, so it is
  * stable for the life of the account and cannot drift out of step with it:
  * KSC-S-0042 for students, KSC-T-0007 for teaching staff, KSC-A-0001 for
@@ -347,11 +299,11 @@ function id_card_missing(array $u): array
     if (empty($u['avatar_path']))   { $missing[] = t('photo'); }
     // In the order the card is read, so the Nepali name sits with the name
     // rather than at the end of the sentence.
-    // By script, not by column — see id_card_names(). A student who typed
+    // By script, not by column — see name_by_script(). A student who typed
     // their Devanagari name into the required "full name" box is missing the
     // English line, not the Nepali one, and was told nothing at all while the
     // question was which column was empty.
-    $names = id_card_names($u);
+    $names = name_by_script($u);
     if ($names['latin'] === null)   { $missing[] = t('full_name_en'); }
     if ($names['deva'] === null)    { $missing[] = t('full_name_ne'); }
     if (empty($u['date_of_birth'])) { $missing[] = t('date_of_birth'); }

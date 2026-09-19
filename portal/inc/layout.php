@@ -265,12 +265,23 @@ function default_nav(?array $user): array
     ];
 }
 
+/**
+ * The name to show this viewer: the script they are reading the portal in,
+ * falling back to the one the person actually has.
+ *
+ * By script rather than by column, the same way the identity card resolves
+ * its two lines — see name_by_script(). Reading full_name_ne as "the Nepali
+ * one" showed a student who registered in Nepali, and whose Devanagari name
+ * therefore sits in full_name, their English name in the Nepali portal and
+ * their Devanagari one in the English portal: exactly backwards, and on every
+ * page that greets them by name.
+ */
 function display_name(array $user): string
 {
-    if (is_nepali() && !empty($user['full_name_ne'])) {
-        return $user['full_name_ne'];
-    }
-    return $user['full_name'];
+    $names = name_by_script($user);
+    return is_nepali()
+        ? ($names['deva'] ?? $names['latin'] ?? '')
+        : ($names['latin'] ?? $names['deva'] ?? '');
 }
 
 function role_label(array $user): string

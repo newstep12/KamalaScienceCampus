@@ -700,14 +700,23 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="translate_notices">
     <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('translate_backfill_intro') ?></p>
-    <?php /* Nothing translates on a page load any more, so this is the only
-             thing that reaches a notice published before translation existed.
-             The count is what tells an admin it needs pressing. */ ?>
-    <?php $pending = untranslated_notice_count(); ?>
-    <p style="font-size:.94rem;<?= $pending ? 'color:var(--warn);font-weight:600;' : 'color:var(--ink-soft);' ?>">
-      <?= $pending ? e(t('translate_backfill_pending', localize_digits((string) $pending)))
-                   : te('translate_backfill_none') ?>
-    </p>
+    <?php
+    /* Nothing translates on a page load any more, so this is the only thing
+       that reaches a notice published before translation existed, and the
+       count is what tells an admin it needs pressing.
+
+       Not while translation is switched off, though: the pass would return
+       nothing translated for every field, so red text urging somebody to
+       press a button that cannot work is worse than silence. And null means
+       the count could not be taken, which is not the same as none. */
+    $pending = translation_enabled() ? untranslated_notice_count() : null;
+    ?>
+    <?php if ($pending !== null): ?>
+      <p style="font-size:.94rem;<?= $pending > 0 ? 'color:var(--warn);font-weight:600;' : 'color:var(--ink-soft);' ?>">
+        <?= $pending > 0 ? e(t('translate_backfill_pending', localize_digits((string) $pending)))
+                         : te('translate_backfill_none') ?>
+      </p>
+    <?php endif; ?>
     <div class="p-field">
       <label style="display:flex;align-items:center;gap:9px;font-weight:500;">
         <input type="checkbox" name="redo_auto" value="1" style="width:auto;">

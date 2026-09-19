@@ -140,10 +140,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * Only where there was English to translate and the box is still
              * empty: Nepali the admin typed themselves is not a failure, and
              * a notice with no body is not a gap.
+             *
+             * And only where a service was there to fail. The glossary is the
+             * default provider, it refuses anything longer than a title by
+             * design, and translation can be switched off altogether — in
+             * each case an empty Nepali box is the feature working as
+             * configured, and an error on every single save would have been
+             * this message crying wolf until nobody read it. What those
+             * installs get instead is the count on the System page.
              */
             $untranslated = [];
-            if ($titleNe === '')                      { $untranslated[] = t('title_nepali'); }
-            if ($bodyEn !== '' && $bodyNe === '')     { $untranslated[] = t('body_nepali'); }
+            if (translation_enabled() && translation_service_ready()) {
+                if ($titleNe === '')                  { $untranslated[] = t('title_nepali'); }
+                if ($bodyEn !== '' && $bodyNe === '') { $untranslated[] = t('body_nepali'); }
+            }
 
             flash('ok', t('notice_saved'));
             if ($untranslated) {
@@ -154,8 +164,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $id = (int) ($_POST['notice_id'] ?? 0);
         $n  = one('SELECT file_path FROM notices WHERE id = ?', [$id]);
         if ($n) {
-            delete_upload($n['file_path']);
+            // The row first, then the file it named — the same order the save
+            // below takes, and for the same reason: a DELETE that throws
+            // would otherwise leave the notice pointing at a file that is no
+            // longer there, a download that 404s for every visitor.
             q('DELETE FROM notices WHERE id = ?', [$id]);
+            delete_upload($n['file_path']);
             flash('ok', t('material_deleted'));
         }
     } elseif ($action === 'toggle_publish') {

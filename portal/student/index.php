@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
-require_once __DIR__ . '/../inc/translate.php';
 
 $user = require_role(ROLE_STUDENT, ROLE_LECTURER);
 $year = (int) ($user['year_level'] ?? 0);

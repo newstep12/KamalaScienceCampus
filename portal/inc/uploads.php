@@ -106,11 +106,16 @@ function user_file_columns(): array
     static $columns = null;
     if ($columns === null) {
         $wanted = ['avatar_path', 'avatar_source_path', 'signature_path'];
-        try {
-            $columns = array_values(array_intersect($wanted, array_column(all('SHOW COLUMNS FROM users'), 'Field')));
-        } catch (Throwable $e) {
-            $columns = ['avatar_path'];
-        }
+        // Not caught and degraded to a shorter list. Guessing here is the
+        // silent orphaning this whole pair exists to refuse — the signature
+        // left behind, nothing logged, the delete reporting success — and it
+        // would arrive through the code written to prevent it. A delete that
+        // cannot establish what it owns fails instead, having destroyed
+        // nothing, because user_file_paths() runs before the row is removed.
+        $columns = array_values(array_intersect(
+            $wanted,
+            array_column(all('SHOW COLUMNS FROM users'), 'Field')
+        ));
     }
     return $columns;
 }
