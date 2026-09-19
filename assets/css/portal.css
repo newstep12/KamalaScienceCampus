@@ -669,7 +669,14 @@ body.lang-ne .idc-photo { width: 5.90em; }
 /* The big line is set in the card's Latin face; a holder whose only name is
    in Devanagari needs the other one, or the line falls back to whatever the
    system happens to offer for the script. */
-.idc-name-deva { font-family: var(--deva); }
+/* And the room that face needs, which is not what the Latin one above is set
+   with: .idc-name is line-height 1.2 and Noto Sans Devanagari occupies about
+   1.24, inside a box that is overflow: hidden — so the card's largest line
+   was clipping its own marks for exactly the holder this class exists for,
+   the one whose only name is in Devanagari. The smaller second line was given
+   this room; the bigger one was left behind. It costs the front nothing: a
+   card reaching this class has no second name line to print. */
+.idc-name-deva { font-family: var(--deva); line-height: 1.3; }
 /* Set a little tighter than it was, because it is no longer the exception.
    This line used to print for the minority of holders who had typed a Nepali
    name; it now prints on every card, so its height belongs to the fullest

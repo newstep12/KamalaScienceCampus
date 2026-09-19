@@ -230,13 +230,27 @@ function transliterate_to_devanagari(string $word): string
     while ($pos < $length) {
         $matched = false;
 
-        // A 'y' ending a word is the vowel that closes it, not a य to hang
-        // the letter before it off. Read as a consonant it took a halanta
-        // with it and Adhikary came out अधिकर्य, Ghimirey घिमिरेय — a dead
-        // conjunct where a name should end. -y is ी, -ey is े, which is what
-        // those spellings are for.
+        // A 'y' ending a word is read by what comes before it.
+        //
+        // After a consonant it is the vowel that closes the name — Adhikary
+        // is अधिकारी — and taking it for a य hung a halanta on that consonant
+        // and left अधिकर्य, a dead conjunct where a name should end. After
+        // 'e' it is silent, the े having already been written: Ghimirey.
+        //
+        // But after any other vowel it is a य and nothing else. Read as the
+        // closing vowel there it replaced the last syllable of some of the
+        // commonest names on this register — Vijay came out विजी, Jay जी —
+        // and where the vowel before it had left a sign of its own it stacked
+        // a second one on the same letter, रोी for Roy.
         if ($pos === $length - 1 && $word[$pos] === 'y' && $pos > 0) {
-            $out .= str_ends_with(substr($word, 0, $pos), 'e') ? '' : 'ी';
+            $before = $word[$pos - 1];
+            if ($before === 'e') {
+                $out .= '';                          // Ghimirey: the े has it
+            } elseif (strpos('aiou', $before) !== false) {
+                $out .= 'य';                         // Vijay, Roy, Uday
+            } else {
+                $out .= 'ी';                         // Adhikary, Mainaly
+            }
             $pos++;
             continue;
         }
@@ -308,6 +322,9 @@ function transliterate_to_devanagari(string $word): string
                 // is not a consonant to be joined to either — without this,
                 // Adhikary took the halanta and then the vowel sign as well
                 // and came out अधिकर्ी.
+                // ...and only where that 'y' is being read as a vowel, which
+                // is after a consonant. After a vowel it is a य like any
+                // other and joins normally.
                 $finalY = ($pos === $length - 1 && $word[$pos] === 'y');
                 if (!$finalY && devanagari_consonant_at($word, $pos) !== null) {
                     $out .= DEVANAGARI_HALANTA;
@@ -492,7 +509,12 @@ function nepali_name(string $latin): ?string
     // record already holds on the card a second time — "Binish Parajuli
     // बिनिश" came back as बिनिश पराजुली बिनिश — and under a notice telling
     // the holder the campus had written it.
-    if (preg_match('/\p{Devanagari}/u', $latin)) {
+    // A Devanagari *letter*, not merely a Devanagari codepoint: the danda and
+    // the Devanagari digits live in that block too, and name_by_script() reads
+    // a name carrying one of those as Latin by majority — so refusing it here
+    // left the holder with one name on the card and a message saying the
+    // other was missing.
+    if (preg_match('/\p{Devanagari}/u', preg_replace('/[^\p{L}]/u', '', $latin) ?? '')) {
         return null;
     }
     // A letter this scheme has no reading for. The tables are ASCII, so an
@@ -522,9 +544,13 @@ function nepali_name(string $latin): ?string
         if ($word === '') {
             continue;
         }
-        // Trailing punctuation — the full stop after an initial, a comma — is
-        // set aside so it cannot spoil a dictionary hit, then put back.
-        preg_match('/^(\p{P}*)(.*?)(\p{P}*)$/u', $word, $parts);
+        // Trailing punctuation — the full stop after an initial, a comma —
+        // and trailing digits are set aside so they cannot spoil a dictionary
+        // hit, then put back. An imported surname with a batch year stuck on
+        // it, the shape the 'ng' branch above was written for, otherwise
+        // missed the list entirely and was spelt by the transliterator:
+        // कुमर2 where the dictionary holds कुमार.
+        preg_match('/^(\p{P}*)(.*?)([\p{P}\p{N}]*)$/u', $word, $parts);
         [, $before, $core, $after] = $parts;
         if ($core === '') {
             $out[] = $word;
