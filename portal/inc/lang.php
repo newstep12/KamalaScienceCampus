@@ -170,6 +170,35 @@ function year_label(?int $year): string
     return t('year_n', localize_digits((string) $year));
 }
 
+/**
+ * The same year as an identity document names it: B.Sc. 3rd Year, not Year 3.
+ *
+ * Year 3 is how the portal talks about a year internally — it is the filter on
+ * a notice, the heading over a class list, the column in a table where the
+ * programme is already the subject. A card is read by people who have none of
+ * that context: an examination hall, a bus conductor, an office in another
+ * district. So the card spells the year out in full, the way the campus writes
+ * it on everything else it issues.
+ *
+ * The ordinal comes from the language file rather than a suffix rule, because
+ * there is no rule to share: English wants 1st/2nd/3rd/4th, Nepali wants the
+ * words. A year with no ordinal written for it — nothing today, the programme
+ * is four years — falls back to its digit, so a fifth year would read
+ * B.Sc. 5 Year rather than not printing at all.
+ */
+function program_year_label(?int $year): string
+{
+    if (!$year) {
+        return '';
+    }
+    $key = 'year_ord_' . $year;
+    $ord = t($key);
+    if ($ord === $key) {
+        $ord = (string) $year;
+    }
+    return t('program_year_n', localize_digits($ord));
+}
+
 function format_bytes(?int $bytes): string
 {
     if (!$bytes) {

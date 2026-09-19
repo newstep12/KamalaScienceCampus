@@ -104,7 +104,10 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
           ?>
           <dl class="idc-rows">
             <?php if ($holder['role'] === ROLE_STUDENT): ?>
-              <?php id_card_row(t('id_card_year'), $holder['year_level'] ? year_label((int) $holder['year_level']) : null); ?>
+              <?php /* program_year_label(), not year_label(): the card says
+                       B.Sc. 3rd Year, because "Year 3" only means anything to
+                       someone who already knows which programme is meant. */ ?>
+              <?php id_card_row(t('id_card_year'), $holder['year_level'] ? program_year_label((int) $holder['year_level']) : null); ?>
               <?php id_card_row(t('id_card_symbol'), $holder['symbol_no'] ?: null); ?>
             <?php else: ?>
               <?php /* id_card_role_line(), not the designation on its own: the

@@ -14,6 +14,13 @@ return [
     'register'         => 'Create an account',
     'all_years'        => 'All years',
     'year_n'           => 'Year %s',
+    // The year written out the way an identity card names it, and the
+    // ordinals it is built from — see program_year_label().
+    'program_year_n'   => 'B.Sc. %s Year',
+    'year_ord_1'       => '1st',
+    'year_ord_2'       => '2nd',
+    'year_ord_3'       => '3rd',
+    'year_ord_4'       => '4th',
     'loading'          => 'Loading…',
     'save'             => 'Save',
     'cancel'           => 'Cancel',
@@ -369,7 +376,15 @@ return [
     'id_card_heading'    => 'Identity card',
     'id_card_no'         => 'Card no.',
     'id_card_year'       => 'Year',
-    'id_card_symbol'     => 'Symbol no.',
+    // Regd., the way Tribhuvan University abbreviates it on its own
+    // documents, and not "TU registration no." spelt out: the front's label
+    // column is 6.25em and the spelt-out phrase needs 7.93em, so it breaks
+    // over three lines and takes the height the address row needs. Widening
+    // the column is no way out either — it comes straight off the value
+    // column, and an address of any length then loses its last line to the
+    // clamp. The Nepali label below is spelt out because Devanagari sets it
+    // narrow enough to fit on one line.
+    'id_card_symbol'     => 'TU regd. no.',
     'id_card_issued'     => 'Issued',
     'id_card_valid'      => 'Valid until',
     'id_card_session'    => 'Academic session',
@@ -381,8 +396,11 @@ return [
     'id_card_holder_sig' => 'Card holder’s signature',
     'id_card_return'     => 'If found, please return to',
     'id_card_photo_here' => 'Attach a passport photo here',
-    'id_card_missing'    => 'Your card is still missing %s. Add it and the card fills in; until then those lines print blank for you to write on.',
-    'id_card_missing_other' => 'This card is missing %s. Those lines print blank.',
+    // "Where there is a labelled line" rather than "those lines": the list can
+    // now name the Nepali name, and that line has no label and no rule — it is
+    // simply absent from the card until there is a name to put on it.
+    'id_card_missing'    => 'Your card is still missing %s. Add it and the card fills in; until then the card prints without it, and where there is a labelled line it comes out blank for you to write on.',
+    'id_card_missing_other' => 'This card is missing %s. It prints without it; where there is a labelled line, it comes out blank.',
     'id_card_missing_link'  => 'Complete my profile',
     'id_card_no_signature'  => 'No Campus Chief’s signature has been uploaded, so the card prints a blank signature line to be signed by hand. An administrator can add one under System → Identity cards.',
     'campus_place'       => 'Dhungrebas, Kamalamai, Sindhuli',
