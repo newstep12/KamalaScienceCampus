@@ -246,6 +246,7 @@ function id_card_context(array $holder, ?array $viewer = null): array
         'chief_title' => designation_label(
             ($named['owner_title'] ?? '') ?: ($card['chief_title'] ?: 'campus_chief')
         ),
+        'holder_id'    => (int) $holder['id'],
         'holder_names' => id_card_names($holder),
         'names'       => campus_names(),
         'issued'      => $holder['approved_at'] ?: $holder['created_at'],
@@ -333,8 +334,11 @@ function can_view_photo(array $viewer, int $targetId): bool
 /**
  * Details the card needs that the person has not filled in yet, as labels
  * ready to list back to them.
+ *
+ * $names is id_card_names($u) when the caller already has it; left out, it is
+ * worked out here.
  */
-function id_card_missing(array $u): array
+function id_card_missing(array $u, ?array $names = null): array
 {
     $missing = [];
     if (empty($u['avatar_path']))   { $missing[] = t('photo'); }
@@ -353,7 +357,10 @@ function id_card_missing(array $u): array
     // A name with no romanisation to read — already Devanagari, or in a
     // script this has no reading for — comes back with nothing, and that
     // card's second line really is blank, so that holder is asked.
-    $names = id_card_names($u);
+    // Taken from the caller where it already has them — a card page resolves
+    // them in id_card_context() and asks this in the same breath, and
+    // id_card_names() may have had to transliterate a name to answer.
+    $names ??= id_card_names($u);
     if ($names['latin'] === null)   { $missing[] = t('full_name_en'); }
     if ($names['deva'] === null)    { $missing[] = t('full_name_ne'); }
     if (empty($u['date_of_birth'])) { $missing[] = t('date_of_birth'); }

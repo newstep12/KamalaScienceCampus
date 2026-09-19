@@ -80,8 +80,14 @@ function id_card_face(array $holder, array $ctx, string $side = 'front'): void
            * one and would otherwise fall back to whatever the system offers.
            */
           // not $names: that is the campus's. Resolved once in
-          // id_card_context(), because both faces and the page's own text ask.
-          $holderNames = $ctx['holder_names'] ?? id_card_names($holder);
+          // id_card_context(), because both faces and the page's own text
+          // ask — but only where that context was built for this holder. A
+          // page drawing a batch of cards from one context would otherwise
+          // print the first holder's name over everybody else's details, and
+          // nothing in the markup would show it.
+          $holderNames = (($ctx['holder_id'] ?? null) === (int) $holder['id'])
+              ? $ctx['holder_names']
+              : id_card_names($holder);
           $primary = $holderNames['latin'] ?? $holderNames['deva'];
           $second  = $holderNames['latin'] !== null ? $holderNames['deva'] : null;
           ?>

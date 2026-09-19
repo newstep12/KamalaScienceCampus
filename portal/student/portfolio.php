@@ -445,13 +445,13 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
     <div class="p-idcard-cta">
       <h3><?= te('id_card_title') ?></h3>
       <p><?= te('id_card_cta') ?></p>
-      <?php if ($missing = id_card_missing($user)): ?>
+      <?php $cardNames = id_card_names($user); ?>
+      <?php if ($missing = id_card_missing($user, $cardNames)): ?>
         <p class="p-idcard-missing"><?= e(t('id_card_missing', join_list($missing))) ?></p>
       <?php endif; ?>
       <?php /* The box that fixes it is on this very page, a few fields up. */ ?>
-      <?php $cardNames = id_card_names($user); ?>
       <?php if ($cardNames['deva_derived']): ?>
-        <p class="hint"><?= e(t('id_card_name_derived', $cardNames['deva'])) ?></p>
+        <p class="p-idcard-note"><?= e(t('id_card_name_derived', $cardNames['deva'])) ?></p>
       <?php endif; ?>
       <a class="p-btn p-btn-primary" href="<?= e(portal_url('/id-card.php')) ?>"><?= te('id_card_open') ?></a>
     </div>

@@ -850,6 +850,11 @@ body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em;
 .p-idcard-cta h3 { font-size: 1rem; margin-bottom: .35em; }
 .p-idcard-cta p { font-size: .9rem; color: var(--ink-soft); margin-bottom: 14px; }
 .p-idcard-missing { color: var(--warn); }
+/* Not a warning. The card is complete; this says the Nepali name on it was
+   written from the English rather than typed, which is worth reading and is
+   not worth alarming anybody about. (.hint is styled only inside a form
+   field, so it does nothing out here.) */
+.p-idcard-note { color: var(--ink-soft); font-style: italic; }
 
 .p-btn-link {
   background: none; border: 0; padding: 0; cursor: pointer;
