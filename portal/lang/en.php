@@ -396,8 +396,11 @@ return [
     'id_card_holder_sig' => 'Card holder’s signature',
     'id_card_return'     => 'If found, please return to',
     'id_card_photo_here' => 'Attach a passport photo here',
-    'id_card_missing'    => 'Your card is still missing %s. Add it and the card fills in; until then those lines print blank for you to write on.',
-    'id_card_missing_other' => 'This card is missing %s. Those lines print blank.',
+    // "Where there is a labelled line" rather than "those lines": the list can
+    // now name the Nepali name, and that line has no label and no rule — it is
+    // simply absent from the card until there is a name to put on it.
+    'id_card_missing'    => 'Your card is still missing %s. Add it and the card fills in; until then the card prints without it, and where there is a labelled line it comes out blank for you to write on.',
+    'id_card_missing_other' => 'This card is missing %s. It prints without it; where there is a labelled line, it comes out blank.',
     'id_card_missing_link'  => 'Complete my profile',
     'id_card_no_signature'  => 'No Campus Chief’s signature has been uploaded, so the card prints a blank signature line to be signed by hand. An administrator can add one under System → Identity cards.',
     'campus_place'       => 'Dhungrebas, Kamalamai, Sindhuli',

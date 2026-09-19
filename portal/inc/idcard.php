@@ -122,6 +122,28 @@ function id_card_name_ne(array $u): ?string
 }
 
 /**
+ * Whether the card can carry the holder's name in Devanagari at all.
+ *
+ * A name on a Nepali identity document is written in both scripts, and this
+ * card is built to print both — but the field it prints from is optional on
+ * every form that collects it, and nothing ever said so. A student who left
+ * it blank, and a student who typed their name into it the way they had just
+ * typed it above (which id_card_name_ne() refuses, rather than printing the
+ * same name twice), both got a card with one name on it and no idea why the
+ * student beside them had two.
+ *
+ * So the answer is not whether the column holds something. It is whether the
+ * printed card ends up with a Devanagari name on it, from either line: a
+ * record entered in Nepali in the first place has its Devanagari name in
+ * full_name, and there is nothing to ask that person for.
+ */
+function id_card_has_name_ne(array $u): bool
+{
+    return id_card_name_ne($u) !== null
+        || (bool) preg_match('/\p{Devanagari}/u', (string) ($u['full_name'] ?? ''));
+}
+
+/**
  * Whether two spellings are the same name, compared the way somebody reading
  * the card would: case is not a difference, nor is spacing, nor a full stop
  * after an initial.
@@ -341,6 +363,9 @@ function id_card_missing(array $u): array
 {
     $missing = [];
     if (empty($u['avatar_path']))   { $missing[] = t('photo'); }
+    // In the order the card is read, so the Nepali name sits with the name
+    // rather than at the end of the sentence.
+    if (!id_card_has_name_ne($u))   { $missing[] = t('full_name_ne'); }
     if (empty($u['date_of_birth'])) { $missing[] = t('date_of_birth'); }
     if (empty($u['address']))       { $missing[] = t('address'); }
     if ($u['role'] === ROLE_STUDENT) {
