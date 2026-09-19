@@ -670,9 +670,21 @@ body.lang-ne .idc-photo { width: 5.90em; }
    in Devanagari needs the other one, or the line falls back to whatever the
    system happens to offer for the script. */
 .idc-name-deva { font-family: var(--deva); }
+/* Set a little tighter than it was, because it is no longer the exception.
+   This line used to print for the minority of holders who had typed a Nepali
+   name; it now prints on every card, so its height belongs to the fullest
+   front rather than to some fronts only.
+
+   Measured against that front — a two-line Latin name, this line under it,
+   the role, and six rows with the longest address the clamp will take — in
+   both languages, both orientations and at print size as well as on screen.
+   It fits in all eight, and the tightest is Nepali landscape in print, which
+   is left with about five pixels on a card 204px tall. Anything added to the
+   front from here needs measuring again: .idc-body is overflow: hidden and
+   the rows do not compress, so what does not fit leaves silently. */
 .idc-name-ne {
-  font-family: var(--deva); font-size: .9em;
-  line-height: 1.18; color: var(--ink-soft);
+  font-family: var(--deva); font-size: .86em;
+  line-height: 1.1; color: var(--ink-soft);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .idc-role {
@@ -849,12 +861,16 @@ body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em;
 }
 .p-idcard-cta h3 { font-size: 1rem; margin-bottom: .35em; }
 .p-idcard-cta p { font-size: .9rem; color: var(--ink-soft); margin-bottom: 14px; }
-.p-idcard-missing { color: var(--warn); }
+/* Both scoped to the panel and qualified by the element, because
+   `.p-idcard-cta p` sets a colour of its own and outranks a bare class: the
+   missing-details line had been rendering in --ink-soft rather than --warn,
+   so there was no contrast for the note below it to be calmer than. */
+.p-idcard-cta p.p-idcard-missing { color: var(--warn); }
 /* Not a warning. The card is complete; this says the Nepali name on it was
    written from the English rather than typed, which is worth reading and is
    not worth alarming anybody about. (.hint is styled only inside a form
    field, so it does nothing out here.) */
-.p-idcard-note { color: var(--ink-soft); font-style: italic; }
+.p-idcard-cta p.p-idcard-note { color: var(--ink-soft); font-style: italic; }
 
 .p-btn-link {
   background: none; border: 0; padding: 0; cursor: pointer;

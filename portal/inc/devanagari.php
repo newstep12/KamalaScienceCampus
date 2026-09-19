@@ -162,7 +162,12 @@ const DEVANAGARI_CONSONANTS = [
  * consonant before it. Longest first, as above.
  */
 const DEVANAGARI_VOWELS = [
+    // 'ou' and 'ow' beside 'au', because that is how this vowel is actually
+    // written here — Gourav, Sourav, Sangroula. Without them the pair broke
+    // into a ो and a stray independent उ in the middle of the word, which is
+    // not an approximation of the name but a syllable that is not in it.
     'aa' => ['आ', 'ा'], 'ai' => ['ऐ', 'ै'], 'au' => ['औ', 'ौ'],
+    'ou' => ['औ', 'ौ'], 'ow' => ['औ', 'ौ'],
     'ee' => ['ई', 'ी'], 'ii' => ['ई', 'ी'], 'oo' => ['ऊ', 'ू'], 'uu' => ['ऊ', 'ू'],
     'a'  => ['अ', ''],  'i'  => ['इ', 'ि'], 'u'  => ['उ', 'ु'],
     'e'  => ['ए', 'े'],  'o'  => ['ओ', 'ो'],
@@ -177,8 +182,11 @@ const DEVANAGARI_HALANTA = '्';
  *
  * Romanised Nepali writes both with the same letter and there is no rule in
  * the spelling that separates them, so this list is kept to the clusters
- * where the answer is not in doubt — the -ndra of Mahendra and Rajendra, and
- * Krishna.
+ * where the answer is not in doubt — the -ndra of Mahendra and Rajendra.
+ *
+ * Not 'shna'. Krishna is in the dictionary and never reaches here, so all it
+ * did was take the last syllable off Trishna, which is तृष्णा and came out
+ * त्रिश्न — the very harm the rest of this note is about.
  *
  * Deliberately short. It once held every two-consonant cluster that ends a
  * Sanskrit-derived masculine name, and those same clusters end a great many
@@ -187,7 +195,7 @@ const DEVANAGARI_HALANTA = '्';
  * holder's name off their card. Where the two readings collide the ा is far
  * the commoner, so the ा is what an unlisted ending gets.
  */
-const DEVANAGARI_INHERENT_ENDINGS = ['ndra', 'ntra', 'mbra', 'shna'];
+const DEVANAGARI_INHERENT_ENDINGS = ['ndra', 'ntra', 'mbra'];
 
 /**
  * One romanised word, transliterated syllable by syllable.
@@ -236,14 +244,15 @@ function transliterate_to_devanagari(string $word): string
              * a ह. So the match is given back, the n is written on its own,
              * and the g is read again on the next turn as the consonant it is.
              */
-            $isWordStart = ($pos - $n) === 0;
             if ($roman === 'ng' && $vowel === null && $pos < $length) {
                 $pos--;                              // hand the g back
-                $out .= 'न' . DEVANAGARI_HALANTA;
+                // The velar nasal, the same letter the vowel case writes, so
+                // Sangroula and Ganga do not spell one sound two ways.
+                $out .= 'ङ' . DEVANAGARI_HALANTA;
                 $matched = true;
                 break;
             }
-            $out .= ($roman === 'ng' && $vowel !== null && !$isWordStart) ? 'ङ्ग' : $letter;
+            $out .= ($roman === 'ng' && $vowel !== null && ($pos - $n) !== 0) ? 'ङ्ग' : $letter;
 
             // What comes after decides how this consonant is finished off.
             if ($vowel !== null) {
@@ -258,10 +267,10 @@ function transliterate_to_devanagari(string $word): string
                 }
                 $out .= $sign;
                 $pos += strlen($roman2);
-                // The syllable is closed. Leaving this true hung a second
-                // vowel sign on the same consonant — Deo came out देो, two
-                // matras stacked on one letter — instead of opening the
-                // syllable the second vowel is.
+                // The syllable is closed here, which is what stops a second
+                // vowel hanging a second sign on the same consonant: Deo once
+                // came out देो, two matras stacked on one letter, instead of
+                // the ओ opening the syllable it is.
             } else {
                 // A halanta joins this consonant to the next one, so it is
                 // written only when a consonant is what follows. Tested
@@ -290,13 +299,13 @@ function transliterate_to_devanagari(string $word): string
             continue;
         }
 
-        // Anything left is not part of the scheme — a stray mark. Carried
-        // through rather than dropped, so nothing disappears silently, but a
-        // digit is carried through in Devanagari: the rows under this line
-        // localise theirs, and a name reading राम 1 beside a NID reading
-        // ००० is one line in two alphabets.
-        $out .= strtr($word[$pos], ['0'=>'०','1'=>'१','2'=>'२','3'=>'३','4'=>'४',
-                                    '5'=>'५','6'=>'६','7'=>'७','8'=>'८','9'=>'९']);
+        // Anything left is not part of the scheme — a digit, a stray mark.
+        // Carried through as written rather than dropped, so nothing
+        // disappears silently. Not rewritten into Devanagari digits: the
+        // number rows on the card are localised at render time and follow the
+        // card's language, an English card keeps its 0-9, and a name that
+        // rewrote its own would be the only thing on the front that did not.
+        $out .= $word[$pos];
         $pos++;
     }
 
@@ -365,9 +374,14 @@ function devanagari_word(string $core, array $dictionary): string
     if (count($parts) > 1) {
         $joined = '';
         foreach ($parts as $part) {
-            $joined .= preg_match('/^[A-Za-z]+$/', $part)
-                ? ($dictionary[strtolower($part)] ?? transliterate_to_devanagari($part))
-                : $part;
+            if ($part === '' || !preg_match('/[A-Za-z]/', $part)) {
+                $joined .= $part;                   // the joining mark itself
+                continue;
+            }
+            // Transliterated whether or not it is purely letters. Copied
+            // through on that test, a part like "Kumar2" reached the card as
+            // Latin text inside the line it sets in a Devanagari face.
+            $joined .= $dictionary[strtolower($part)] ?? transliterate_to_devanagari($part);
         }
         return $joined;
     }
@@ -389,6 +403,12 @@ function devanagari_word(string $core, array $dictionary): string
  */
 function nepali_name(string $latin): ?string
 {
+    // "K. C." is "K.C." is "KC". Closed up before the split on whitespace,
+    // or the surname arrived as two lone letters, missed the dictionary, and
+    // printed as क. क. — two different initials as the same Devanagari
+    // letter, and the same surname spelt two ways on two students' cards.
+    $latin = preg_replace('/\b([A-Za-z])\.\s+(?=[A-Za-z]\.)/', '$1.', $latin) ?? $latin;
+
     // Typographic spacing and quotes folded to their ASCII equivalents first,
     // so a name is judged on its letters rather than on how it was pasted.
     $latin = trim(strtr($latin, [
@@ -399,6 +419,13 @@ function nepali_name(string $latin): ?string
 
     // Nothing to work from: no Latin letter to read.
     if ($latin === '' || !preg_match('/[A-Za-z]/', $latin)) {
+        return null;
+    }
+    // Not valid UTF-8 — a Latin-1 byte pasted or imported into the field.
+    // Every /u test below quietly returns false on such a string rather than
+    // matching, so the guards that follow would all pass it, and preg_split()
+    // would then hand foreach a false. Refused here instead.
+    if (!preg_match('//u', $latin)) {
         return null;
     }
     // Already carries Devanagari. Transliterating it would put a name the
@@ -431,7 +458,7 @@ function nepali_name(string $latin): ?string
 
     // Split on whitespace, keeping the separators out of the way; a name is
     // one or more words and nothing here needs to know which is which.
-    foreach (preg_split('/\s+/u', $latin) as $word) {
+    foreach (preg_split('/\s+/u', $latin) ?: [] as $word) {
         if ($word === '') {
             continue;
         }
@@ -444,7 +471,15 @@ function nepali_name(string $latin): ?string
             continue;
         }
         $word = devanagari_word($core, $dictionary);
-        $out[] = $before . $word . (preg_match('/\p{P}$/u', $word) ? '' : $after);
+        // The trailing mark goes back unless the entry already ends in that
+        // same mark — K.C. carries its own stop and must not get two. Asking
+        // only whether the entry ended in any punctuation swallowed whatever
+        // had actually followed the name: "(Kc)" lost its closing bracket and
+        // "Kc," the comma dividing surname from given name.
+        if ($after !== '' && $word !== '' && mb_substr($word, -1) === mb_substr($after, 0, 1)) {
+            $after = mb_substr($after, 1);
+        }
+        $out[] = $before . $word . $after;
     }
 
     $name = trim(implode(' ', $out));
