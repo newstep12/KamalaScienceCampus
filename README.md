@@ -77,11 +77,12 @@ verify and deliberately left blank rather than invent:
 
 - **Office hours** — `src/pages/contact.html`.
 - **Staff bios** — the About page's leadership and faculty section
-  (`src/pages/about.html`, `src/pages-ne/about.html`) carries only what was
-  known: names, roles, Manoj Devkota's CV, Shyam Lal Mahato's degree and
-  subject, and Chandeshwar Yadav's subject. Qualifications and subjects for
-  the others are marked `TODO`. The Chairman's and Campus Chief's messages
-  were drafted for them to approve — edit them to the wording they sign off.
+  (`src/pages/about.html`, `src/pages-ne/about.html`) carries what the campus
+  has confirmed: every teacher's rank, subject and degree, and Manoj Devkota's
+  full CV. Still marked `TODO`: the Chairman's background, and the Account
+  Head's qualifications and years of service. The Chairman's and Campus
+  Chief's messages were drafted for them to approve — edit them to the wording
+  they sign off.
 - **Fees** — intentionally not stated anywhere; the pages point people to the
   campus phone number instead, since community-campus fees change each session.
 - **Photographs** — there are no campus images yet. Drop real campus photos
