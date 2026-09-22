@@ -590,6 +590,10 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
 /* auto-fill, not auto-fit: a group with one card keeps a card-sized column
    instead of one card stretched across the page */
 .people { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+/* The teaching staff are a fixed four, so their columns are fixed too: four
+   abreast, then 2x2, then one up. Left to auto-fill they break into three
+   with the fourth orphaned on a row of its own at tablet widths. */
+.people-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .people-group {
   font-family: var(--sans); font-size: .8rem; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft);
@@ -598,14 +602,45 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
 .person-card { text-align: center; }
 .person-card p:not(.person-role) { text-align: left; }
 
+/* The Campus Chief heads the faculty from a card of his own, portrait beside
+   the bio. It reads as the senior entry, and it lifts him out of the grid so
+   the teachers below fill one even row instead of leaving an orphan card. */
+.person-lead {
+  display: grid; gap: 34px;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
+  align-items: center;
+  text-align: left;
+  padding: 32px 38px;
+  margin-bottom: 30px;
+  border-top: 3px solid var(--gold);
+  background: linear-gradient(112deg, #fff 0%, #fff 44%, var(--bg-tint) 100%);
+}
+.person-lead .person-photo { margin-bottom: 0; }
+.person-lead .person-name { font-size: 1.45rem; margin-bottom: 6px; }
+.person-lead .person-role { margin-bottom: 13px; }
+
+@media (max-width: 1000px) {
+  .people-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 900px) {
   .message { grid-template-columns: 1fr; gap: 26px; padding: 30px; }
   .person-bio { text-align: center; }
+}
+@media (max-width: 760px) {
+  .person-lead {
+    grid-template-columns: 1fr; gap: 20px;
+    text-align: center; padding: 30px 24px;
+  }
+  .person-lead p:not(.person-role) { text-align: left; }
 }
 @media (max-width: 560px) {
   .message { padding: 24px 20px; }
   .person-photo { width: 124px; height: 124px; }
   .person-initials { font-size: 2.2rem; }
+  .person-lead { padding: 26px 20px; }
+}
+@media (max-width: 520px) {
+  .people-row { grid-template-columns: minmax(0, 1fr); }
 }
 
 body.lang-ne .person-name, body.lang-ne .message-sign { font-family: var(--deva); }
