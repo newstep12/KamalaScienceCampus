@@ -619,15 +619,12 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
 .person-lead .person-name { font-size: 1.45rem; margin-bottom: 6px; }
 .person-lead .person-role { margin-bottom: 13px; }
 
-@media (max-width: 900px) {
-  .message { grid-template-columns: 1fr; gap: 26px; padding: 30px; }
-  .person-bio { text-align: center; }
-}
 @media (max-width: 1000px) {
   .people-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-@media (max-width: 520px) {
-  .people-row { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 900px) {
+  .message { grid-template-columns: 1fr; gap: 26px; padding: 30px; }
+  .person-bio { text-align: center; }
 }
 @media (max-width: 760px) {
   .person-lead {
@@ -641,6 +638,9 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
   .person-photo { width: 124px; height: 124px; }
   .person-initials { font-size: 2.2rem; }
   .person-lead { padding: 26px 20px; }
+}
+@media (max-width: 520px) {
+  .people-row { grid-template-columns: minmax(0, 1fr); }
 }
 
 body.lang-ne .person-name, body.lang-ne .message-sign { font-family: var(--deva); }
