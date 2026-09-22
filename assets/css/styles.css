@@ -602,22 +602,19 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
 .person-card { text-align: center; }
 .person-card p:not(.person-role) { text-align: left; }
 
-/* The Campus Chief heads the faculty from a card of his own, portrait beside
-   the bio. It reads as the senior entry, and it lifts him out of the grid so
-   the teachers below fill one even row instead of leaving an orphan card. */
+/* The Campus Chief heads the faculty from a card of his own, centred above
+   the teaching row. It reads as the senior entry, and it lifts him out of the
+   grid so the teachers below fill one even row with no orphan card. It takes
+   .person-card's centring and adds the featured treatment on top. */
 .person-lead {
-  display: grid; gap: 34px;
-  grid-template-columns: minmax(0, 150px) minmax(0, 1fr);
-  align-items: center;
-  text-align: left;
-  padding: 32px 38px;
-  margin-bottom: 30px;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 36px 40px;
   border-top: 3px solid var(--gold);
-  background: linear-gradient(112deg, #fff 0%, #fff 44%, var(--bg-tint) 100%);
+  background: linear-gradient(168deg, #fff 0%, #fff 38%, var(--bg-tint) 100%);
 }
-.person-lead .person-photo { margin-bottom: 0; }
 .person-lead .person-name { font-size: 1.45rem; margin-bottom: 6px; }
-.person-lead .person-role { margin-bottom: 13px; }
+.person-lead .person-role { margin-bottom: 15px; }
 
 @media (max-width: 1000px) {
   .people-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -626,18 +623,11 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
   .message { grid-template-columns: 1fr; gap: 26px; padding: 30px; }
   .person-bio { text-align: center; }
 }
-@media (max-width: 760px) {
-  .person-lead {
-    grid-template-columns: 1fr; gap: 20px;
-    text-align: center; padding: 30px 24px;
-  }
-  .person-lead p:not(.person-role) { text-align: left; }
-}
 @media (max-width: 560px) {
   .message { padding: 24px 20px; }
   .person-photo { width: 124px; height: 124px; }
   .person-initials { font-size: 2.2rem; }
-  .person-lead { padding: 26px 20px; }
+  .person-lead { padding: 28px 22px; }
 }
 @media (max-width: 520px) {
   .people-row { grid-template-columns: minmax(0, 1fr); }
