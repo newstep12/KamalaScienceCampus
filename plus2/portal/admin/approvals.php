@@ -66,6 +66,7 @@ layout_head(['title' => t('pending_approvals'), 'active' => 'approvals', 'wide' 
           <th><?= te('full_name') ?></th>
           <th><?= te('email') ?></th>
           <th><?= te('class') ?></th>
+          <th><?= te('study_group') ?></th>
           <th><?= te('roll_no') ?></th>
           <th><?= te('guardian_name') ?></th>
           <th><?= te('guardian_phone') ?></th>
@@ -95,6 +96,7 @@ layout_head(['title' => t('pending_approvals'), 'active' => 'approvals', 'wide' 
             </td>
             <td><?= e($p['email']) ?></td>
             <td class="nowrap"><?= e($p['class_level'] ? class_with_section((int) $p['class_level'], $p['section'] ?? null) : '—') ?></td>
+            <td class="nowrap"><?= e(study_group_label($p['study_group'] ?? null) ?: '—') ?></td>
             <td class="nowrap"><?= e(($p['roll_no'] ?? '') ?: '—') ?></td>
             <td><?= e(($p['guardian_name'] ?? '') ?: '—') ?></td>
             <td class="nowrap"><?= e(($p['guardian_phone'] ?? '') ?: '—') ?></td>

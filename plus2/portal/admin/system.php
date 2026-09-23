@@ -54,10 +54,13 @@ function apply_schema(): array
  */
 function column_migrations(): array
 {
-    // Nothing yet: every column this portal uses is in sql/schema.sql from
-    // the start. A column added in a later version goes here as an
-    // ALTER TABLE, so an existing install picks it up from this button.
-    return [];
+    // Columns added after the first version. Each is safe to run again: a
+    // column that already exists raises "Duplicate column", which the caller
+    // catches and logs.
+    return [
+        // Biology or Computer Science, printed on the card.
+        'study group' => 'ALTER TABLE users ADD COLUMN study_group VARCHAR(20) NULL AFTER roll_no',
+    ];
 }
 
 $result = null;
@@ -102,6 +105,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_setting('id_card_chief_name',    trim((string) ($_POST['id_card_chief_name'] ?? '')) ?: null);
             set_setting('id_card_chief_name_ne', trim((string) ($_POST['id_card_chief_name_ne'] ?? '')) ?: null);
             set_setting('id_card_chief_title',   in_array($chiefTitle, designations(), true) ? $chiefTitle : 'principal');
+            $coordTitle = (string) ($_POST['id_card_coord_title'] ?? 'coordinator');
+            set_setting('id_card_coord_name',    trim((string) ($_POST['id_card_coord_name'] ?? '')) ?: null);
+            set_setting('id_card_coord_name_ne', trim((string) ($_POST['id_card_coord_name_ne'] ?? '')) ?: null);
+            set_setting('id_card_coord_title',   in_array($coordTitle, designations(), true) ? $coordTitle : 'coordinator');
             set_setting('id_card_valid_until',   parse_date((string) ($_POST['id_card_valid_until'] ?? '')));
             set_setting('id_card_session',       mb_substr(trim((string) ($_POST['id_card_session'] ?? '')), 0, 40) ?: null);
             log_activity((int) $admin['id'], 'save_idcard');
@@ -122,6 +129,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 set_setting('school_phone',       $line('school_phone', 40));
                 set_setting('school_email',       $email);
                 set_setting('school_website',     $line('school_website', 120));
+                // Only a web address becomes a QR code; anything else is
+                // dropped rather than printed as a code that opens nothing.
+                $map = $line('school_map_url', 500);
+                set_setting('school_map_url', $map !== null && preg_match('#^https?://#i', $map) ? $map : null);
                 log_activity((int) $admin['id'], 'save_school');
                 flash('ok', t('school_saved'));
             }
@@ -276,18 +287,20 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
   </div>
 
   <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--line);">
-    <h3 style="margin:0 0 6px;font-size:1rem;"><?= te('signature') ?></h3>
-    <?php $cardSig = signature_for_use('id_card'); ?>
-    <?php if ($cardSig): ?>
-      <div class="p-signature-preview">
-        <img src="<?= e(signature_url($cardSig)) ?>" alt="<?= e($cardSig['label']) ?>">
-      </div>
-      <p style="color:var(--ink-soft);font-size:.94rem;">
-        <?= te('idcard_signature_now', $cardSig['label'], t('sig_scope_' . signature_scope($cardSig['release_scope']))) ?>
-      </p>
-    <?php else: ?>
-      <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('idcard_signature_none') ?></p>
-    <?php endif; ?>
+    <?php foreach (['id_card_coordinator' => 'coord_signature_title', 'id_card' => 'signature'] as $use => $heading): ?>
+      <h3 style="margin:14px 0 6px;font-size:1rem;"><?= te($heading) ?></h3>
+      <?php $cardSig = signature_for_use($use); ?>
+      <?php if ($cardSig): ?>
+        <div class="p-signature-preview">
+          <img src="<?= e(signature_url($cardSig)) ?>" alt="<?= e($cardSig['label']) ?>">
+        </div>
+        <p style="color:var(--ink-soft);font-size:.94rem;">
+          <?= te('idcard_signature_now', $cardSig['label'], t('sig_scope_' . signature_scope($cardSig['release_scope']))) ?>
+        </p>
+      <?php else: ?>
+        <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('idcard_signature_none') ?></p>
+      <?php endif; ?>
+    <?php endforeach; ?>
     <p style="margin-top:12px;">
       <a class="p-btn p-btn-gold p-btn-sm" href="<?= e(portal_url('/admin/signatures.php')) ?>">
         <?= te('idcard_signature_manage') ?>
@@ -301,12 +314,12 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
     <div class="p-field-row">
       <div class="p-field">
         <label for="chief_name"><?= te('chief_name') ?></label>
-        <input type="text" id="chief_name" name="id_card_chief_name" value="<?= e(setting('id_card_chief_name')) ?>">
+        <input type="text" id="chief_name" name="id_card_chief_name" value="<?= e($design['chief_name']) ?>">
       </div>
       <div class="p-field">
         <label for="chief_name_ne"><?= te('chief_name_ne') ?> <span class="hint"><?= te('optional') ?></span></label>
         <input type="text" id="chief_name_ne" name="id_card_chief_name_ne" lang="ne"
-               value="<?= e(setting('id_card_chief_name_ne')) ?>">
+               value="<?= e($design['chief_name_ne']) ?>">
       </div>
     </div>
     <div class="p-field-row">
@@ -324,6 +337,24 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
         <label for="valid_until"><?= te('id_card_valid') ?> <span class="hint"><?= te('valid_until_hint') ?></span></label>
         <input type="date" id="valid_until" name="id_card_valid_until" value="<?= e(setting('id_card_valid_until')) ?>">
       </div>
+    </div>
+    <div class="p-field-row">
+      <div class="p-field">
+        <label for="coord_name"><?= te('coord_name') ?></label>
+        <input type="text" id="coord_name" name="id_card_coord_name" value="<?= e($design['coord_name']) ?>">
+      </div>
+      <div class="p-field">
+        <label for="coord_name_ne"><?= te('chief_name_ne') ?> <span class="hint"><?= te('optional') ?></span></label>
+        <input type="text" id="coord_name_ne" name="id_card_coord_name_ne" lang="ne" value="<?= e($design['coord_name_ne']) ?>">
+      </div>
+    </div>
+    <div class="p-field" style="max-width:420px;">
+      <label for="coord_title"><?= te('coord_title') ?></label>
+      <select id="coord_title" name="id_card_coord_title">
+        <?php foreach (designations() as $d): ?>
+          <option value="<?= e($d) ?>" <?= $design['coord_title'] === $d ? 'selected' : '' ?>><?= e(designation_label($d)) ?></option>
+        <?php endforeach; ?>
+      </select>
     </div>
     <div class="p-field" style="max-width:320px;">
       <label for="session"><?= te('id_card_session') ?> <span class="hint"><?= te('session_hint') ?></span></label>
@@ -368,6 +399,12 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
       <label for="school_website"><?= te('school_website') ?></label>
       <input type="text" id="school_website" name="school_website" maxlength="120"
              value="<?= e(setting('school_website')) ?>" placeholder="kamalasciencecampus.edu.np/plus2">
+    </div>
+    <div class="p-field">
+      <label for="school_map_url"><?= te('school_map_url') ?></label>
+      <input type="url" id="school_map_url" name="school_map_url" maxlength="500"
+             value="<?= e(setting('school_map_url')) ?>" placeholder="<?= e(SCHOOL_MAP_URL) ?>">
+      <span class="hint"><?= te('school_map_hint') ?></span>
     </div>
     <p class="hint"><?= te('school_hint') ?></p>
     <div class="p-form-actions">
@@ -445,6 +482,7 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
     <dl class="p-stat"><dt><?= te('photo') ?></dt><dd><?= e(localize_digits((string) $counts['photos'])) ?></dd></dl>
   </div>
 </section>
+<?php id_card_scripts(); ?>
 <script>
 // The preview answers the picker straight away: the card reads its colourway
 // and its orientation off two attributes, so nothing has to be re-rendered.
@@ -456,7 +494,7 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
   form.addEventListener('change', function () {
     var data = new FormData(form);
     sheet.querySelectorAll('.idc').forEach(function (card) {
-      card.setAttribute('data-theme', data.get('id_card_theme') || 'navy');
+      card.setAttribute('data-theme', data.get('id_card_theme') || 'school');
       card.setAttribute('data-orientation', data.get('id_card_orientation') || 'portrait');
     });
     sheet.setAttribute('data-sides', data.get('id_card_sides') || 'both');

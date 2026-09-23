@@ -904,7 +904,7 @@ kept apart from Kamala Science Campus in everything that matters:
 | Sign-in cookie | `kscportal`, path `/` | `sksportal`, path `/plus2/portal/` |
 | Uploads | `portal/uploads/` | `plus2/portal/uploads/` |
 | ID card name | Kamala Science Campus | Shree Kamala Secondary School |
-| ID card signatory | Campus Chief | **Principal** |
+| ID card signatories | Campus Chief | **+2 Coordinator and Principal** |
 | ID card number | `KSC-S-0042` | `SKSS-S-0042` |
 
 A campus account cannot sign in to the school portal and a school account
@@ -926,21 +926,48 @@ to either never reaches the other. The one change to the campus site is a
 
 ### What a student registers with
 
-Name (English, and Nepali if they want), email, **class (11 or 12)**, section,
-**roll number** (if known), **father's / guardian's name and phone number**,
-date of birth, address, photograph and password. After approval they can edit
-all of these from **My portfolio** except the class, which the office sets.
+Name (English, and Nepali if they want), email, **class (11 or 12)**,
+**group (Biology or Computer Science)**, section, **roll number** (if known),
+**father's / guardian's name and phone number**, date of birth, address,
+photograph and password. After approval they can edit all of these from
+**My portfolio** except the class, which the office sets — including their
+group, their card photograph and **their own signature**, which prints on the
+back as the card holder's signature (the paper is lifted off a photographed
+signature automatically, as on the campus card).
 
 ### The identity card
 
-Front: school name in both scripts, place, photograph, name in both scripts,
-"+2 Science Student", then **Class · Section, Roll no., Guardian, Guardian's
-phone, Date of birth, Address**, the card number and the **Principal's
-signature** over the Principal's name. Back: issue date, validity, session,
-card number, blood group, conditions, the holder's signature and where to
-return a lost card. The design options (six colourways, portrait/landscape,
-A4 or card printer) work exactly as the campus card's — see *Identity cards*
-above.
+Front: the school's emblem and name in both scripts, place, the band
+"IDENTITY CARD · SKSS-S-0002", photograph, name in both scripts, the group
+("+2 Science · Biology Group"), then **Class · Section, Roll no., Guardian,
+Guardian's phone, Date of birth, Address**, and at the foot **two
+signatures**: the **+2 Coordinator's** (Mr. Bharat Malla) on the left and the
+**Principal's** (Mr. Kamlesh Chaudhary) on the right, each over its name and
+title. The card number moved up into the band so the front did not have to
+grow to fit the second signature.
+
+Back: issue date, validity, session, card number, blood group, conditions,
+the holder's own signature, where to return a lost card, and a **QR code of
+the school's location** — a phone camera opens it in Google Maps. It encodes
+the link the school gave (`https://share.google/ZFv9eShytG6Z9kkJx`), which
+the office can change under **System → School details on the card**. The
+code is drawn in the browser by `plus2/assets/js/qrcode.js` (Kazuhiko Arase,
+MIT licence), kept in the repository rather than loaded from a CDN.
+
+**Colourways:** eight, set school-wide under **System → Identity cards**.
+Two are the school's own, taken from its signboard and emblem — **School
+blue & yellow** (the default) and **Blue & saffron** — alongside navy & gold,
+teal & cream, crimson & gold, forest & gold, slate & silver, and ink on white
+(for a home printer).
+
+**Portrait or landscape:** the office's choice under System is the default,
+and the card page itself also offers **Portrait / Landscape** for each print
+run, beside the choice of faces and printer (`?orient=` in the address).
+
+Every face was checked against the fullest card the design takes — a
+two-line name, a two-line address, the longer Computer Science group line, in
+English and Nepali, portrait and landscape — with nothing clipped, and the
+printed QR code was decoded back to the school's link in all four.
 
 ## Filling in the content
 
@@ -948,19 +975,31 @@ Search `src/plus2/` for `[ add` and `TODO`. Everything the school must supply
 is marked; nothing was invented:
 
 - the programme introduction, subjects, seats and medium — `src/plus2/pages/index.html`
-- the **Principal's message** and the **Coordinator's message** — `src/plus2/pages/messages.html`
+- the wording of the **Principal's message** (Mr. Kamlesh Chaudhary) and the
+  **Coordinator's message** (Mr. Bharat Malla) — `src/plus2/pages/messages.html`
+  (their names are in; Mr. Malla's photo is the campus's own)
+- the subjects of each group — `src/plus2/pages/index.html`
 - the **teachers** — `src/plus2/pages/teachers.html` (copy a card per teacher)
 - the school's address, phone and email — the footer and the *At a glance* panel
 
 Photos: save square photos to `plus2/assets/img/people/<slug>.jpg`
-(`principal`, `coordinator`, `teacher-1`, … — the `{{PHOTO:slug:XY}}`
-markers) and run `python3 build.py`.
+(`kamlesh-chaudhary`, `teacher-1`, … — the `{{PHOTO:slug:XY}}` markers) and
+run `python3 build.py`.
 
-**Logo:** `plus2/assets/img/logo-192.png` is a **placeholder** crest drawn
-for this ("श्री कमला मा.वि. · +2 SCIENCE", source in
-`src/plus2-logo-placeholder.svg`). Replace it with the school's own seal as a
-192×192 PNG with a transparent background; it is used on the pages, the
-portal and every identity card. It is deliberately not the campus seal.
+**Hero photo:** the +2 home page opens on the school building,
+`plus2/assets/img/school-building.jpg`, under a dark gradient so the heading
+stays readable (`plus2/assets/css/plus2.css`, loaded on the +2 pages only).
+
+**Logo:** `plus2/assets/img/logo-192.png` (and `logo-512.png`) is a **redraw**
+of the emblem painted on the school's signboard — the white ring lettered
+*Shree Kamala Secondary School · Dhungrebas, Sindhuli*, the saffron disc, the
+six-pointed star and the open book. The only copy to hand was about 100
+pixels across in a photograph of the sign, too small to print from, so it was
+redrawn as a vector: `src/plus2-logo.svg`. **Check it against the school's
+own artwork**, and if the school has the original file, replace both PNGs
+with it (transparent background). To re-render after editing the SVG, open it
+in a browser at 800×800 and save a screenshot with a transparent background,
+then scale it to 192 and 512.
 
 ## Test it locally first
 
@@ -1002,11 +1041,16 @@ Nothing here is on the live site until this branch is merged into `main`
 3. Delete `plus2/portal/install.php` in hPanel's File Manager. (It refuses to
    run again once set up, but deleting it is tidier.)
 4. Sign in at `/plus2/portal/` and, as administrator:
-   - **Signatures** — upload the **Principal's** signature (a clean scan on
-     white, or a transparent PNG; a PNG is stored exactly as uploaded), point
-     *Identity cards* at it, and choose how far to release it.
-   - **System → Identity cards** — the Principal's name as printed under the
-     signature, the valid-until date and the session (e.g. 2082/83).
+   - **Signatures** — upload **two** signatures: the Principal's (title
+     *Principal*) and the Coordinator's (title *+2 Coordinator*) — each a
+     clean scan on white, or a transparent PNG (a PNG is stored exactly as
+     uploaded). Point *Identity cards — Principal's signature* and *Identity
+     cards — Coordinator's signature* at them, then set each one's release to
+     **Everyone signed in** so they print on cards students print themselves
+     (*Administrators only* keeps them off those, for the office to sign).
+   - **System → Identity cards** — the colourway and orientation, the names
+     printed under the two signatures (already *Kamlesh Chaudhary* and *Bharat
+     Malla*), the valid-until date and the session (e.g. 2082/83).
    - **System → School details on the card** — the place under the school
      name, the approval line, and the phone and email printed on the back.
      Left empty, the phone and email lines are simply left off.

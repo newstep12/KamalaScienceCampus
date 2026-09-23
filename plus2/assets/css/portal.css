@@ -1254,3 +1254,53 @@ body.lang-ne .p-creds dt { text-transform: none; letter-spacing: 0; font-size: .
   padding: 7px 12px; user-select: all;
 }
 .p-creds .hint { margin: 14px 0 0; }
+
+/* ---- Shree Kamala Secondary School: two signatures, card number in the band ----
+   The front's foot holds the +2 Coordinator's signature and the Principal's
+   side by side; the card number moves up into the band so the front is no
+   taller than it was with one signature. */
+.idc-band { letter-spacing: .14em; }
+.idc-band-no {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .03em; text-transform: none; white-space: nowrap;
+}
+body.lang-ne .idc-band-no { font-size: .92em; }
+.idc-foot-two { justify-content: space-between; align-items: flex-end; gap: .8em; }
+.idc-foot-two .idc-sig { flex: 1 1 0; min-width: 0; }
+.idc-foot-two .idc-sig-rule { width: 100%; max-width: 9em; }
+.idc-foot-two .idc-sig-img { max-width: 8.5em; }
+.idc-foot-two .idc-sig-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+/* ---- The school's own colourways ----------------------------------------
+   Royal blue with sunflower yellow — the signboard's colours — and the same
+   blue with the saffron of the emblem. Dark text on both bands: white on
+   saffron or yellow falls short of legible at this size. */
+.idc[data-theme="school"] {
+  --idc-head-bg: #1d3b8f; --idc-head-sub: #e7ecf8; --idc-head-dim: #b3c2e6;
+  --idc-band-bg: #f2c230; --idc-band-fg: #2a2000;
+  --idc-accent: #1d3b8f;  --idc-strip: #eef2fb; --idc-ring: #c3cde8;
+}
+.idc[data-theme="saffron"] {
+  --idc-head-bg: #1d3b8f; --idc-head-sub: #e7ecf8; --idc-head-dim: #b3c2e6;
+  --idc-band-bg: #ec6b1c; --idc-band-fg: #1f0c00;
+  --idc-accent: #b44c0c;  --idc-strip: #fdf1e8; --idc-ring: #f3c7a8;
+}
+
+/* ---- The back's foot: where to return the card, and the school's location
+   as a QR code beside it. The code is drawn in the browser into .idc-qr; a
+   white quiet zone round it is what lets a phone read it off a coloured
+   strip. */
+.idc-back-foot { flex-direction: row; align-items: center; gap: .7em; }
+.idc-return { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.idc-qr-wrap { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; }
+.idc-qr {
+  display: block; width: 3.9em; height: 3.9em; padding: .22em;
+  background: #fff; border: 1px solid var(--idc-rule); border-radius: .2em;
+}
+.idc-qr svg { display: block; width: 100%; height: 100%; }
+.idc-qr-label {
+  margin-top: .15em; font-size: .52em; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-soft); white-space: nowrap;
+}
+body.lang-ne .idc-qr-label { text-transform: none; letter-spacing: 0; font-size: .6em; }
+.idc-back[data-orientation="landscape"] .idc-qr { width: 3.4em; height: 3.4em; }

@@ -41,6 +41,10 @@ $card    = $ctx['card'];
 $missing = id_card_missing($holder, $ctx['holder_names']);
 $sides   = id_card_sides($_GET['sides'] ?? $card['sides']);
 $target  = in_array($_GET['print'] ?? '', ['sheet', 'card'], true) ? $_GET['print'] : 'sheet';
+// Portrait or landscape for this print run. The office's choice under System
+// is the default; whoever is printing can turn the card for their printer or
+// their lanyard without changing it for anybody else.
+$ctx['orientation'] = id_card_orientation($_GET['orient'] ?? $card['orientation']);
 
 layout_head([
     'title'  => $own ? t('id_card_title') : t('id_card_for', $holder['full_name']),
@@ -82,21 +86,28 @@ if ($ctx['holder_names']['deva_derived']) {
   </div>
 <?php endforeach; ?>
 
-<?php if (!$ctx['signature']): ?>
+<?php
+/* One note per signature the card is printing without: the Principal's and
+   the Coordinator's are released separately, so either can be missing. */
+foreach (['id_card' => 'signature', 'id_card_coordinator' => 'coord_signature'] as $use => $key):
+    if (!empty($ctx[$key])) {
+        continue;
+    }
+    $who = t($use === 'id_card' ? 'desig_principal' : 'desig_coordinator');
+?>
   <div class="p-flash p-flash-info p-noprint">
-    <?php if (signature_withheld('id_card', $viewer)): ?>
+    <?php if (signature_withheld($use, $viewer)): ?>
       <?php /* There is a signature; the office simply does not release it this
-               far. Say so, rather than letting the holder think one is missing
-               and ask the office to upload what it has already uploaded. */ ?>
-      <?= te('id_card_signature_held') ?>
+               far. Say so, rather than letting the holder think one is missing. */ ?>
+      <?= e(t('id_card_signature_held_who', $who)) ?>
     <?php else: ?>
-      <?= te('id_card_no_signature') ?>
+      <?= e(t('id_card_no_signature_who', $who)) ?>
       <?php if ($viewer['role'] === ROLE_ADMIN): ?>
         <a href="<?= e(portal_url('/admin/signatures.php')) ?>"><?= te('signatures_title') ?></a>
       <?php endif; ?>
     <?php endif; ?>
   </div>
-<?php endif; ?>
+<?php endforeach; ?>
 
 <form class="idc-controls p-noprint" method="get">
   <?php if (!$own): ?>
@@ -110,6 +121,18 @@ if ($ctx['holder_names']['deva_derived']) {
         <label class="idc-choice">
           <input type="radio" name="sides" value="<?= e($v) ?>" <?= $sides === $v ? 'checked' : '' ?>>
           <span><?= te($key) ?></span>
+        </label>
+      <?php endforeach; ?>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend><?= te('idcard_orientation') ?></legend>
+    <div class="idc-choices">
+      <?php foreach (['portrait', 'landscape'] as $o): ?>
+        <label class="idc-choice">
+          <input type="radio" name="orient" value="<?= e($o) ?>" <?= $ctx['orientation'] === $o ? 'checked' : '' ?>>
+          <span><?= te('orientation_' . $o) ?></span>
         </label>
       <?php endforeach; ?>
     </div>
@@ -191,8 +214,12 @@ $pageRule = $target === 'card'
     var data = new FormData(form);
     var sides = data.get('sides') || 'both';
     var target = data.get('print') || 'sheet';
-    var orientation = sheet.querySelector('.idc').getAttribute('data-orientation') || 'portrait';
+    var orientation = data.get('orient') || 'portrait';
 
+    // Turning the card is two attributes: every face reads its layout off
+    // data-orientation, and the sheet sizes the card from its own.
+    sheet.setAttribute('data-orientation', orientation);
+    sheet.querySelectorAll('.idc').forEach(function (c) { c.setAttribute('data-orientation', orientation); });
     sheet.setAttribute('data-sides', sides);
     sheet.setAttribute('data-print-target', target);
     rule.textContent = target === 'card' ? PAGES['card-' + orientation] : PAGES.sheet;
@@ -203,6 +230,7 @@ $pageRule = $target === 'card'
       var url = new URL(window.location.href);
       url.searchParams.set('sides', sides);
       url.searchParams.set('print', target);
+      url.searchParams.set('orient', orientation);
       window.history.replaceState({}, '', url);
     }
   }
@@ -215,4 +243,5 @@ $pageRule = $target === 'card'
   });
 })();
 </script>
+<?php id_card_scripts(); ?>
 <?php layout_foot(); ?>

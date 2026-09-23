@@ -32,6 +32,30 @@ function id_card_row(string $label, ?string $value): void
 }
 
 /**
+ * One signature over its rule, with the signer's name and title beneath. An
+ * image the office has not released prints as an empty space above the rule,
+ * to be signed by hand; the name and title print either way, so the card
+ * reads the same whether or not the signature is on it.
+ */
+function id_card_signature(?string $img, string $name, string $title): void
+{
+    ?>
+    <div class="idc-sig">
+      <?php if ($img): ?>
+        <img class="idc-sig-img" src="<?= e($img) ?>" alt="">
+      <?php else: ?>
+        <span class="idc-sig-img"></span>
+      <?php endif; ?>
+      <span class="idc-sig-rule"></span>
+      <?php if ($name !== ''): ?>
+        <span class="idc-sig-name"><?= e($name) ?></span>
+      <?php endif; ?>
+      <span class="idc-sig-title"><?= e($title) ?></span>
+    </div>
+    <?php
+}
+
+/**
  * One face of the card. $side is 'front' or 'back'; $ctx comes from
  * id_card_context(), optionally with 'theme' and 'orientation' overridden for
  * a preview. $holderNames is id_card_names($holder) when the caller already
@@ -56,7 +80,13 @@ function id_card_face(array $holder, array $ctx, string $side = 'front', ?array 
         </div>
       </header>
 
-      <div class="idc-band"><?= te('id_card_heading') ?></div>
+      <?php /* The card number rides in the band, beside the words it belongs
+               to, which frees the foot for two signatures without the front
+               growing any taller — it is already full. */ ?>
+      <div class="idc-band">
+        <?= te('id_card_heading') ?>
+        <span class="idc-band-no">· <?= e(id_card_number($holder)) ?></span>
+      </div>
 
       <div class="idc-body">
         <div class="idc-photo<?= $ctx['photo'] ? '' : ' empty' ?>">
@@ -155,23 +185,11 @@ function id_card_face(array $holder, array $ctx, string $side = 'front', ?array 
         </div>
       </div>
 
-      <footer class="idc-foot">
-        <div class="idc-cardno">
-          <span class="idc-cardno-label"><?= te('id_card_no') ?></span>
-          <span class="idc-cardno-value"><?= e(id_card_number($holder)) ?></span>
-        </div>
-        <div class="idc-sig">
-          <?php if ($ctx['signature']): ?>
-            <img class="idc-sig-img" src="<?= e($ctx['signature']) ?>" alt="">
-          <?php else: ?>
-            <span class="idc-sig-img"></span>
-          <?php endif; ?>
-          <span class="idc-sig-rule"></span>
-          <?php if ($ctx['chief'] !== ''): ?>
-            <span class="idc-sig-name"><?= e($ctx['chief']) ?></span>
-          <?php endif; ?>
-          <span class="idc-sig-title"><?= e($ctx['chief_title']) ?></span>
-        </div>
+      <?php /* Two signatures: the +2 Coordinator's on the left and the
+               Principal's on the right, where the head of the school signs. */ ?>
+      <footer class="idc-foot idc-foot-two">
+        <?php id_card_signature($ctx['coord_signature'] ?? null, (string) ($ctx['coord'] ?? ''), (string) ($ctx['coord_title'] ?? '')); ?>
+        <?php id_card_signature($ctx['signature'], (string) $ctx['chief'], (string) $ctx['chief_title']); ?>
       </footer>
 
     <?php else: ?>
@@ -239,13 +257,24 @@ function id_card_face(array $holder, array $ctx, string $side = 'front', ?array 
             $ctx['school']['email'] ?: null,
         ]);
         ?>
-        <strong><?= te('id_card_return') ?></strong>
-        <span><?= e($names['en']) ?><?= $ctx['school']['place'] !== '' ? ' · ' . e($ctx['school']['place']) : '' ?></span>
-        <?php if ($contact): ?>
-          <span><?= e(implode(' · ', $contact)) ?></span>
-        <?php endif; ?>
-        <?php if ($ctx['school']['website']): ?>
-          <span><?= e($ctx['school']['website']) ?></span>
+        <div class="idc-return">
+          <strong><?= te('id_card_return') ?></strong>
+          <span><?= e($names['en']) ?><?= $ctx['school']['place'] !== '' ? ' · ' . e($ctx['school']['place']) : '' ?></span>
+          <?php if ($contact): ?>
+            <span><?= e(implode(' · ', $contact)) ?></span>
+          <?php endif; ?>
+          <?php if ($ctx['school']['website']): ?>
+            <span><?= e($ctx['school']['website']) ?></span>
+          <?php endif; ?>
+        </div>
+        <?php /* The school's location as a QR code, drawn by
+                 assets/js/idcard-qr.js. A phone camera opens it in maps. */ ?>
+        <?php if (!empty($ctx['school']['map_url'])): ?>
+          <div class="idc-qr-wrap">
+            <span class="idc-qr" data-qr="<?= e($ctx['school']['map_url']) ?>" role="img"
+                  aria-label="<?= te('id_card_map') ?>"></span>
+            <span class="idc-qr-label"><?= te('id_card_map') ?></span>
+          </div>
         <?php endif; ?>
       </footer>
     <?php endif; ?>

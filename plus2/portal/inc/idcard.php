@@ -41,6 +41,28 @@ function designation_label(?string $key): string
 }
 
 /**
+ * The two groups a +2 Science student studies in. The key is what
+ * users.study_group stores; the label comes from the language file, so the
+ * card prints it in the card's language.
+ */
+function study_groups(): array
+{
+    return ['biology', 'computer'];
+}
+
+/** One of the two, or null for anything else — never a value nobody chose. */
+function study_group(?string $value): ?string
+{
+    $value = trim((string) $value);
+    return in_array($value, study_groups(), true) ? $value : null;
+}
+
+function study_group_label(?string $key): string
+{
+    return study_group($key) !== null ? t('group_' . $key) : '';
+}
+
+/**
  * The eight blood groups, stored and printed exactly as they are written here.
  * The card carries one because it is the detail an ambulance crew reads off it,
  * and the campus office cannot invent it: only the holder knows it, so only the
@@ -149,7 +171,13 @@ function id_card_number(array $u): string
 function id_card_role_line(array $u): string
 {
     if ($u['role'] === ROLE_STUDENT) {
-        return t('role_student_card');
+        // "+2 Science · Biology Group": the group rides on the line that
+        // already says what the holder is, because the front's six rows are
+        // full and this is the one place it reads as a single phrase.
+        $group = study_group($u['study_group'] ?? null);
+        return $group !== null
+            ? t('role_student_group', t('group_' . $group . '_card'))
+            : t('role_student_card');
     }
     return designation_label($u['designation'] ?? null) ?: t('role_' . $u['role']);
 }
@@ -166,6 +194,11 @@ function id_card_role_line(array $u): string
 function id_card_themes(): array
 {
     return [
+        // The school's own colours, off its signboard and its emblem: royal
+        // blue with sunflower yellow, and the same blue with the emblem's
+        // saffron. The first is the default.
+        'school'  => ['#1d3b8f', '#f2c230'],
+        'saffron' => ['#1d3b8f', '#ec6b1c'],
         'navy'    => ['#0b2545', '#d99a2b'],
         'teal'    => ['#0e5f5e', '#efe3c6'],
         'crimson' => ['#7a1f2b', '#d9a13b'],
@@ -177,7 +210,7 @@ function id_card_themes(): array
 
 function id_card_theme(?string $key): string
 {
-    return isset(id_card_themes()[(string) $key]) ? (string) $key : 'navy';
+    return isset(id_card_themes()[(string) $key]) ? (string) $key : 'school';
 }
 
 function id_card_orientation(?string $key): string
@@ -195,9 +228,14 @@ function id_card_sides(?string $key): string
 function id_card_settings(): array
 {
     return [
-        'chief_name'    => setting('id_card_chief_name'),
-        'chief_name_ne' => setting('id_card_chief_name_ne'),
+        // The two people who sign every card. The names the school gave are
+        // the defaults; the office can change either under System.
+        'chief_name'    => setting('id_card_chief_name', 'Kamlesh Chaudhary'),
+        'chief_name_ne' => setting('id_card_chief_name_ne', 'कमलेश चौधरी'),
         'chief_title'   => setting('id_card_chief_title', 'principal'),
+        'coord_name'    => setting('id_card_coord_name', 'Bharat Malla'),
+        'coord_name_ne' => setting('id_card_coord_name_ne', 'भरत मल्ल'),
+        'coord_title'   => setting('id_card_coord_title', 'coordinator'),
         'valid_until'   => setting('id_card_valid_until'),
         'session'       => setting('id_card_session'),
         'theme'         => id_card_theme(setting('id_card_theme')),
@@ -234,6 +272,8 @@ function id_card_context(array $holder, ?array $viewer = null): array
     $viewer = $viewer ?? current_user();
     $sig    = applied_signature('id_card', $viewer);
     $named  = $sig ?: signature_for_use('id_card');   // withheld, but it still names the signer
+    $coordSig   = applied_signature('id_card_coordinator', $viewer);
+    $coordNamed = $coordSig ?: signature_for_use('id_card_coordinator');
 
     return [
         'card'        => $card,
@@ -248,11 +288,28 @@ function id_card_context(array $holder, ?array $viewer = null): array
         'chief_title' => designation_label(
             ($named['owner_title'] ?? '') ?: ($card['chief_title'] ?: 'principal')
         ),
+        // The Coordinator signs beside the Principal, on the same terms: the
+        // image only as far as the office has released it, the name and title
+        // beneath it either way.
+        'coord_signature' => $coordSig ? signature_url($coordSig) : null,
+        'coord'       => $coordNamed ? signature_owner_name($coordNamed) : id_card_coord_name($card),
+        'coord_title' => designation_label(
+            ($coordNamed['owner_title'] ?? '') ?: ($card['coord_title'] ?: 'coordinator')
+        ),
         'holder_names' => id_card_names($holder),
         'names'       => school_names(),
         'school'      => school_details(),
         'issued'      => $holder['approved_at'] ?: $holder['created_at'],
     ];
+}
+
+/** The Coordinator's name in the card's language, or '' if none is set. */
+function id_card_coord_name(array $s): string
+{
+    if (is_nepali() && !empty($s['coord_name_ne'])) {
+        return (string) $s['coord_name_ne'];
+    }
+    return (string) ($s['coord_name'] ?? '');
 }
 
 /** The Principal's name in the card's language, or '' if none is set. */
@@ -354,6 +411,7 @@ function id_card_missing(array $u, ?array $names = null): array
     if (empty($u['address']))       { $missing[] = t('address'); }
     if ($u['role'] === ROLE_STUDENT) {
         if (empty($u['class_level']))    { $missing[] = t('class'); }
+        if (study_group($u['study_group'] ?? null) === null) { $missing[] = t('study_group'); }
         if (empty($u['roll_no']))        { $missing[] = t('roll_no'); }
         if (empty($u['guardian_name']))  { $missing[] = t('guardian_name'); }
         if (empty($u['guardian_phone'])) { $missing[] = t('guardian_phone'); }
@@ -392,7 +450,25 @@ function school_details(): array
         'phone'       => setting('school_phone'),
         'email'       => setting('school_email'),
         'website'     => setting('school_website', 'kamalasciencecampus.edu.np/plus2'),
+        // Where the school is, as a link a phone opens in its maps app. It is
+        // printed on the back of every card as a QR code.
+        'map_url'     => setting('school_map_url', SCHOOL_MAP_URL),
     ];
+}
+
+/** The school's location on Google Maps, as the school gave it. */
+const SCHOOL_MAP_URL = 'https://share.google/ZFv9eShytG6Z9kkJx';
+
+/**
+ * The script tags that draw the QR code on a card's back. Called once by a
+ * page that shows a card, just before layout_foot().
+ */
+function id_card_scripts(): void
+{
+    foreach (['qrcode.js', 'idcard-qr.js'] as $js) {
+        $v = (string) (@filemtime(__DIR__ . '/../../assets/js/' . $js) ?: 0);
+        echo '<script src="', e(portal_url('/../assets/js/' . $js . '?v=' . $v)), '"></script>', "\n";
+    }
 }
 
 /**

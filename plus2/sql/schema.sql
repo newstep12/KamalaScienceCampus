@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS users (
   class_level     TINYINT UNSIGNED NULL,
   section         VARCHAR(10)   NULL,            -- A, B … where the school runs more than one
   roll_no         VARCHAR(20)   NULL,            -- the school's own roll number
+  -- The +2 Science group: 'biology' or 'computer' (Computer Science). Chosen
+  -- by the student at registration, changeable from their portfolio.
+  study_group     VARCHAR(20)   NULL,
   neb_reg_no      VARCHAR(40)   NULL,            -- NEB registration number, once issued
   guardian_name   VARCHAR(120)  NULL,            -- father's, mother's or guardian's name
   guardian_phone  VARCHAR(30)   NULL,            -- the number to ring about this student

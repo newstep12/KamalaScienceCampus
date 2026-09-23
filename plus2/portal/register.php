@@ -4,6 +4,7 @@ require_once __DIR__ . '/inc/layout.php';
 require_once __DIR__ . '/inc/mail.php';
 require_once __DIR__ . '/inc/uploads.php';
 require_once __DIR__ . '/inc/photos.php';
+require_once __DIR__ . '/inc/idcard.php';
 
 if ($u = current_user()) {
     header('Location: ' . home_for($u));
@@ -14,7 +15,7 @@ $errors = [];
 $done   = false;
 $in = [
     'full_name'     => '', 'full_name_ne'   => '', 'email'   => '',
-    'class_level'   => '', 'section'        => '', 'roll_no' => '',
+    'class_level'   => '', 'section'        => '', 'roll_no' => '', 'study_group' => '',
     'guardian_name' => '', 'guardian_phone' => '', 'phone'   => '',
     'date_of_birth' => '', 'address'        => '',
 ];
@@ -66,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (mb_strlen($in['full_name']) < 3)                      { $errors['full_name'] = t('err_name_short'); }
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 190) { $errors['email'] = t('err_email_bad'); }
     if (!in_array($class, class_levels(), true))              { $errors['class_level'] = t('err_class_bad'); }
+    if (study_group($in['study_group']) === null)             { $errors['study_group'] = t('err_group_bad'); }
     if (mb_strlen($in['guardian_name']) < 3)                  { $errors['guardian_name'] = t('err_guardian_name'); }
     if (!preg_match('/[0-9]{7,}/', preg_replace('/\D+/', '', $in['guardian_phone']) ?? '')) {
         $errors['guardian_phone'] = t('err_guardian_phone');
@@ -104,9 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!$errors) {
         q(
             'INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
-                                class_level, section, roll_no, guardian_name, guardian_phone,
+                                class_level, section, roll_no, study_group, guardian_name, guardian_phone,
                                 phone, date_of_birth, address, avatar_path, avatar_source_path)
-             VALUES (?, ?, ?, ?, \'student\', \'pending\', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+             VALUES (?, ?, ?, ?, \'student\', \'pending\', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $in['full_name'],
                 $in['full_name_ne'] !== '' ? $in['full_name_ne'] : null,
@@ -115,6 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $class,
                 $in['section'] !== '' ? $in['section'] : null,
                 $in['roll_no'] !== '' ? $in['roll_no'] : null,
+                study_group($in['study_group']),
                 $in['guardian_name'],
                 $in['guardian_phone'],
                 $in['phone'] !== '' ? $in['phone'] : null,
@@ -196,15 +199,26 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
       </div>
 
       <div class="p-field-row">
+        <div class="p-field <?= isset($errors['study_group']) ? 'error' : '' ?>">
+          <label for="study_group"><?= te('study_group') ?></label>
+          <select id="study_group" name="study_group" required>
+            <option value=""><?= te('choose_group') ?></option>
+            <?php foreach (study_groups() as $g): ?>
+              <option value="<?= e($g) ?>" <?= $in['study_group'] === $g ? 'selected' : '' ?>><?= e(study_group_label($g)) ?></option>
+            <?php endforeach; ?>
+          </select>
+          <?php if (isset($errors['study_group'])): ?><span class="err"><?= e($errors['study_group']) ?></span><?php endif; ?>
+        </div>
+
         <div class="p-field">
           <label for="roll_no"><?= te('roll_no') ?> <span class="hint"><?= te('if_known') ?></span></label>
           <input type="text" id="roll_no" name="roll_no" value="<?= e($in['roll_no']) ?>" maxlength="20" inputmode="numeric">
         </div>
+      </div>
 
-        <div class="p-field">
-          <label for="phone"><?= te('phone') ?> <span class="hint"><?= te('optional') ?></span></label>
-          <input type="tel" id="phone" name="phone" value="<?= e($in['phone']) ?>" autocomplete="tel">
-        </div>
+      <div class="p-field" style="max-width:50%;">
+        <label for="phone"><?= te('phone') ?> <span class="hint"><?= te('optional') ?></span></label>
+        <input type="tel" id="phone" name="phone" value="<?= e($in['phone']) ?>" autocomplete="tel">
       </div>
 
       <div class="p-field-row">

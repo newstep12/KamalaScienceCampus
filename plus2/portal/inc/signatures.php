@@ -53,8 +53,12 @@ function signature_tables_ready(): bool
     return $ready;
 }
 
-/** The uses a signature can be pointed at. Each is a setting: signature_<use>. */
-const SIGNATURE_USES = ['id_card'];
+/**
+ * The uses a signature can be pointed at. Each is a setting: signature_<use>.
+ * A student's card carries two: the Principal's, and the +2 Coordinator's
+ * beside it.
+ */
+const SIGNATURE_USES = ['id_card', 'id_card_coordinator'];
 
 /** Widest first, so a comparison can read left to right. */
 function signature_scopes(): array

@@ -225,6 +225,10 @@ def build_plus2():
                       lambda m: photo(m.group(1), m.group(2), '', PLUS2['people'], 'assets/img/people/'),
                       html)
         html = html.replace('{{V}}', asset_version())
+        # The +2 section's own stylesheet, versioned on its own, so editing it
+        # never changes a campus page.
+        html = html.replace('{{V2}}', hashlib.sha1(
+            (PLUS2['out'] / 'assets' / 'css' / 'plus2.css').read_bytes()).hexdigest()[:10])
         # Pages live one level down, so the site-wide assets are one up.
         html = html.replace('{{BASE}}', '../')
         (PLUS2['out'] / path.name).write_text(html)

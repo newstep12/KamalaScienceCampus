@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../inc/layout.php';
 require_once __DIR__ . '/../inc/signatures.php';
+require_once __DIR__ . '/../inc/idcard.php';
 
 require_role(ROLE_ADMIN);
 
@@ -16,6 +17,17 @@ foreach (class_levels() as $c) {
     );
 }
 
+// Active students by class and group — the two numbers the office is asked
+// for most. A student who has not chosen a group yet counts under "—".
+$byGroup = [];
+foreach (all(
+    'SELECT class_level, study_group, COUNT(*) AS n FROM users
+      WHERE role = \'student\' AND status = \'active\'
+      GROUP BY class_level, study_group'
+) as $r) {
+    $byGroup[(int) $r['class_level']][(string) ($r['study_group'] ?? '')] = (int) $r['n'];
+}
+
 // Students with something still missing from their card, so the office can
 // chase them before a print run rather than after.
 $incomplete = (int) scalar(
@@ -23,6 +35,7 @@ $incomplete = (int) scalar(
       WHERE role = \'student\' AND status = \'active\'
         AND (avatar_path IS NULL OR roll_no IS NULL OR roll_no = \'\'
              OR guardian_phone IS NULL OR guardian_phone = \'\'
+             OR study_group IS NULL
              OR date_of_birth IS NULL OR address IS NULL OR address = \'\')'
 );
 
@@ -66,6 +79,34 @@ layout_head(['title' => t('admin_home'), 'active' => 'home', 'wide' => true]);
   <dl class="p-stat"><dt><?= te('total_teachers') ?></dt><dd><?= e(localize_digits((string) $teachers)) ?></dd></dl>
   <dl class="p-stat"><dt><?= te('cards_incomplete') ?></dt><dd><?= e(localize_digits((string) $incomplete)) ?></dd></dl>
 </div>
+
+<section class="p-card">
+  <h2><?= te('students_by_group') ?></h2>
+  <div class="p-table-wrap">
+    <table class="p-table" style="border:0;">
+      <thead>
+        <tr>
+          <th><?= te('class') ?></th>
+          <?php foreach (study_groups() as $g): ?><th style="text-align:end;"><?= e(study_group_label($g)) ?></th><?php endforeach; ?>
+          <th style="text-align:end;"><?= te('group_none') ?></th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach (class_levels() as $c): ?>
+          <tr>
+            <th scope="row"><?= e(class_label($c)) ?></th>
+            <?php foreach (study_groups() as $g): ?>
+              <td style="text-align:end;font-weight:600;">
+                <a href="<?= e(portal_url('/admin/users.php?role=student&class=' . $c . '&group=' . $g)) ?>"><?= e(localize_digits((string) ($byGroup[$c][$g] ?? 0))) ?></a>
+              </td>
+            <?php endforeach; ?>
+            <td style="text-align:end;"><?= e(localize_digits((string) ($byGroup[$c][''] ?? 0))) ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</section>
 
 <section class="p-card">
   <h2><?= te('recent_activity') ?></h2>

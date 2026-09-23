@@ -33,11 +33,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // digits whatever keyboard typed them.
         if ($user['role'] === ROLE_STUDENT) {
             q(
-                'UPDATE users SET section = ?, roll_no = ?, guardian_name = ?, guardian_phone = ?
+                'UPDATE users SET section = ?, roll_no = ?, study_group = ?, guardian_name = ?,
+                                  guardian_phone = ?
                   WHERE id = ?',
                 [
                     mb_strtoupper($field('section', 10)) ?: null,
                     ascii_digits($field('roll_no', 20)) ?: null,
+                    // Biology or Computer Science, or what was already there:
+                    // an empty or unknown value never wipes a group out.
+                    study_group($field('study_group', 20)) ?? ($user['study_group'] ?? null),
                     $field('guardian_name', 120) ?: null,
                     ascii_digits($field('guardian_phone', 30)) ?: null,
                     $user['id'],
@@ -278,9 +282,20 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
           </div>
         </div>
 
-        <div class="p-field" style="max-width:260px;">
-          <label for="roll_no"><?= te('roll_no') ?></label>
-          <input type="text" id="roll_no" name="roll_no" maxlength="20" inputmode="numeric" value="<?= e($user['roll_no'] ?? '') ?>">
+        <div class="p-field-row">
+          <div class="p-field">
+            <label for="study_group"><?= te('study_group') ?></label>
+            <select id="study_group" name="study_group">
+              <option value=""><?= te('choose_group') ?></option>
+              <?php foreach (study_groups() as $g): ?>
+                <option value="<?= e($g) ?>" <?= ($user['study_group'] ?? '') === $g ? 'selected' : '' ?>><?= e(study_group_label($g)) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="p-field">
+            <label for="roll_no"><?= te('roll_no') ?></label>
+            <input type="text" id="roll_no" name="roll_no" maxlength="20" inputmode="numeric" value="<?= e($user['roll_no'] ?? '') ?>">
+          </div>
         </div>
 
         <div class="p-field-row">
@@ -484,6 +499,7 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
         <?php if ($user['role'] === ROLE_STUDENT): ?>
         <tr><th scope="row"><?= te('class') ?></th>
             <td><?= e($user['class_level'] ? class_with_section((int) $user['class_level'], $user['section'] ?? null) : '—') ?></td></tr>
+        <tr><th scope="row"><?= te('study_group') ?></th><td><?= e(study_group_label($user['study_group'] ?? null) ?: '—') ?></td></tr>
         <tr><th scope="row"><?= te('roll_no') ?></th><td><?= e(($user['roll_no'] ?? '') ?: '—') ?></td></tr>
         <?php else: ?>
         <tr><th scope="row"><?= te('designation') ?></th>

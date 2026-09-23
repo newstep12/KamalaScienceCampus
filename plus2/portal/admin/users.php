@@ -132,6 +132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             q('UPDATE users SET class_level = ? WHERE id = ?',
               [in_array($class, class_levels(), true) ? $class : null, $id]);
             log_activity((int) $admin['id'], 'set_class', $target['email'], (string) $class);
+        } elseif ($action === 'set_group') {
+            $group = study_group(is_string($_POST['study_group'] ?? null) ? $_POST['study_group'] : null);
+            q('UPDATE users SET study_group = ? WHERE id = ?', [$group, $id]);
+            log_activity((int) $admin['id'], 'set_group', $target['email'], (string) $group);
         } elseif ($action === 'set_roll') {
             $roll = mb_substr(ascii_digits(trim((string) ($_POST['roll_no'] ?? ''))), 0, 20);
             q('UPDATE users SET roll_no = ? WHERE id = ?', [$roll !== '' ? $roll : null, $id]);
@@ -140,19 +144,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('ok', t('user_updated'));
     }
     header('Location: ' . portal_url('/admin/users.php?' . http_build_query(array_filter([
-        'role' => $_GET['role'] ?? null, 'class' => $_GET['class'] ?? null, 'q' => $_GET['q'] ?? null,
+        'role' => $_GET['role'] ?? null, 'class' => $_GET['class'] ?? null,
+        'group' => $_GET['group'] ?? null, 'q' => $_GET['q'] ?? null,
     ]))));
     exit;
 }
 
 $role   = (string) ($_GET['role'] ?? '');
 $class  = (int) ($_GET['class'] ?? 0);
+$group  = study_group(is_string($_GET['group'] ?? null) ? $_GET['group'] : null);
 $search = trim((string) ($_GET['q'] ?? ''));
 
 $sql = 'SELECT * FROM users WHERE 1 = 1';
 $par = [];
 if (in_array($role, ['student', 'teacher', 'admin'], true)) { $sql .= ' AND role = ?';        $par[] = $role; }
 if (in_array($class, class_levels(), true))                 { $sql .= ' AND class_level = ?'; $par[] = $class; }
+if ($group !== null)                                        { $sql .= ' AND study_group = ?'; $par[] = $group; }
 if ($search !== '') {
     $sql .= ' AND (full_name LIKE ? OR full_name_ne LIKE ? OR email LIKE ? OR roll_no LIKE ? OR guardian_name LIKE ?)';
     $like = '%' . $search . '%';
@@ -297,6 +304,15 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
       <?php endforeach; ?>
     </select>
   </div>
+  <div class="p-field" style="margin:0;min-width:170px;">
+    <label for="group"><?= te('study_group') ?></label>
+    <select id="group" name="group">
+      <option value=""><?= te('all_groups') ?></option>
+      <?php foreach (study_groups() as $g): ?>
+        <option value="<?= e($g) ?>" <?= $group === $g ? 'selected' : '' ?>><?= e(study_group_label($g)) ?></option>
+      <?php endforeach; ?>
+    </select>
+  </div>
   <button class="p-btn p-btn-ghost" type="submit"><?= te('search') ?></button>
 </form>
 
@@ -348,6 +364,17 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
                     <option value="0">—</option>
                     <?php foreach (class_levels() as $c): ?>
                       <option value="<?= $c ?>" <?= (int) $u['class_level'] === $c ? 'selected' : '' ?>><?= e(class_label($c)) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </form>
+                <form method="post" style="margin-top:6px;">
+                  <?= csrf_field() ?>
+                  <input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
+                  <input type="hidden" name="action" value="set_group">
+                  <select name="study_group" onchange="this.form.submit()" aria-label="<?= te('study_group') ?>">
+                    <option value="">—</option>
+                    <?php foreach (study_groups() as $g): ?>
+                      <option value="<?= e($g) ?>" <?= ($u['study_group'] ?? '') === $g ? 'selected' : '' ?>><?= e(study_group_label($g)) ?></option>
                     <?php endforeach; ?>
                   </select>
                 </form>
