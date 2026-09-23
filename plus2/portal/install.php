@@ -100,6 +100,13 @@ if (!$locked && !$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!local_db_host($dbHost))                            { $errors[] = 'The database host must be localhost — the database on this server.'; }
     if ($dbName === '' || $dbUser === '')                  { $errors[] = 'Enter the database name and user.'; }
+    // Letters, digits and underscores only — every real name looks like
+    // u849870167_plus2. The name goes into the connection string, where a
+    // second "host=" smuggled in after a semicolon would override the
+    // localhost check above, since PDO takes the last value it reads.
+    elseif (!preg_match('/^[A-Za-z0-9_]{1,64}$/', $dbName) || !preg_match('/^[A-Za-z0-9_]{1,64}$/', $dbUser)) {
+        $errors[] = 'The database name and user may contain only letters, digits and underscores.';
+    }
     if ($adminName === '')                                  { $errors[] = 'Enter the administrator name.'; }
     if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL))    { $errors[] = 'Enter a valid administrator email.'; }
     if (mb_strlen($adminPass) < 10)                         { $errors[] = 'The administrator password must be at least 10 characters.'; }
