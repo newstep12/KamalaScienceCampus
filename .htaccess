@@ -17,6 +17,8 @@
 # and build.py / README.md / .claude are development files.
 RedirectMatch 404 ^/(src|sql|\.claude)(/|$)
 RedirectMatch 404 ^/(build\.py|README\.md)$
+# The +2 Science portal's schema, same reason as /sql above.
+RedirectMatch 404 ^/plus2/sql(/|$)
 
 # Never serve the repository metadata
 RedirectMatch 404 ^/\.git(/|$)

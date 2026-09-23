@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <!-- Shree Kamala Secondary School, Dhungrebas — emblem.
+       A redraw of the emblem painted on the school's signboard (the only copy
+       to hand was about 100 pixels across in a photograph): a white ring
+       carrying the school's name, an orange disc, and a six-pointed star with
+       an open book at its centre. Check it against the school's own artwork
+       and replace plus2/assets/img/logo-192.png with the official file when
+       there is one. Render: see "The +2 Science section" in README.md. -->
+  <defs>
+    <path id="top" d="M 57.2 230.4 A 146 146 0 1 1 342.8 230.4"/>
+    <path id="bottom" d="M 72 206 A 128 128 0 0 0 328 206"/>
+  </defs>
+
+  <!-- ring -->
+  <circle cx="200" cy="200" r="196" fill="#ffffff"/>
+  <circle cx="200" cy="200" r="190" fill="none" stroke="#1d3b8f" stroke-width="7"/>
+  <circle cx="200" cy="200" r="122" fill="none" stroke="#1d3b8f" stroke-width="6"/>
+
+  <text font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700"
+        font-style="italic" fill="#1d3b8f" letter-spacing="0.5">
+    <textPath href="#top" startOffset="50%" text-anchor="middle">Shree Kamala Secondary School</textPath>
+  </text>
+  <text font-family="Georgia, 'Times New Roman', serif" font-size="27" font-weight="700"
+        font-style="italic" fill="#1d3b8f" letter-spacing="0.5" dominant-baseline="hanging">
+    <textPath href="#bottom" startOffset="50%" text-anchor="middle">Dhungrebas, Sindhuli</textPath>
+  </text>
+  <!-- the dots that part the two lines of lettering -->
+  <circle cx="61.0" cy="270.8" r="6" fill="#1d3b8f"/>
+  <circle cx="339.0" cy="270.8" r="6" fill="#1d3b8f"/>
+
+  <!-- centre -->
+  <circle cx="200" cy="200" r="116" fill="#ec6b1c"/>
+
+  <!-- six-pointed star: two interlaced triangles, white with a blue rule -->
+  <g fill="#ffffff" stroke="#1d3b8f" stroke-width="6" stroke-linejoin="round">
+    <polygon points="200,98 288,250 112,250"/>
+    <polygon points="200,302 112,150 288,150"/>
+  </g>
+  <g fill="none" stroke="#1d3b8f" stroke-width="6" stroke-linejoin="round">
+    <polygon points="200,98 288,250 112,250"/>
+  </g>
+  <!-- the small rings at the star's six points -->
+  <g fill="#ffffff" stroke="#1d3b8f" stroke-width="4">
+    <circle cx="200" cy="98" r="9"/>
+    <circle cx="288" cy="250" r="9"/>
+    <circle cx="112" cy="250" r="9"/>
+    <circle cx="200" cy="302" r="9"/>
+    <circle cx="112" cy="150" r="9"/>
+    <circle cx="288" cy="150" r="9"/>
+  </g>
+
+  <!-- open book -->
+  <g stroke="#1d3b8f" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M 200 186 C 180 172, 156 170, 140 176 L 140 232 C 156 226, 180 228, 200 242 Z" fill="#ffffff"/>
+    <path d="M 200 186 C 220 172, 244 170, 260 176 L 260 232 C 244 226, 220 228, 200 242 Z" fill="#ffffff"/>
+    <line x1="200" y1="186" x2="200" y2="242"/>
+  </g>
+  <g stroke="#1d3b8f" stroke-width="3" stroke-linecap="round" fill="none">
+    <path d="M 152 192 C 166 188, 180 189, 190 194"/>
+    <path d="M 152 206 C 166 202, 180 203, 190 208"/>
+    <path d="M 152 220 C 166 216, 180 217, 190 222"/>
+    <path d="M 248 192 C 234 188, 220 189, 210 194"/>
+    <path d="M 248 206 C 234 202, 220 203, 210 208"/>
+    <path d="M 248 220 C 234 216, 220 217, 210 222"/>
+  </g>
+</svg>

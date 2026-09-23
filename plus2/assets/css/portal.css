@@ -1,0 +1,1306 @@
+/* Kamala Science Campus — portal.
+   Extends the public site's tokens in styles.css; only portal chrome here. */
+
+:root {
+  --p-rail: 232px;          /* the sections down the left */
+  --p-rail-drawer: 268px;   /* the same rail as a drawer on a phone */
+  --p-head-h: 64px;         /* matches .p-header-inner's min-height */
+  --ok: #0f7b52;
+  --ok-bg: #e7f5ee;
+  --warn: #8a6116;
+  --warn-bg: #fdf4e3;
+  --err: #a32c2c;
+  --err-bg: #fbeceb;
+  --focus: 0 0 0 3px rgba(14, 124, 123, .28);
+}
+
+body.portal {
+  background: var(--bg-soft);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Devanagari needs a touch more leading to stay comfortable. */
+body.lang-ne { font-family: var(--deva); line-height: 1.8; }
+body.lang-ne h1, body.lang-ne h2, body.lang-ne h3, body.lang-ne .p-brand-name {
+  font-family: var(--deva); letter-spacing: 0; line-height: 1.45;
+}
+
+/* ---------------------------------------------------------------- header -- */
+
+.p-header {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--navy);
+  color: #dbe7f3;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .08);
+}
+.p-header-inner {
+  max-width: 1240px; margin: 0 auto; padding: 0 20px;
+  display: flex; align-items: center; gap: 18px; min-height: var(--p-head-h);
+  /* None of these three can shrink below their contents, so on a narrow phone
+     they wrap onto a second row rather than pushing Sign out off the side of
+     the screen and the whole portal into a sideways scroll. */
+  flex-wrap: wrap; row-gap: 6px;
+}
+
+/* The campus name gives way first — it is the one thing here that can be read
+   from half of itself. */
+.p-brand { display: flex; align-items: center; gap: 11px; flex: 0 1 auto; min-width: 0; }
+.p-brand-text { min-width: 0; }
+.p-brand-name, .p-brand-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-brand:hover { text-decoration: none; }
+.p-brand .crest { width: 38px; height: 38px; flex-basis: 38px; }
+.p-brand-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.p-brand-name { font-family: var(--serif); font-weight: 700; font-size: .98rem; color: #fff; }
+.p-brand-sub { font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; color: #8fb0cf; }
+body.lang-ne .p-brand-sub { text-transform: none; letter-spacing: 0; font-size: .76rem; }
+
+/* The sections are not up here any more — see the rail below. The button is,
+   because on a phone the rail is a drawer and something has to open it. */
+.p-nav-toggle {
+  display: none; flex: 0 0 auto;
+  background: rgba(255, 255, 255, .1); border: 0; color: #fff;
+  font-size: 1.05rem; padding: 8px 13px; border-radius: 8px; cursor: pointer;
+  line-height: 1;
+}
+
+.p-header-right {
+  display: flex; align-items: center; gap: 14px;
+  flex: 0 0 auto; margin-inline-start: auto;
+}
+
+.p-lang {
+  font-size: .84rem; font-weight: 600; color: #cfe0f0;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 999px; padding: 5px 13px;
+  transition: background .15s ease;
+}
+.p-lang:hover { background: rgba(255, 255, 255, .14); color: #fff; text-decoration: none; }
+
+.p-user { display: flex; align-items: center; gap: 9px; }
+
+/* The same round portrait the public site gives the campus's people: a white
+   ring with a thin gold line outside it. A photograph fills the circle rather
+   than being letterboxed into it, and is anchored high, because what is stored
+   is a card portrait — taller than it is wide, with the head in the upper
+   third — and centring that in a circle cuts the forehead off. */
+.p-avatar {
+  flex: 0 0 auto;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, var(--teal), var(--navy) 78%);
+  color: #fff; overflow: hidden;
+  display: grid; place-items: center;
+  font-size: .76rem; font-weight: 700; letter-spacing: .02em;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--gold);
+}
+.p-user-meta { display: flex; flex-direction: column; line-height: 1.25; }
+.p-user-name { font-size: .86rem; font-weight: 600; color: #fff; }
+.p-user-role { font-size: .72rem; color: #8fb0cf; }
+
+.p-signout {
+  font-size: .85rem; color: #cfe0f0;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 8px; padding: 6px 13px;
+}
+.p-signout:hover { background: rgba(255, 255, 255, .14); color: #fff; text-decoration: none; }
+
+/* ------------------------------------------------------------------ rail -- */
+
+/* Below the header the page is two columns: the sections down the left, the
+   page itself on the right. The rail sticks under the header rather than
+   scrolling away, so however far down a list of notices somebody is, every
+   other section is still one click off. */
+.p-shell { flex: 1; width: 100%; display: flex; align-items: flex-start; }
+
+.p-rail {
+  flex: 0 0 var(--p-rail); width: var(--p-rail);
+  align-self: stretch;
+  position: sticky; top: var(--p-head-h);
+  max-height: calc(100vh - var(--p-head-h)); overflow-y: auto;
+  background: #fff;
+  border-inline-end: 1px solid var(--line);
+  padding: 18px 12px 34px;
+}
+.p-rail nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.p-rail a {
+  display: block; padding: 10px 14px; border-radius: 9px;
+  color: var(--ink-soft); font-size: .94rem; font-weight: 500;
+  transition: background .15s ease, color .15s ease;
+}
+.p-rail a:hover { background: var(--bg-tint); color: var(--navy); text-decoration: none; }
+.p-rail a[aria-current="page"] { background: var(--navy); color: #fff; font-weight: 600; }
+body.lang-ne .p-rail a { font-size: 1rem; }
+
+.p-rail-scrim { display: none; }
+
+/* No rail — the sign-in and registration pages. A plain block, so the single
+   column centres itself exactly as it did before the rail existed. */
+.p-shell-bare { display: block; }
+
+/* ------------------------------------------------------------------ main -- */
+
+.p-main {
+  flex: 1;
+  width: 100%; max-width: 1080px;
+  margin: 0 auto; padding: 34px 20px 64px;
+}
+.p-main.wide { max-width: 1240px; }
+/* Beside the rail the column is whatever is left, centred in it. min-width: 0
+   so a wide table scrolls inside the column instead of stretching the page. */
+.p-shell .p-main { flex: 1 1 auto; min-width: 0; }
+
+.p-page-head { margin-bottom: 28px; }
+.p-page-head h1 { font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: .28em; }
+.p-page-head p { color: var(--ink-soft); max-width: 680px; margin: 0; }
+
+.p-flash {
+  border-radius: var(--radius-sm); padding: 13px 18px; margin-bottom: 20px;
+  font-size: .94rem; font-weight: 500;
+  animation: p-slide .3s ease;
+}
+.p-flash-ok    { background: var(--ok-bg);   color: var(--ok);   border-inline-start: 4px solid var(--ok); }
+.p-flash-error { background: var(--err-bg);  color: var(--err);  border-inline-start: 4px solid var(--err); }
+.p-flash-info  { background: var(--bg-tint); color: var(--navy); border-inline-start: 4px solid var(--teal); }
+
+@keyframes p-slide { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* ----------------------------------------------------------------- cards -- */
+
+.p-card {
+  background: #fff; border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 26px;
+  box-shadow: var(--shadow-sm);
+}
+.p-card + .p-card { margin-top: 20px; }
+.p-card h2 { font-size: 1.2rem; margin-bottom: .5em; }
+.p-card h3 { font-size: 1.02rem; }
+
+.p-grid { display: grid; gap: 20px; }
+.p-grid-2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.p-grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+.p-grid > * { min-width: 0; }
+
+.p-stat {
+  background: #fff; border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 22px 24px;
+}
+.p-stat dt {
+  font-size: .74rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px;
+}
+body.lang-ne .p-stat dt { text-transform: none; letter-spacing: 0; font-size: .82rem; }
+.p-stat dd {
+  margin: 0; font-family: var(--serif); font-size: 1.9rem; color: var(--navy); line-height: 1.1;
+}
+body.lang-ne .p-stat dd { font-family: var(--deva); font-size: 1.6rem; }
+
+/* --------------------------------------------------------------- courses -- */
+
+.p-course {
+  display: block; background: #fff;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px 24px;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+a.p-course:hover {
+  text-decoration: none; border-color: var(--teal);
+  box-shadow: var(--shadow); transform: translateY(-2px);
+}
+.p-course-code {
+  font-size: .74rem; font-weight: 700; letter-spacing: .09em;
+  color: var(--teal-600); text-transform: uppercase; margin-bottom: 7px;
+}
+.p-course h3 { margin-bottom: .3em; font-size: 1.08rem; }
+.p-course p { color: var(--ink-soft); font-size: .92rem; margin: 0; }
+.p-course-meta {
+  display: flex; flex-wrap: wrap; gap: 6px 16px;
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+  font-size: .84rem; color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------- materials -- */
+
+.p-list { list-style: none; margin: 0; padding: 0; }
+.p-item {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 17px 0; border-bottom: 1px solid var(--line);
+}
+.p-item:last-child { border-bottom: 0; }
+.p-item:first-child { padding-top: 4px; }
+
+.p-icon {
+  width: 38px; height: 38px; flex: 0 0 38px; border-radius: 9px;
+  background: var(--bg-tint); color: var(--teal-600);
+  display: grid; place-items: center; font-size: .95rem; font-weight: 700;
+}
+.p-icon.file { background: #e9f0f7; color: var(--navy); }
+.p-icon.link { background: #eaf5f4; color: var(--teal-600); }
+.p-icon.note { background: var(--gold-soft); color: #6b4a06; }
+
+.p-item-body { flex: 1; min-width: 0; }
+.p-item-body h4 { margin: 0 0 3px; font-family: var(--sans); font-size: .98rem; color: var(--navy); font-weight: 600; }
+body.lang-ne .p-item-body h4 { font-family: var(--deva); }
+.p-item-body p { margin: 0; color: var(--ink-soft); font-size: .9rem; }
+.p-item-meta { font-size: .8rem; color: var(--ink-soft); margin-top: 5px; }
+.p-item-note {
+  margin-top: 10px; padding: 13px 16px;
+  background: var(--bg-soft); border-radius: var(--radius-sm);
+  font-size: .92rem; white-space: pre-wrap; color: var(--ink);
+}
+.p-item-actions { flex: 0 0 auto; display: flex; gap: 8px; align-items: center; }
+
+/* --------------------------------------------------------------- notices -- */
+
+.p-notice {
+  background: #fff; border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 22px 24px; margin-bottom: 14px;
+}
+.p-notice.pinned { border-color: var(--gold); background: #fffdf8; }
+.p-notice h3 { margin-bottom: .3em; font-size: 1.05rem; }
+.p-notice-body { color: var(--ink-soft); font-size: .94rem; white-space: pre-wrap; }
+.p-notice-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+
+.p-tag {
+  display: inline-block; font-size: .72rem; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--bg-tint); color: var(--teal-600);
+}
+body.lang-ne .p-tag { text-transform: none; letter-spacing: 0; font-size: .78rem; }
+.p-tag.tu     { background: #e7eefc; color: #24468e; }
+.p-tag.exam   { background: var(--gold-soft); color: #6b4a06; }
+.p-tag.campus { background: #eaf5f4; color: var(--teal-600); }
+.p-tag.pin    { background: var(--gold); color: #2b1d02; }
+.p-tag.year   { background: #f0f2f5; color: var(--ink-soft); }
+.p-tag.ok      { background: var(--ok-bg);   color: var(--ok); }
+.p-tag.pending { background: var(--warn-bg); color: var(--warn); }
+.p-tag.bad     { background: var(--err-bg);  color: var(--err); }
+
+/* ----------------------------------------------------------------- forms -- */
+
+.p-auth { max-width: 470px; margin: 52px auto; }
+.p-auth .p-card { padding: 34px; }
+.p-auth h1 { font-size: 1.55rem; margin-bottom: .3em; }
+.p-auth-intro { color: var(--ink-soft); font-size: .95rem; margin-bottom: 26px; }
+.p-auth-alt { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line);
+              font-size: .92rem; color: var(--ink-soft); text-align: center; }
+
+.p-field { margin-bottom: 17px; }
+.p-field label { display: block; font-size: .87rem; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+.p-field .hint { display: block; font-weight: 400; font-size: .82rem; color: var(--ink-soft); margin-top: 3px; }
+.p-field input, .p-field select, .p-field textarea {
+  width: 100%; font: inherit; font-size: .95rem;
+  padding: 11px 13px; border: 1px solid var(--line);
+  border-radius: var(--radius-sm); background: #fff; color: var(--ink);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.p-field input:focus, .p-field select:focus, .p-field textarea:focus {
+  outline: none; border-color: var(--teal); box-shadow: var(--focus);
+}
+.p-field textarea { min-height: 120px; resize: vertical; }
+.p-field.error input, .p-field.error select { border-color: var(--err); }
+.p-field .err { display: block; color: var(--err); font-size: .84rem; margin-top: 5px; }
+
+.p-field-row { display: grid; gap: 0 16px; grid-template-columns: 1fr 1fr; }
+.p-field-row > * { min-width: 0; }
+
+.p-pw-wrap { position: relative; }
+.p-pw-wrap input { padding-inline-end: 46px; }
+.p-pw-toggle {
+  position: absolute; inset-inline-end: 6px; top: 50%; transform: translateY(-50%);
+  background: none; border: 0; cursor: pointer; padding: 6px 8px;
+  font-size: .95rem; color: var(--ink-soft); border-radius: 6px;
+}
+.p-pw-toggle:hover { background: var(--bg-tint); }
+.p-pw-toggle.on { color: var(--teal-600); }
+
+.p-btn {
+  display: inline-block; font: inherit; font-size: .94rem; font-weight: 600;
+  padding: 11px 22px; border-radius: var(--radius-sm);
+  border: 1px solid transparent; cursor: pointer; text-align: center;
+  transition: background .15s ease, transform .1s ease, box-shadow .15s ease;
+}
+.p-btn:hover { text-decoration: none; }
+.p-btn:active { transform: translateY(1px); }
+.p-btn-primary { background: var(--navy); color: #fff; }
+.p-btn-primary:hover { background: var(--navy-700); box-shadow: var(--shadow-sm); }
+.p-btn-gold { background: var(--gold); color: #2b1d02; }
+.p-btn-gold:hover { background: #c98c22; }
+.p-btn-ghost { border-color: var(--line); color: var(--navy); background: #fff; }
+.p-btn-ghost:hover { background: var(--bg-tint); }
+.p-btn-danger { border-color: #e6c5c3; color: var(--err); background: #fff; }
+.p-btn-danger:hover { background: var(--err-bg); }
+.p-btn-sm { padding: 7px 14px; font-size: .85rem; }
+.p-btn-block { display: block; width: 100%; }
+
+.p-form-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 22px; }
+
+/* ---------------------------------------------------------------- tables -- */
+
+.p-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+.p-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.p-table th, .p-table td { padding: 13px 16px; text-align: start; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.p-table th {
+  background: var(--bg-soft); font-size: .75rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-soft); font-weight: 700; white-space: nowrap;
+}
+body.lang-ne .p-table th { text-transform: none; letter-spacing: 0; font-size: .84rem; }
+.p-table tbody tr:last-child td { border-bottom: 0; }
+.p-table tbody tr:hover { background: var(--bg-soft); }
+.p-table .nowrap { white-space: nowrap; }
+/* A summary table in a narrow sidebar column. It escapes the card without
+   all three: the public stylesheet's `table { min-width: 520px }` (which the
+   scrolling .p-table-wrap hides everywhere else), the nowrap headers above,
+   and a long unbroken value. */
+.p-table-compact { table-layout: fixed; min-width: 0; }
+.p-table-compact th { white-space: normal; width: 42%; }
+.p-table-compact td { overflow-wrap: anywhere; }
+.p-table form { display: inline; }
+
+.p-empty {
+  text-align: center; padding: 46px 24px; color: var(--ink-soft);
+  background: #fff; border: 1px dashed var(--line); border-radius: var(--radius);
+}
+.p-empty p { margin: 0; }
+
+.p-section-head {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  align-items: baseline; justify-content: space-between; margin-bottom: 18px;
+}
+.p-section-head h2 { margin: 0; }
+
+.p-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.p-filters a {
+  font-size: .87rem; padding: 7px 15px; border-radius: 999px;
+  border: 1px solid var(--line); background: #fff; color: var(--ink-soft);
+}
+.p-filters a:hover { background: var(--bg-tint); text-decoration: none; }
+.p-filters a[aria-current="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+.p-back { display: inline-block; font-size: .88rem; margin-bottom: 14px; color: var(--ink-soft); }
+
+.p-footer {
+  border-top: 1px solid var(--line); background: #fff;
+  padding: 18px 20px; font-size: .85rem; color: var(--ink-soft);
+  display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between;
+  max-width: 1240px; margin: 0 auto; width: 100%;
+}
+
+/* ------------------------------------------------------------ responsive -- */
+
+/* Narrow enough that the rail would be a third of the screen: it becomes a
+   drawer over the page, opened by the button in the header. */
+@media (max-width: 900px) {
+  .p-nav-toggle { display: inline-flex; }
+  .p-rail {
+    position: fixed; top: var(--p-head-h); inset-inline-start: 0; bottom: 0;
+    z-index: 60; width: var(--p-rail-drawer); flex-basis: var(--p-rail-drawer);
+    max-height: none;
+    transform: translateX(-100%);
+    /* visibility, not just the transform: slid off-screen alone, the eight
+       links stay in the tab order and in the accessibility tree, so tabbing
+       from the menu button walks through a rail nobody can see. It is delayed
+       by the length of the slide so the drawer still animates shut. */
+    visibility: hidden;
+    transition: transform .2s ease, visibility 0s linear .2s;
+    box-shadow: var(--shadow);
+  }
+  .p-rail.open {
+    transform: none; visibility: visible;
+    transition: transform .2s ease, visibility 0s;
+  }
+  .p-rail a { padding: 12px 14px; }
+  .p-rail-scrim {
+    display: block; position: fixed; top: var(--p-head-h); inset-inline: 0; bottom: 0;
+    z-index: 55; background: rgba(11, 37, 69, .42);
+  }
+  .p-rail-scrim[hidden] { display: none; }
+
+  .p-user-meta { display: none; }
+  .p-field-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .p-main { padding: 24px 16px 48px; }
+  .p-card { padding: 20px; }
+  .p-auth { margin: 24px auto; }
+  .p-auth .p-card { padding: 24px; }
+  .p-brand-name { font-size: .88rem; }
+  .p-signout { padding: 6px 10px; font-size: .8rem; }
+  .p-item { flex-wrap: wrap; }
+  .p-item-actions { width: 100%; padding-inline-start: 54px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* Armed state for the two-step confirm */
+.p-btn.armed {
+  background: var(--err); border-color: var(--err); color: #fff;
+  animation: p-pulse .3s ease;
+}
+@keyframes p-pulse { from { transform: scale(.96); } to { transform: none; } }
+
+/* Notice categories added for the official reference links */
+.p-tag.ugc         { background: #eef0fb; color: #3b3f8f; }
+.p-tag.scholarship { background: #fdf0e3; color: #8a5a16; }
+
+/* An external reference notice reads better with its link obvious */
+.p-notice a[target="_blank"] { font-weight: 600; }
+
+/* A one-time credential needs to be readable and obviously copyable */
+.p-flash strong, .p-flash code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* ======================================================== identity cards == */
+/* The card is drawn at true CR80 size — 85.6 × 54 mm, a bank card — when
+   printed, and larger on screen so it can be read. Every measurement inside
+   it is in em, so changing --card-w scales the whole card, type included, and
+   portrait and landscape come out with identical type sizes.
+
+   --card-w is always the SHORT edge of the card. */
+
+.idc-sheet {
+  --card-w: 86mm;
+  display: flex; flex-wrap: wrap; gap: 26px;
+}
+.idc-sheet[data-orientation="landscape"] { --card-w: 68mm; }
+.idc-holder { margin: 0; max-width: 100%; }
+.idc-holder figcaption {
+  margin-top: 8px; font-size: .78rem; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .idc-holder figcaption { text-transform: none; letter-spacing: 0; }
+
+/* Printing the front alone hides the back everywhere, screen included, so
+   what is on screen is what comes out of the printer. */
+.idc-sheet[data-sides="front"] .idc-holder-back { display: none; }
+
+/* ---- colourways ---------------------------------------------------------
+   Each is a header colour and a band colour chosen together. Only these
+   tokens change between themes; the layout below never names a colour. */
+
+.idc {
+  --idc-head-bg: #0b2545;
+  --idc-head-fg: #ffffff;
+  --idc-head-sub: #e8eef6;
+  --idc-head-dim: #a8c3dd;
+  --idc-head-rule: transparent;
+  --idc-band-bg: #d99a2b;
+  --idc-band-fg: #2b1d02;
+  --idc-band-rule: transparent;
+  /* the line outside the photograph's white ring */
+  --idc-ring: #c9d4e0;
+  --idc-accent: #0b6564;
+  --idc-strip: #eef4f8;
+  --idc-rule: #e2e8ef;
+  --idc-edge: #cfd8e2;
+}
+.idc[data-theme="teal"] {
+  --idc-head-bg: #0e5f5e; --idc-head-sub: #dff0ef; --idc-head-dim: #9dc9c7;
+  --idc-band-bg: #efe3c6; --idc-band-fg: #4a3c1a;
+  --idc-accent: #0b5453;  --idc-strip: #eaf4f3;
+}
+.idc[data-theme="crimson"] {
+  --idc-head-bg: #7a1f2b; --idc-head-sub: #f8e9eb; --idc-head-dim: #dcaab1;
+  --idc-band-bg: #d9a13b; --idc-band-fg: #2f1e05;
+  --idc-accent: #7a1f2b;  --idc-strip: #f9eef0;
+}
+.idc[data-theme="forest"] {
+  --idc-head-bg: #14452f; --idc-head-sub: #e4f0e9; --idc-head-dim: #a6c6b5;
+  --idc-band-bg: #d9bd6a; --idc-band-fg: #2b230a;
+  --idc-accent: #14452f;  --idc-strip: #ecf4ef;
+}
+.idc[data-theme="slate"] {
+  --idc-head-bg: #263244; --idc-head-sub: #e9edf3; --idc-head-dim: #a9b6c6;
+  --idc-band-bg: #c8d2de; --idc-band-fg: #22303f;
+  --idc-accent: #3d5a80;  --idc-strip: #eef1f5;
+}
+/* No flood colour anywhere: the theme for a home printer, and the only one
+   that still looks deliberate when background graphics are switched off. */
+.idc[data-theme="ink"] {
+  --idc-head-bg: #ffffff; --idc-head-fg: #0b2545;
+  --idc-head-sub: #0b2545; --idc-head-dim: #4d5b6b;
+  --idc-head-rule: #0b2545;
+  --idc-band-bg: #ffffff;  --idc-band-fg: #0b2545; --idc-band-rule: #0b2545;
+  --idc-accent: #0b2545;   --idc-strip: #ffffff;
+  --idc-edge: #0b2545;
+}
+
+/* ---- the card ---- */
+
+.idc {
+  width: var(--card-w);
+  height: calc(var(--card-w) * 1.5858);          /* 85.6 / 53.98 */
+  font-size: calc(var(--card-w) * .046);
+  font-family: var(--sans);
+  line-height: 1.35;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--idc-edge);
+  border-radius: .9em;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.idc[data-orientation="landscape"] {
+  width: calc(var(--card-w) * 1.5858);
+  height: var(--card-w);
+}
+body.lang-ne .idc { font-family: var(--deva); line-height: 1.35; }
+
+/* ---- front: crest and campus name ----
+   The seal sits above the campus name and the whole masthead is centred, the
+   way the campus's own letterhead reads. On a card that is already full to
+   the edges that costs real height, which the blocks below give back: the
+   band, the foot and the photograph are each a little tighter than they were
+   so that no detail is pushed off the card. */
+
+.idc-top {
+  display: flex; flex-direction: column; align-items: center; gap: .22em;
+  padding: .5em .8em .42em;
+  text-align: center;
+  background: var(--idc-head-bg); color: var(--idc-head-fg);
+  border-bottom: .12em solid var(--idc-head-rule);
+}
+.idc-crest { width: 3.55em; height: 3.55em; flex: 0 0 auto; }
+.idc-top-text { display: flex; flex-direction: column; align-items: center; min-width: 0; max-width: 100%; }
+.idc-campus-ne {
+  font-family: var(--deva); font-weight: 700; font-size: 1.08em; line-height: 1.2;
+}
+.idc-campus-en {
+  font-family: var(--serif); font-weight: 700; font-size: .95em;
+  line-height: 1.16; letter-spacing: .01em; color: var(--idc-head-sub);
+}
+.idc-place { font-size: .63em; color: var(--idc-head-dim); margin-top: .22em; line-height: 1.25; }
+
+.idc-band {
+  background: var(--idc-band-bg); color: var(--idc-band-fg);
+  font-size: .76em; font-weight: 700;
+  letter-spacing: .22em; text-transform: uppercase;
+  text-align: center; padding: .28em .6em;
+  border-block: .16em solid var(--idc-band-rule);
+}
+body.lang-ne .idc-band { letter-spacing: .06em; text-transform: none; font-size: .82em; }
+
+/* ---- front: photo, name, details ---- */
+
+.idc-body {
+  flex: 1; min-height: 0;
+  padding: .44em .9em .2em;
+  display: flex; flex-direction: column; align-items: stretch;
+  overflow: hidden;
+}
+.idc-body > * { flex: 0 0 auto; }
+.idc-detail { display: flex; flex-direction: column; min-width: 0; text-align: center; }
+
+/* ---- the front's spacing ------------------------------------------------
+   The front is one fixed height with a variable amount in it, and what was
+   left over used to collect at the bottom as a band of nothing above the card
+   number — a sixth of the card on a staff card, which reads as a mistake
+   rather than as air.
+
+   So the rows take the slack instead, spread evenly between the details above
+   them and the foot below. gap is still the floor, so this only ever opens the
+   rows up: a card too full to have any slack falls back to the gap and packs
+   exactly as it did, which is what keeps the fullest front fitting. */
+.idc-front .idc-detail { flex: 1; min-height: 0; }
+.idc-front .idc-rows { flex: 1; justify-content: space-between; }
+/* A row keeps its own height. Left to shrink — which is what a flex item does
+   by default — a front with more in it than fits would not overflow at all:
+   the rows would be squeezed instead, and a value would be cut through the
+   middle of its own line rather than the last row going missing. Both are
+   silent, but the second at least shows up in a measurement. */
+.idc-front .idc-row { flex: 0 0 auto; }
+
+/* Round, the way the public site frames the campus's people: a white ring
+   with a thin line outside it. The stored photograph is square, because this
+   frame is — photos.php crops it to the frame as it is uploaded, keeping the
+   headroom a circle needs above the head. */
+.idc-photo {
+  flex: 0 0 auto;
+  width: 6.2em; aspect-ratio: 1;
+  margin: 0 auto .3em;
+  border-radius: 50%;
+  /* A white ring drawn by the border, and the line outside it drawn by an
+     outline rather than a box-shadow: browsers treat a shadow as background
+     decoration and drop it when background graphics are off, which is exactly
+     how this project tells people to print the Ink on white colourway. An
+     outline is foreground and survives. */
+  border: .16em solid #fff;
+  outline: .08em solid var(--idc-ring); outline-offset: 0;
+  overflow: hidden; background: var(--bg-soft);
+}
+/* Centred, and deliberately not anchored high a second time.
+   The placing is decided once, at upload, and a photograph cropped there
+   arrives here already square: in a square frame object-position moves it
+   nowhere at all, and the only pictures it can move are the ones photos.php
+   had to store untouched — no GD on the host, or an image too large to
+   decode. Anchoring those at a tenth pressed the head into the top of the
+   ring, and it disagreed with the portfolio, which previews the same
+   photograph centred in the same frame and promises that is what prints. */
+.idc-photo img {
+  width: 100%; height: 100%; display: block;
+  object-fit: cover; object-position: 50% 50%;
+}
+
+/* The frame used to give up height when the card was too full. It cannot any
+   more: its width is fixed and its height came from aspect-ratio, so shrinking
+   one and not the other turns the circle into an ellipse. It holds its shape,
+   and the room a long name and a long address need is found by the type below
+   closing up instead. */
+.idc-front[data-orientation="portrait"] .idc-photo { flex: 0 0 auto; }
+/* Devanagari sets taller, so the Nepali card gives the type its room back. */
+body.lang-ne .idc-photo { width: 5.90em; }
+.idc-photo.empty {
+  border: .14em dashed #b9c4d1;
+  outline: 0;
+  display: grid; place-items: center; text-align: center; padding: .9em;
+}
+.idc-photo.empty span { font-size: .6em; color: #8a97a6; line-height: 1.35; }
+
+.idc-name {
+  font-weight: 700; font-size: 1.15em;
+  line-height: 1.2; color: var(--navy);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+/* The big line is set in the card's Latin face; a holder whose only name is
+   in Devanagari needs the other one, or the line falls back to whatever the
+   system happens to offer for the script. */
+/* And the room that face needs, which is not what the Latin one above is set
+   with: .idc-name is line-height 1.2 and Noto Sans Devanagari occupies about
+   1.24, inside a box that is overflow: hidden — so the card's largest line
+   was clipping its own marks for exactly the holder this class exists for,
+   the one whose only name is in Devanagari. The smaller second line was given
+   this room; the bigger one was left behind. It costs the front nothing: a
+   card reaching this class has no second name line to print. */
+.idc-name-deva { font-family: var(--deva); line-height: 1.3; }
+/* Set a little tighter than it was, because it is no longer the exception.
+   This line used to print for the minority of holders who had typed a Nepali
+   name; it now prints on every card, so its height belongs to the fullest
+   front rather than to some fronts only.
+
+   Measured against that front — a two-line Latin name, this line under it,
+   the role, and six rows with the longest address the clamp will take — in
+   both languages, both orientations and at print size as well as on screen.
+   It fits in all eight, and the tightest is Nepali landscape in print, which
+   is left with three pixels on a card 204px tall. Three. Anything added to
+   the front from here — a row, a line, a larger face — has to be measured
+   against that same card first: .idc-body is overflow: hidden and the rows do
+   not compress, so what does not fit leaves without saying anything. */
+.idc-name-ne {
+  font-family: var(--deva); font-size: .86em;
+  /* Not tighter than the script needs. Devanagari hangs marks above the line
+     and below it — the chandrabindu of कुँवर, the ौ of पौडेल, a ु underneath —
+     and this box is overflow: hidden with its height set by the line box, so
+     a line-height under what the face actually occupies does not crowd the
+     type, it cuts the tops and bottoms off it. Noto Sans Devanagari wants
+     about 1.24 here, and 1.3 leaves the marks whole. It is not a saving:
+     .86em x 1.3 is 1.118em against the 1.062em of the .9em/1.18 it replaced,
+     so the line costs the front about half a pixel more than before. */
+  line-height: 1.3; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.idc-role {
+  font-size: .78em; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--idc-accent); margin-top: .08em;
+}
+body.lang-ne .idc-role { letter-spacing: 0; text-transform: none; font-size: .84em; }
+
+.idc-rows {
+  margin: .3em 0 0; padding: .26em 0 0;
+  border-top: 1px solid var(--idc-rule);
+  display: flex; flex-direction: column; gap: .1em;
+  text-align: start;
+}
+.idc-row { display: grid; grid-template-columns: 6.25em 1fr; gap: .35em; align-items: baseline; }
+/* The back's values are short, so its longer labels get room not to wrap. */
+.idc-back .idc-row { grid-template-columns: 7.4em 1fr; }
+.idc-row dt {
+  font-size: .68em; font-weight: 700; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--ink-soft); line-height: 1.26;
+}
+body.lang-ne .idc-row dt { text-transform: none; letter-spacing: 0; font-size: .74em; }
+.idc-row dd {
+  margin: 0; font-size: .8em; font-weight: 600; color: var(--ink);
+  line-height: 1.2; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+/* A detail nobody has filled in prints as a rule, so it can be written on. */
+.idc-row dd.blank { border-bottom: 1px dotted #9aa7b5; min-height: 1.1em; }
+
+/* ---- front: card number and the Campus Chief's signature ---- */
+
+.idc-foot {
+  padding: .16em .9em .3em;
+  border-top: 1px solid var(--idc-rule);
+  display: flex; align-items: flex-end; justify-content: space-between; gap: .6em;
+}
+.idc-cardno { display: flex; flex-direction: column; }
+.idc-cardno-label {
+  font-size: .64em; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .idc-cardno-label { text-transform: none; letter-spacing: 0; font-size: .72em; }
+.idc-cardno-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .82em; font-weight: 700; color: var(--navy); letter-spacing: .02em;
+}
+
+.idc-sig { display: flex; flex-direction: column; align-items: center; min-width: 8.5em; }
+.idc-sig-img { height: 1.7em; max-width: 9em; object-fit: contain; display: block; }
+span.idc-sig-img { width: 1px; }
+.idc-sig-rule { display: block; width: 8.5em; border-top: 1px solid var(--ink-soft); margin-top: .1em; }
+.idc-sig-name { font-size: .74em; font-weight: 700; color: var(--navy); line-height: 1.25; }
+.idc-sig-title {
+  font-size: .68em; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--ink-soft); line-height: 1.25;
+}
+body.lang-ne .idc-sig-title { text-transform: none; letter-spacing: 0; font-size: .76em; }
+
+/* ---- back ---- */
+
+.idc-affil {
+  padding: .5em .9em; background: var(--idc-strip);
+  font-size: .66em; line-height: 1.4; color: var(--navy); text-align: center;
+  border-bottom: 1px solid var(--idc-rule);
+}
+.idc-back .idc-body { padding-top: .75em; }
+.idc-back .idc-rows { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* The portrait back was loosened — wider gaps between the rows, more air above
+   the conditions — when the blood group and the holder's signature came off
+   it. They are back, because the portfolio now collects both, so the room they
+   took is theirs again and the loosening is gone with them. Nothing here can
+   be given away twice: the back's body is overflow: hidden, so an over-filled
+   card drops its last condition and says nothing about it. */
+
+.idc-terms { margin-top: .9em; }
+.idc-terms h4 {
+  margin: 0 0 .3em; font-family: var(--sans); color: var(--navy);
+  font-size: .7em; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+body.lang-ne .idc-terms h4 { font-family: var(--deva); text-transform: none; letter-spacing: 0; font-size: .8em; }
+.idc-terms ul { margin: 0; padding-inline-start: 1.1em; }
+.idc-terms li { font-size: .7em; line-height: 1.45; color: var(--ink-soft); margin-bottom: .2em; }
+
+/* The holder's own signature, at the foot of the back. margin-top: auto keeps
+   it against the bottom of the body whatever length the conditions run to, so
+   it never floats in the middle of a card with a short list above it. A
+   holder who has not uploaded one gets the rule alone, to sign by hand — the
+   same bargain the Campus Chief's signature strikes on the front. */
+.idc-holder-sig {
+  margin-top: auto; padding-top: 1.2em;
+  display: flex; flex-direction: column; align-items: flex-start;
+}
+.idc-holder-sig .idc-sig-img { max-width: 11em; }
+.idc-holder-sig .idc-sig-rule { width: 11em; }
+
+.idc-back-foot {
+  background: var(--idc-strip); border-top: 1px solid var(--idc-rule);
+  padding: .55em .9em .7em;
+  display: flex; flex-direction: column;
+}
+.idc-back-foot strong {
+  font-size: .64em; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--navy); margin-bottom: .15em;
+}
+body.lang-ne .idc-back-foot strong { text-transform: none; letter-spacing: 0; font-size: .74em; }
+.idc-back-foot span { font-size: .66em; color: var(--ink-soft); line-height: 1.45; }
+
+/* ---- landscape -----------------------------------------------------------
+   Same card, turned: the photo moves beside the details rather than above
+   them, and the blocks that only stack vertically are tightened to fit the
+   shorter card. Type stays exactly the size it is in portrait. */
+
+/* Turned on its side the card loses two fifths of its height, and a stacked
+   masthead would take a third of what is left. The seal moves beside the name
+   instead and the pair is centred together — still centred, still the larger
+   seal, but lying down with the card. */
+.idc[data-orientation="landscape"] .idc-top {
+  flex-direction: row; justify-content: center; gap: .6em;
+  padding: .32em .8em .28em; text-align: start;
+}
+.idc[data-orientation="landscape"] .idc-crest { width: 3.1em; height: 3.1em; }
+.idc[data-orientation="landscape"] .idc-top-text { align-items: flex-start; }
+.idc[data-orientation="landscape"] .idc-place { margin-top: .16em; }
+.idc[data-orientation="landscape"] .idc-band { padding: .24em .6em; }
+
+.idc-front[data-orientation="landscape"] .idc-body {
+  flex-direction: row; align-items: flex-start; gap: .8em; padding: .32em .8em .22em;
+}
+.idc-front[data-orientation="landscape"] .idc-photo { width: 6em; margin: 0; }
+body.lang-ne .idc-front[data-orientation="landscape"] .idc-photo { width: 5.8em; }
+/* The details take the body's full height beside the photograph, so the rows
+   spread the same way they do in portrait. The body aligns its children to the
+   top — right for the photograph, which would otherwise stretch into an
+   ellipse, and wrong for the column of text beside it. */
+.idc-front[data-orientation="landscape"] .idc-detail { flex: 1; text-align: start; align-self: stretch; }
+.idc-front[data-orientation="landscape"] .idc-name { font-size: .95em; }
+.idc-front[data-orientation="landscape"] .idc-rows {
+  margin-top: .2em; padding-top: 0; border-top: 0; gap: .05em;
+}
+.idc-front[data-orientation="landscape"] .idc-row { grid-template-columns: 6.2em 1fr; }
+
+.idc[data-orientation="landscape"] .idc-foot { padding: .18em .8em .26em; }
+.idc[data-orientation="landscape"] .idc-sig-img { height: 1.55em; }
+.idc[data-orientation="landscape"] .idc-sig-name { line-height: 1.25; }
+
+/* The back has room to sit in two columns once it is on its side. */
+.idc-back[data-orientation="landscape"] .idc-affil { padding: .35em .8em; }
+.idc-back[data-orientation="landscape"] .idc-body {
+  display: grid; padding: .55em .8em .45em;
+  grid-template-columns: 1.05fr 1fr; gap: .1em .9em;
+  grid-template-areas: "rows terms" "sig terms";
+  align-content: start;
+}
+.idc-back[data-orientation="landscape"] .idc-rows { grid-area: rows; gap: .16em; }
+.idc-back[data-orientation="landscape"] .idc-row { grid-template-columns: 7.2em 1fr; }
+.idc-back[data-orientation="landscape"] .idc-terms { grid-area: terms; margin-top: 0; }
+/* Beside the conditions rather than below them, and no taller than the row it
+   sits in: the terms already span both rows, so a signature that grew would
+   push the last condition off a card that cannot scroll. */
+.idc-back[data-orientation="landscape"] .idc-holder-sig {
+  grid-area: sig; margin-top: 0; padding-top: .7em; align-self: end;
+}
+.idc-back[data-orientation="landscape"] .idc-holder-sig .idc-sig-img { height: 1.5em; max-width: 9.5em; }
+.idc-back[data-orientation="landscape"] .idc-holder-sig .idc-sig-rule { width: 9.5em; }
+.idc-back[data-orientation="landscape"] .idc-back-foot { padding: .4em .8em .5em; }
+
+/* ---- the panel that sends people here from their portfolio ---- */
+
+.p-idcard-cta {
+  margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line);
+}
+.p-idcard-cta h3 { font-size: 1rem; margin-bottom: .35em; }
+.p-idcard-cta p { font-size: .9rem; color: var(--ink-soft); margin-bottom: 14px; }
+/* Both scoped to the panel and qualified by the element, because
+   `.p-idcard-cta p` sets a colour of its own and outranks a bare class: the
+   missing-details line had been rendering in --ink-soft rather than --warn,
+   so there was no contrast for the note below it to be calmer than. */
+.p-idcard-cta p.p-idcard-missing { color: var(--warn); }
+/* Not a warning, so it keeps the panel's own colour and is set apart only by
+   the italic — the card is complete; this says the Nepali name on it was
+   written from the English rather than typed, which is worth reading and is
+   not worth alarming anybody about. (.hint is styled only inside a form
+   field, so it does nothing out here.) */
+.p-idcard-cta p.p-idcard-note { font-style: italic; }
+
+.p-btn-link {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; font-size: .82rem; color: var(--err); text-decoration: underline;
+}
+
+img.p-avatar { display: block; object-fit: cover; object-position: 50% 18%; }
+a.p-user:hover { text-decoration: none; }
+a.p-user:hover .p-user-name { text-decoration: underline; }
+
+/* ---- choosing how this print run comes out ---- */
+
+.idc-controls {
+  display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: flex-end;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px 22px; margin-bottom: 14px;
+}
+.idc-controls fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.idc-controls legend {
+  padding: 0 0 8px; font-size: .78rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .idc-controls legend { text-transform: none; letter-spacing: 0; font-size: .86rem; }
+.idc-controls-actions { margin-inline-start: auto; display: flex; gap: 10px; align-items: center; }
+
+.idc-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.idc-choice {
+  display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto;
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 15px; font-size: .9rem; cursor: pointer; white-space: nowrap;
+  transition: border-color .15s ease, background .15s ease;
+}
+
+.idc-choice:hover { background: var(--bg-tint); }
+.idc-choice input { width: auto; flex: 0 0 auto; accent-color: var(--teal); margin: 0; }
+.idc-choice:has(input:checked) { border-color: var(--teal); background: var(--bg-tint); color: var(--navy); font-weight: 600; }
+.idc-choice:has(input:focus-visible) { box-shadow: var(--focus); }
+
+.idc-print-hint { max-width: 62ch; margin-bottom: 22px; }
+
+/* ---- the colourway picker on the System page ---- */
+
+.idc-themes { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px; }
+.idc-theme {
+  display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; flex: 0 0 auto;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 9px 15px 9px 11px; cursor: pointer; font-size: .92rem;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.idc-theme:hover { border-color: var(--teal); }
+.idc-theme:has(input:checked) { border-color: var(--teal); box-shadow: var(--focus); font-weight: 600; color: var(--navy); }
+.idc-theme input { position: absolute; width: auto; opacity: 0; pointer-events: none; }
+.idc-swatch {
+  display: inline-flex; border-radius: 5px; overflow: hidden;
+  border: 1px solid rgba(11, 37, 69, .18); flex: 0 0 auto;
+}
+.idc-swatch i { display: block; width: 15px; height: 26px; }
+
+.idc-design { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+.idc-design-fields { flex: 1 1 340px; min-width: 0; }
+.idc-design-preview { flex: 0 0 auto; }
+.idc-design-preview .idc-sheet { --card-w: 62mm; gap: 14px; }
+.idc-design-preview > span {
+  display: block; margin-bottom: 10px; font-size: .78rem; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .idc-design-preview > span { text-transform: none; letter-spacing: 0; }
+
+@media (max-width: 560px) {
+  .idc-controls-actions { margin-inline-start: 0; width: 100%; }
+}
+
+/* On a narrow phone the card shrinks to fit the screen. Sized against the
+   viewport, never a percentage: the card's containing block is sized by the
+   card itself, so a percentage here would be circular. */
+@media screen and (max-width: 480px) {
+  .idc-sheet { --card-w: min(86mm, calc(100vw - 42px)); }
+  .idc-sheet[data-orientation="landscape"] { --card-w: min(68mm, calc((100vw - 42px) / 1.5858)); }
+}
+
+/* ---- printing -----------------------------------------------------------
+   Two targets. A4 keeps a margin and draws a cutting line round each card,
+   for an office or home printer. Card gives each face a page exactly the size
+   of a CR80 blank with no margin, for a card printer. The @page rule itself
+   is swapped by the script on the page, because @page cannot be selected. */
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+
+  .p-header, .p-footer, .p-noprint, .skip, .p-flash,
+  .p-rail, .p-rail-scrim { display: none !important; }
+  body.portal { background: #fff; }
+  .p-shell { display: block; }
+  .p-main, .p-main.wide { padding: 0; max-width: none; }
+
+  .idc-sheet,
+  .idc-sheet[data-orientation="landscape"] { --card-w: 53.98mm; gap: 8mm; }
+  .idc {
+    box-shadow: none;
+    border: 1px solid #9aa7b5;      /* a cutting line that survives on paper */
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .idc-holder { break-inside: avoid; page-break-inside: avoid; }
+  .idc, .idc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* A card printer feeds one blank at a time: no gap, no cutting line, no
+     rounded corner drawn on top of the blank's own, one face per page. */
+  .idc-sheet[data-print-target="card"] { display: block; gap: 0; }
+  .idc-sheet[data-print-target="card"] .idc-holder { break-after: page; page-break-after: always; }
+  .idc-sheet[data-print-target="card"] .idc-holder:last-child { break-after: auto; page-break-after: auto; }
+  .idc-sheet[data-print-target="card"] .idc { border: 0; border-radius: 0; }
+
+  /* The design preview is a preview, not something to print. */
+  .idc-design-preview { display: none !important; }
+}
+
+/* The stored signature, shown to an administrator before it goes on a card */
+.p-signature-preview {
+  display: inline-block; margin-bottom: 16px; padding: 12px 18px;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.p-signature-preview img { max-height: 70px; width: auto; }
+
+/* ==================================================== notice attachments == */
+
+/* An attached PDF *is* the notice for most TU announcements, so it is offered
+   to be read in place rather than only downloaded. Collapsed by default: the
+   board can list sixty of them. */
+.p-preview { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.p-preview > summary {
+  cursor: pointer; font-weight: 600; font-size: .9rem; color: var(--teal-600);
+  list-style: none; display: inline-flex; align-items: center; gap: 7px;
+}
+.p-preview > summary::-webkit-details-marker { display: none; }
+.p-preview > summary::before { content: "▸"; font-size: .8em; transition: transform .15s ease; }
+.p-preview[open] > summary::before { transform: rotate(90deg); }
+.p-preview > summary:hover { text-decoration: underline; }
+
+.p-preview-frame {
+  margin-top: 12px; background: #f4f6f8;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden;
+}
+/* Tall enough to read a page of A4 without scrolling the frame itself, and
+   capped against the viewport so a phone still shows the rest of the page. */
+.p-preview-frame iframe { display: block; width: 100%; height: min(78vh, 780px); border: 0; }
+.p-preview-frame img { display: block; width: 100%; height: auto; }
+
+@media (max-width: 640px) {
+  .p-preview-frame iframe { height: 65vh; }
+}
+
+/* Says plainly that a Nepali notice was rendered by machine, not by a person */
+.p-auto-note {
+  margin-top: 12px; font-size: .82rem; color: var(--ink-soft);
+  border-left: 3px solid var(--line); padding-left: 10px;
+}
+
+/* ======================================================= signature library == */
+
+/* One card per signature: the image itself at a readable size, what the office
+   knows about it, and the one control that matters — how far it is released. */
+.p-sig-list { margin-top: 18px; display: grid; gap: 16px; }
+
+.p-sig {
+  display: grid; gap: 18px;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) minmax(200px, 250px);
+  align-items: start;
+  padding: 18px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+/* White behind the image whatever the page does: a signature scanned on white
+   paper disappears into a tinted panel, and one with a transparent background
+   would otherwise be read against it. */
+.p-sig-image {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 92px; padding: 12px;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.p-sig-image img { max-width: 100%; max-height: 92px; width: auto; height: auto; }
+
+.p-sig-meta h3 { margin: 0 0 4px; font-size: 1.02rem; }
+.p-sig-owner { margin: 0 0 6px; font-size: .92rem; color: var(--ink); }
+.p-sig-owner span { color: var(--ink-soft); font-size: .88rem; }
+.p-sig-note  { margin: 0 0 6px; font-size: .88rem; color: var(--ink-soft); }
+.p-sig-trail { margin: 0 0 10px; font-size: .82rem; color: var(--ink-soft); line-height: 1.7; }
+.p-sig-tags  { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+
+.p-sig-controls .p-field { margin-bottom: 6px; }
+.p-sig-controls .hint { display: block; margin-bottom: 12px; line-height: 1.6; }
+
+.p-sig-edit { margin-bottom: 12px; }
+.p-sig-edit > summary {
+  cursor: pointer; font-size: .88rem; font-weight: 600; color: var(--teal-600);
+  list-style: none; display: inline-flex; align-items: center; gap: 7px;
+}
+.p-sig-edit > summary::-webkit-details-marker { display: none; }
+.p-sig-edit > summary::before { content: "▸"; font-size: .8em; transition: transform .15s ease; }
+.p-sig-edit[open] > summary::before { transform: rotate(90deg); }
+.p-sig-edit > form { margin-top: 12px; }
+
+@media (max-width: 900px) {
+  .p-sig { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ====================================================== official documents == */
+
+/* A4 at its real width, so what an administrator reads on screen is the page
+   that comes out of the printer. */
+.p-doc {
+  width: 210mm; max-width: 100%; min-height: 297mm;
+  margin: 0 auto; padding: 18mm 20mm 16mm;
+  background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column;
+}
+
+.p-doc-head {
+  display: flex; align-items: center; gap: 16px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--navy);
+}
+.p-doc-crest { width: 84px; height: 84px; flex: 0 0 84px; }
+.p-doc-head-text { display: flex; flex-direction: column; gap: 1px; }
+.p-doc-campus-ne { font-family: var(--deva); font-weight: 700; font-size: 1.28rem; color: var(--navy); }
+.p-doc-campus-en { font-family: var(--serif); font-weight: 700; font-size: 1.44rem; color: var(--navy); }
+.p-doc-place   { font-size: .86rem; color: var(--ink-soft); }
+.p-doc-affil   { font-size: .8rem; color: var(--ink-soft); }
+.p-doc-contact { font-size: .76rem; color: var(--ink-soft); }
+
+.p-doc-meta {
+  display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  margin-top: 14px; font-size: .88rem; color: var(--ink-soft);
+}
+
+.p-doc-title {
+  margin: 26px 0 20px; text-align: center;
+  font-family: var(--serif); font-size: 1.32rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--navy);
+  text-decoration: underline; text-underline-offset: 7px;
+}
+body.lang-ne .p-doc-title { font-family: var(--deva); text-transform: none; letter-spacing: .02em; }
+
+.p-doc-particulars {
+  margin: 0 0 22px; padding: 14px 16px;
+  background: var(--bg-soft); border-radius: var(--radius-sm);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 26px;
+}
+.p-doc-particulars > div { display: grid; grid-template-columns: 9em 1fr; gap: 8px; align-items: baseline; }
+.p-doc-particulars dt { font-size: .82rem; font-weight: 600; color: var(--ink-soft); }
+.p-doc-particulars dd { margin: 0; font-size: .92rem; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Justified and generously led: this is read as a letter, not as a screen. */
+.p-doc-body { font-size: 1rem; line-height: 2; text-align: justify; }
+.p-doc-body p { margin: 0 0 1.1em; }
+
+/* Pushed to the foot of the page, where a signature belongs, whatever the
+   length of the body above it. */
+.p-doc-sign {
+  margin-top: auto; padding-top: 34px;
+  display: flex; flex-direction: column; align-items: flex-end;
+}
+.p-doc-sig-img { height: 58px; max-width: 220px; object-fit: contain; display: block; }
+span.p-doc-sig-img { width: 1px; }
+.p-doc-sig-rule { display: block; width: 220px; border-top: 1px solid var(--ink-soft); margin-top: 4px; }
+.p-doc-sig-name   { font-weight: 700; font-size: .96rem; color: var(--navy); margin-top: 5px; }
+.p-doc-sig-title  { font-size: .86rem; color: var(--ink-soft); }
+.p-doc-sig-campus { font-size: .82rem; color: var(--ink-soft); }
+
+.p-doc-foot {
+  margin-top: 26px; padding-top: 10px; border-top: 1px solid var(--line);
+  font-size: .76rem; color: var(--ink-soft); text-align: center;
+}
+
+.p-doc-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+
+@media (max-width: 760px) {
+  .p-doc { padding: 22px 18px; min-height: 0; }
+  .p-doc-head { flex-direction: column; text-align: center; gap: 10px; }
+  .p-doc-crest { width: 64px; height: 64px; flex-basis: 64px; }
+  .p-doc-particulars { grid-template-columns: minmax(0, 1fr); }
+  .p-doc-body { text-align: left; line-height: 1.85; }
+}
+
+@media print {
+  /* The page is the document: the portal's own chrome and the screen's frame
+     around it have no business on paper. */
+  .p-doc {
+    width: auto; min-height: auto; margin: 0;
+    padding: 18mm 20mm 16mm;
+    border: 0; border-radius: 0; box-shadow: none;
+    break-inside: auto;
+  }
+  .p-doc, .p-doc * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .p-doc-head { break-after: avoid; page-break-after: avoid; }
+  .p-doc-sign { break-inside: avoid; page-break-inside: avoid; }
+}
+
+/* The photograph as the card will print it. It has to be the card's own frame
+   — round, since that is what the card is now — or the preview shows somebody
+   a crop the card will never produce, which is the surprise it exists to
+   prevent. */
+.p-photo-preview { display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; }
+.p-photo-preview .hint { margin: 0; }
+.p-photo-frame {
+  flex: 0 0 auto; width: 92px; aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid #fff; outline: 1px solid var(--line);
+  overflow: hidden; background: var(--bg-soft);
+}
+.p-photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Where the round frame sits on the photograph. The generic .p-field rule
+   gives every input a box and padding, which on a slider draws a border round
+   the track; a range input is its own control and wants neither. */
+.p-place input[type="range"] { width: 100%; padding: 0; border: 0; background: none; accent-color: var(--teal); }
+.p-place-ends {
+  display: flex; justify-content: space-between;
+  font-size: .8rem; color: var(--ink-soft); margin-top: 2px;
+}
+
+/* The holder's own signature, shown as it will print: a strip rather than a
+   frame, because a signature is wide and shallow, and on white because a
+   scan with a transparent background would otherwise sit on the page's grey
+   and look like a different image on the card. */
+.p-sig-preview { display: flex; align-items: center; gap: 14px; margin: 4px 0 12px; }
+.p-sig-preview .hint { margin: 0; }
+.p-sig-frame {
+  flex: 0 0 auto; width: 170px; height: 60px; padding: 6px 10px;
+  display: grid; place-items: center;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.p-sig-frame img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+
+/* ====================================================== handing a password over */
+
+/* A password on its way from the campus office to the person it belongs to.
+   It gets its own panel, its own line and a monospace face, because the one
+   way this goes wrong is a character lost on the way to whoever has to type
+   it — and the login page cannot tell them that is what happened. */
+.p-creds {
+  margin-bottom: 24px; padding: 20px 22px;
+  background: var(--ok-bg);
+  border: 1px solid rgba(15, 123, 82, .28);
+  border-inline-start: 4px solid var(--ok);
+  border-radius: var(--radius-sm);
+}
+.p-creds h2 { font-size: 1.04rem; margin: 0 0 4px; color: var(--ok); }
+.p-creds > p { margin: 0 0 14px; font-size: .94rem; color: var(--ink); }
+.p-creds dl { margin: 0; display: grid; gap: 8px; }
+.p-creds dl > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.p-creds dt {
+  flex: 0 0 auto; min-width: 5.5em;
+  font-size: .76rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+body.lang-ne .p-creds dt { text-transform: none; letter-spacing: 0; font-size: .84rem; }
+.p-creds dd { margin: 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.p-creds code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.02rem; font-weight: 600; letter-spacing: .04em;
+  background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 7px;
+  padding: 7px 12px; user-select: all;
+}
+.p-creds .hint { margin: 14px 0 0; }
+
+/* ---- Shree Kamala Secondary School: two signatures, card number in the band ----
+   The front's foot holds the +2 Coordinator's signature and the Principal's
+   side by side; the card number moves up into the band so the front is no
+   taller than it was with one signature. */
+.idc-band { letter-spacing: .14em; }
+.idc-band-no {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .03em; text-transform: none; white-space: nowrap;
+}
+body.lang-ne .idc-band-no { font-size: .92em; }
+.idc-foot-two { justify-content: space-between; align-items: flex-end; gap: .8em; }
+.idc-foot-two .idc-sig { flex: 1 1 0; min-width: 0; }
+.idc-foot-two .idc-sig-rule { width: 100%; max-width: 9em; }
+.idc-foot-two .idc-sig-img { max-width: 8.5em; }
+.idc-foot-two .idc-sig-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+/* ---- The school's own colourways ----------------------------------------
+   Royal blue with sunflower yellow — the signboard's colours — and the same
+   blue with the saffron of the emblem. Dark text on both bands: white on
+   saffron or yellow falls short of legible at this size. */
+.idc[data-theme="school"] {
+  --idc-head-bg: #1d3b8f; --idc-head-sub: #e7ecf8; --idc-head-dim: #b3c2e6;
+  --idc-band-bg: #f2c230; --idc-band-fg: #2a2000;
+  --idc-accent: #1d3b8f;  --idc-strip: #eef2fb; --idc-ring: #c3cde8;
+}
+.idc[data-theme="saffron"] {
+  --idc-head-bg: #1d3b8f; --idc-head-sub: #e7ecf8; --idc-head-dim: #b3c2e6;
+  --idc-band-bg: #ec6b1c; --idc-band-fg: #1f0c00;
+  --idc-accent: #b44c0c;  --idc-strip: #fdf1e8; --idc-ring: #f3c7a8;
+}
+
+/* ---- The back's foot: where to return the card, and the school's location
+   as a QR code beside it. The code is drawn in the browser into .idc-qr; a
+   white quiet zone round it is what lets a phone read it off a coloured
+   strip. */
+.idc-back-foot { flex-direction: row; align-items: center; gap: .7em; }
+.idc-return { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.idc-qr-wrap { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; }
+.idc-qr {
+  display: block; width: 3.9em; height: 3.9em; padding: .22em;
+  background: #fff; border: 1px solid var(--idc-rule); border-radius: .2em;
+}
+.idc-qr svg { display: block; width: 100%; height: 100%; }
+.idc-qr-label {
+  margin-top: .15em; font-size: .52em; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-soft); white-space: nowrap;
+}
+body.lang-ne .idc-qr-label { text-transform: none; letter-spacing: 0; font-size: .6em; }
+.idc-back[data-orientation="landscape"] .idc-qr { width: 3.4em; height: 3.4em; }

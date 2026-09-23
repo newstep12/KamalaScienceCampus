@@ -1,0 +1,37 @@
+/* Shree Kamala Secondary School — +2 Science pages.
+   Loaded after the site-wide styles.css, on the /plus2/ pages only. */
+
+/* The school building behind the home page's heading. The gradient runs dark
+   on the left, where the text sits, and lets the building show through on
+   the right; the dotted texture the campus hero carries is left off, since
+   it would sit on top of a photograph. */
+.hero.hero-photo {
+  background:
+    linear-gradient(90deg, rgba(9, 26, 58, .94) 0%, rgba(9, 26, 58, .82) 42%, rgba(9, 26, 58, .35) 100%),
+    url("../img/school-building.jpg") center 38% / cover no-repeat,
+    #0b2545;
+}
+.hero.hero-photo::after { display: none; }
+.hero.hero-photo .wrap { padding-top: 110px; padding-bottom: 110px; }
+.hero-photo .hero-credit {
+  position: absolute; right: 16px; bottom: 12px; z-index: 1;
+  font-size: .72rem; color: rgba(255, 255, 255, .75);
+}
+
+/* On a phone the text covers the whole width, so the whole photo is darkened. */
+@media (max-width: 720px) {
+  .hero.hero-photo {
+    background:
+      linear-gradient(180deg, rgba(9, 26, 58, .78) 0%, rgba(9, 26, 58, .9) 100%),
+      url("../img/school-building.jpg") center 30% / cover no-repeat,
+      #0b2545;
+  }
+  .hero.hero-photo .wrap { padding-top: 72px; padding-bottom: 72px; }
+}
+
+/* The embedded map on the home page. */
+.map-frame {
+  border: 1px solid var(--line, #e2e8ef); border-radius: 14px; overflow: hidden;
+  aspect-ratio: 16 / 10; background: #eef4f8;
+}
+.map-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
