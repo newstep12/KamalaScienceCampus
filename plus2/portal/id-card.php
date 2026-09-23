@@ -35,6 +35,14 @@ if ($requested > 0 && $requested !== (int) $viewer['id']) {
     }
 }
 
+// Every active student has a number from their approval; one who became a
+// student some other way gets theirs the first time their card is drawn, so a
+// card never prints without one.
+if ($holder['role'] === ROLE_STUDENT && empty($holder['student_no']) && $holder['status'] === 'active') {
+    assign_student_no((int) $holder['id']);
+    $holder = one('SELECT * FROM users WHERE id = ? LIMIT 1', [(int) $holder['id']]) ?? $holder;
+}
+
 $own     = (int) $holder['id'] === (int) $viewer['id'];
 $ctx     = id_card_context($holder, $viewer);
 $card    = $ctx['card'];

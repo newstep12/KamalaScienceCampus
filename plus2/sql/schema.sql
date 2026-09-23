@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS users (
   -- The +2 Science group: 'biology' or 'computer' (Computer Science). Chosen
   -- by the student at registration, changeable from their portfolio.
   study_group     VARCHAR(20)   NULL,
+  -- The student's permanent number, given in order as the office approves
+  -- them: the n in KSSD-XI-n. It never changes, so a student moved up from
+  -- class 11 to class 12 keeps it and only the class in front changes.
+  student_no      INT UNSIGNED  NULL,
   neb_reg_no      VARCHAR(40)   NULL,            -- NEB registration number, once issued
   guardian_name   VARCHAR(120)  NULL,            -- father's, mother's or guardian's name
   guardian_phone  VARCHAR(30)   NULL,            -- the number to ring about this student
@@ -53,6 +57,7 @@ CREATE TABLE IF NOT EXISTS users (
   last_login_at   DATETIME      NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_email (email),
+  UNIQUE KEY uq_users_student_no (student_no),
   KEY idx_users_status_role (status, role),
   KEY idx_users_class (class_level, section)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

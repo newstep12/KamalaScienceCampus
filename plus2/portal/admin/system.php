@@ -44,6 +44,14 @@ function apply_schema(): array
         }
     }
 
+    // Every active student approved before numbers existed gets one now, in
+    // the order they were approved, so no card prints without a number.
+    foreach (all('SELECT id FROM users
+                   WHERE role = \'student\' AND status = \'active\' AND student_no IS NULL
+                   ORDER BY approved_at, id') as $row) {
+        assign_student_no((int) $row['id']);
+    }
+
     $after = db()->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
     return ['added' => array_values(array_diff($after, $before)), 'tables' => $after];
 }
@@ -60,6 +68,9 @@ function column_migrations(): array
     return [
         // Biology or Computer Science, printed on the card.
         'study group' => 'ALTER TABLE users ADD COLUMN study_group VARCHAR(20) NULL AFTER roll_no',
+        // The n in KSSD-XI-n; see assign_student_no().
+        'student number' => 'ALTER TABLE users ADD COLUMN student_no INT UNSIGNED NULL AFTER study_group',
+        'student number key' => 'ALTER TABLE users ADD UNIQUE KEY uq_users_student_no (student_no)',
     ];
 }
 

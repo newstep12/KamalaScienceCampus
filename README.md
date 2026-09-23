@@ -905,7 +905,7 @@ kept apart from Kamala Science Campus in everything that matters:
 | Uploads | `portal/uploads/` | `plus2/portal/uploads/` |
 | ID card name | Kamala Science Campus | Shree Kamala Secondary School |
 | ID card signatories | Campus Chief | **+2 Coordinator and Principal** |
-| ID card number | `KSC-S-0042` | `SKSS-S-0042` |
+| ID card number | `KSC-S-0042` | `KSSD-XI-1`, `KSSD-XII-2` |
 
 A campus account cannot sign in to the school portal and a school account
 cannot sign in to the campus portal; signing in or out of one does nothing to
@@ -938,7 +938,7 @@ signature automatically, as on the campus card).
 ### The identity card
 
 Front: the school's emblem and name in both scripts, place, the band
-"IDENTITY CARD · SKSS-S-0002", photograph, name in both scripts, the group
+"IDENTITY CARD · KSSD-XI-1", photograph, name in both scripts, the group
 ("+2 Science · Biology Group"), then **Class · Section, Roll no., Guardian,
 Guardian's phone, Date of birth, Address**, and at the foot **two
 signatures**: the **+2 Coordinator's** (Mr. Bharat Malla) on the left and the
@@ -964,6 +964,15 @@ teal & cream, crimson & gold, forest & gold, slate & silver, and ink on white
 and the card page itself also offers **Portrait / Landscape** for each print
 run, beside the choice of faces and printer (`?orient=` in the address).
 
+**Card numbers** read `KSSD-XI-1`, `KSSD-XII-2`: KSSD for Kamala Secondary
+School, Dhungrebas, the class in Roman numerals, then the student's own
+number. Numbers are handed out 1, 2, 3 … in the order the office approves
+students (`users.student_no`, unique) and never change, so a Class 11 student
+moved up keeps theirs — `KSSD-XI-1` becomes `KSSD-XII-1` — and cannot collide
+with anyone already in Class 12. Roll numbers were not used for this: they
+repeat across sections and years, and are often unknown at registration.
+Staff cards read `KSSD-T-7` (teachers) and `KSSD-A-1` (administrators).
+
 Every face was checked against the fullest card the design takes — a
 two-line name, a two-line address, the longer Computer Science group line, in
 English and Nepali, portrait and landscape — with nothing clipped, and the
@@ -971,8 +980,11 @@ printed QR code was decoded back to the school's link in all four.
 
 ## Filling in the content
 
-Search `src/plus2/` for `[ add` and `TODO`. Everything the school must supply
-is marked; nothing was invented:
+Search `src/plus2/` for `TODO`. The public pages carry neutral wording where
+the school's details are still to come (no bracketed placeholders reach the
+live site), and a `TODO` comment beside each says what belongs there. The
+Principal's and the Coordinator's messages are **drafts** written for them to
+approve — edit them to the wording they sign off. Still to supply:
 
 - the programme introduction, subjects, seats and medium — `src/plus2/pages/index.html`
 - the wording of the **Principal's message** (Mr. Kamlesh Chaudhary) and the

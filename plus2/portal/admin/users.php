@@ -94,11 +94,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_activity((int) $admin['id'], 'suspend_user', $target['email']);
         } elseif ($action === 'reactivate') {
             q('UPDATE users SET status = \'active\', approved_at = NOW(), approved_by = ? WHERE id = ?', [$admin['id'], $id]);
+            assign_student_no($id);       // a no-op for staff and for anyone who has one
             log_activity((int) $admin['id'], 'reactivate_user', $target['email']);
         } elseif ($action === 'set_role') {
             $role = in_array($_POST['role'] ?? '', ['student', 'teacher', 'admin'], true) ? $_POST['role'] : null;
             if ($role) {
                 q('UPDATE users SET role = ? WHERE id = ?', [$role, $id]);
+                if ($target['status'] === 'active') {
+                    assign_student_no($id);   // only does anything when the new role is student
+                }
                 log_activity((int) $admin['id'], 'set_role', $target['email'], $role);
             }
         } elseif ($action === 'reset_password') {

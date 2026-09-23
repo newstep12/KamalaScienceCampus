@@ -16,6 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($target && $action === 'approve') {
         q('UPDATE users SET status = \'active\', approved_at = NOW(), approved_by = ? WHERE id = ?',
           [$admin['id'], $id]);
+        // The student's permanent number — the n in KSSD-XI-n — is given
+        // here, so numbers run in the order the office approves students.
+        assign_student_no($id);
         log_activity((int) $admin['id'], 'approve_user', $target['email']);
         notify_student_approved($target);
         flash('ok', t('approved_ok', $target['full_name']));

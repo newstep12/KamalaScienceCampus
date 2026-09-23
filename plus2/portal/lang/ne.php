@@ -660,7 +660,7 @@ return [
     'id_card_roll' => 'रोल नं.',
     'id_card_guardian' => 'अभिभावक',
     'id_card_guardian_phone' => 'अभिभावक फोन',
-    'school_place_default' => 'ढुंग्रेबास, कमलामाई-४, सिन्धुली',
+    'school_place_default' => 'ढुंग्रेबास, सिन्धुली',
     'school_affiliation_default' => '+२ विज्ञान (कक्षा ११ र १२) · राष्ट्रिय परीक्षा बोर्ड, नेपाल',
     'school_title' => 'कार्डमा विद्यालयको विवरण',
     'school_saved' => 'विद्यालयको विवरण सुरक्षित भयो।',

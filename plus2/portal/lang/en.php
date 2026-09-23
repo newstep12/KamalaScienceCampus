@@ -704,7 +704,7 @@ return [
     'id_card_roll' => 'Roll no.',
     'id_card_guardian' => 'Guardian',
     'id_card_guardian_phone' => 'Guardian’s ph.',
-    'school_place_default' => 'Dhungrebas, Kamalamai-4, Sindhuli',
+    'school_place_default' => 'Dhungrebas, Sindhuli',
     'school_affiliation_default' => '+2 Science (Class 11 & 12) · National Examinations Board, Nepal',
     'school_title' => 'School details on the card',
     'school_intro' => 'What every card prints about the school besides its name: the place under the name on the front, and on the back the approval line and where a lost card is returned.',

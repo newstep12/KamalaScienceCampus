@@ -155,16 +155,68 @@ function id_card_names(array $u): array
 }
 
 /**
- * The card number. Derived from the account id rather than stored, so it is
- * stable for the life of the account and cannot drift out of step with it:
- * SKSS-S-0042 for students, SKSS-T-0007 for teachers, SKSS-A-0001 for
- * administrators. SKSS, not KSC: this is the school's own numbering, and a
- * card number must never be mistaken for one the campus issued.
+ * The card number: KSSD — Kamala Secondary School, Dhungrebas — then the
+ * class in Roman numerals, then the student's own number.
+ *
+ *   KSSD-XI-1    the first student approved, in class 11
+ *   KSSD-XII-2   the second, in class 12
+ *
+ * The number is the student's for good (users.student_no, handed out in the
+ * order the office approves students), and only the class in front of it
+ * moves: a class 11 student moved up keeps their number and becomes
+ * KSSD-XII-1, which cannot collide with anyone already in class 12. Roll
+ * numbers were not used because they repeat across sections and years, and
+ * are often not known when a student registers.
+ *
+ * Staff cards: KSSD-T-7 for teachers, KSSD-A-1 for administrators, from the
+ * account id. KSSD, never KSC: this is the school's numbering, and must never
+ * be mistaken for a card the campus issued.
  */
 function id_card_number(array $u): string
 {
-    $letter = [ROLE_STUDENT => 'S', ROLE_TEACHER => 'T', ROLE_ADMIN => 'A'][$u['role']] ?? 'X';
-    return sprintf('SKSS-%s-%04d', $letter, (int) $u['id']);
+    if ($u['role'] === ROLE_STUDENT) {
+        $class = class_roman(isset($u['class_level']) ? (int) $u['class_level'] : null);
+        $no    = !empty($u['student_no']) ? (string) (int) $u['student_no'] : '—';
+        return 'KSSD-' . $class . '-' . $no;
+    }
+    $letter = [ROLE_TEACHER => 'T', ROLE_ADMIN => 'A'][$u['role']] ?? 'X';
+    return 'KSSD-' . $letter . '-' . (int) $u['id'];
+}
+
+/** Class 11 → XI, class 12 → XII; S for a student with no class set yet. */
+function class_roman(?int $class): string
+{
+    return [11 => 'XI', 12 => 'XII'][(int) $class] ?? 'S';
+}
+
+/**
+ * Give a student their permanent number, the next one after the highest
+ * handed out, if they do not have one yet. Safe to call again: a student who
+ * already has a number keeps it, and staff never get one.
+ *
+ * The next number is read and written in one statement, and the column is
+ * unique, so two approvals at the same moment cannot share a number: the
+ * second one's write fails on the key and is simply tried again.
+ */
+function assign_student_no(int $id): void
+{
+    for ($attempt = 0; $attempt < 3; $attempt++) {
+        try {
+            q(
+                // The derived table makes MySQL read MAX() before it writes,
+                // which it will not do on the table it is updating directly.
+                'UPDATE users
+                    SET student_no = (SELECT n FROM (SELECT COALESCE(MAX(student_no), 0) + 1 AS n FROM users) AS t)
+                  WHERE id = ? AND role = \'student\' AND student_no IS NULL',
+                [$id]
+            );
+            return;
+        } catch (PDOException $e) {
+            if ($e->getCode() !== '23000') {
+                throw $e;
+            }
+        }
+    }
 }
 
 /** The line under the name: the staff title, or "+2 Science Student". */
