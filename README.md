@@ -886,3 +886,139 @@ Worth knowing before changing anything here:
 - Links in emails use the real domain, never the request's `Host` header.
 - `.htaccess` sends `X-Frame-Options: SAMEORIGIN` and HSTS, and hides the PHP
   version.
+
+
+---
+
+# The +2 Science section (Shree Kamala Secondary School)
+
+`/plus2/` is a separate section for **Shree Kamala Secondary School's +2
+Science programme — Class 11 and Class 12** — living on this same website but
+kept apart from Kamala Science Campus in everything that matters:
+
+| | Kamala Science Campus | +2 Science (Shree Kamala Secondary School) |
+| --- | --- | --- |
+| Public pages | `/`, `/ne/` | `/plus2/` |
+| Portal | `/portal/` | `/plus2/portal/` |
+| Database | the campus database | **a database of its own** |
+| Sign-in cookie | `kscportal`, path `/` | `sksportal`, path `/plus2/portal/` |
+| Uploads | `portal/uploads/` | `plus2/portal/uploads/` |
+| ID card name | Kamala Science Campus | Shree Kamala Secondary School |
+| ID card signatory | Campus Chief | **Principal** |
+| ID card number | `KSC-S-0042` | `SKSS-S-0042` |
+
+A campus account cannot sign in to the school portal and a school account
+cannot sign in to the campus portal; signing in or out of one does nothing to
+the other, even in the same browser. The school portal's code is a copy of the
+campus portal's (under `plus2/portal/`) rather than shared with it, so a change
+to either never reaches the other. The one change to the campus site is a
+**+2 Science** link in its navigation.
+
+## What's in it
+
+- **Public pages** — `plus2/index.html` (the programme), `messages.html`
+  (the Principal's and the Coordinator's messages), `teachers.html`.
+  Sources in `src/plus2/pages/`, header and footer in `src/plus2/partials/`,
+  built by `python3 build.py` like the rest of the site. English only for now.
+- **The portal** — students of Class 11 and 12 register, the school office
+  approves them, and they sign in to add their details and print their
+  identity card. Roles: student, teacher, administrator.
+
+### What a student registers with
+
+Name (English, and Nepali if they want), email, **class (11 or 12)**, section,
+**roll number** (if known), **father's / guardian's name and phone number**,
+date of birth, address, photograph and password. After approval they can edit
+all of these from **My portfolio** except the class, which the office sets.
+
+### The identity card
+
+Front: school name in both scripts, place, photograph, name in both scripts,
+"+2 Science Student", then **Class · Section, Roll no., Guardian, Guardian's
+phone, Date of birth, Address**, the card number and the **Principal's
+signature** over the Principal's name. Back: issue date, validity, session,
+card number, blood group, conditions, the holder's signature and where to
+return a lost card. The design options (six colourways, portrait/landscape,
+A4 or card printer) work exactly as the campus card's — see *Identity cards*
+above.
+
+## Filling in the content
+
+Search `src/plus2/` for `[ add` and `TODO`. Everything the school must supply
+is marked; nothing was invented:
+
+- the programme introduction, subjects, seats and medium — `src/plus2/pages/index.html`
+- the **Principal's message** and the **Coordinator's message** — `src/plus2/pages/messages.html`
+- the **teachers** — `src/plus2/pages/teachers.html` (copy a card per teacher)
+- the school's address, phone and email — the footer and the *At a glance* panel
+
+Photos: save square photos to `plus2/assets/img/people/<slug>.jpg`
+(`principal`, `coordinator`, `teacher-1`, … — the `{{PHOTO:slug:XY}}`
+markers) and run `python3 build.py`.
+
+**Logo:** `plus2/assets/img/logo-192.png` is a **placeholder** crest drawn
+for this ("श्री कमला मा.वि. · +2 SCIENCE", source in
+`src/plus2-logo-placeholder.svg`). Replace it with the school's own seal as a
+192×192 PNG with a transparent background; it is used on the pages, the
+portal and every identity card. It is deliberately not the campus seal.
+
+## Test it locally first
+
+**On Windows (XAMPP):**
+
+1. Install XAMPP, start **Apache** and **MySQL**.
+2. Copy this whole repository into `C:\xampp\htdocs\KamalaScienceCampus`.
+3. Open <http://localhost/phpmyadmin>, create a database called `plus2_test`
+   (collation `utf8mb4_unicode_ci`). Then **User accounts → Add user account**:
+   user `plus2`, host `localhost`, a password, and under *Database for user
+   account* grant all privileges on `plus2_test`. (The installer will not
+   accept an empty password, so XAMPP's password-less `root` will not do.)
+4. Open <http://localhost/KamalaScienceCampus/plus2/portal/install.php> and
+   enter host `localhost`, database `plus2_test`, user `plus2` and its
+   password, and the administrator you want. The installer works out the
+   portal's address from where it is running, so a subfolder is fine.
+5. The +2 pages are at <http://localhost/KamalaScienceCampus/plus2/>. Register
+   a student, sign in as the administrator to approve them, sign in as the
+   student and print the card.
+
+**On macOS / Linux**, with PHP 8 and MySQL/MariaDB installed: create the
+database the same way, then from the repository folder run
+`php -S 127.0.0.1:8080` and open <http://127.0.0.1:8080/plus2/portal/install.php>.
+
+To start again from nothing, delete `plus2/portal/inc/config.php`, the files
+under `plus2/portal/uploads/` (not `.htaccess` or `.gitkeep`), and drop and
+recreate the database.
+
+## Going live
+
+Nothing here is on the live site until this branch is merged into `main`
+(Hostinger deploys `main` only). After merging:
+
+1. In hPanel, **Databases → Management**, create a **new** MySQL database
+   for the +2 portal. **Do not reuse the campus portal's database** — the
+   installer refuses it if you try.
+2. Visit `https://kamalasciencecampus.edu.np/plus2/portal/install.php`, enter
+   that database and the school office's administrator account.
+3. Delete `plus2/portal/install.php` in hPanel's File Manager. (It refuses to
+   run again once set up, but deleting it is tidier.)
+4. Sign in at `/plus2/portal/` and, as administrator:
+   - **Signatures** — upload the **Principal's** signature (a clean scan on
+     white, or a transparent PNG; a PNG is stored exactly as uploaded), point
+     *Identity cards* at it, and choose how far to release it.
+   - **System → Identity cards** — the Principal's name as printed under the
+     signature, the valid-until date and the session (e.g. 2082/83).
+   - **System → School details on the card** — the place under the school
+     name, the approval line, and the phone and email printed on the back.
+     Left empty, the phone and email lines are simply left off.
+   - **People** — add teachers and office staff; their designation
+     (Principal, Vice-Principal, +2 Coordinator, Teacher, …) goes on their card.
+
+`plus2/portal/inc/config.php` is git-ignored, like the campus one.
+
+## Each new session
+
+In **People**, first suspend last year's Class 12 leavers, then **Move all
+Class 11 students to Class 12** — it moves every active Class 11 student up
+and clears their roll numbers so this year's can be entered (by the students
+from their portfolio, or by the office on the People page). New Class 11
+students register as usual.

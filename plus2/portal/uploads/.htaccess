@@ -1,0 +1,10 @@
+# Uploaded files are served only through portal/download.php, which checks
+# that the signed-in user is entitled to the file. Deny direct access, and
+# make certain nothing here is ever executed.
+Require all denied
+
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+AddType text/plain .php .phtml .phar

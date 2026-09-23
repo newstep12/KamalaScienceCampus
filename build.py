@@ -3,6 +3,8 @@
 
     src/pages/*.html      + src/partials/*      ->  ./*.html        (English)
     src/pages-ne/*.html   + src/partials-ne/*   ->  ./ne/*.html     (Nepali)
+    src/plus2/pages/*.html + src/plus2/partials/* -> ./plus2/*.html (+2 Science,
+                          Shree Kamala Secondary School; English only)
 
 Run `python3 build.py` after editing anything under src/. The generated files
 at the project root are what gets published; GitHub and Hostinger serve them
@@ -82,10 +84,10 @@ TEMPLATE = """<!doctype html>
 """
 
 
-def photo(slug, initials, base):
+def photo(slug, initials, base, people=PEOPLE, url='assets/img/people/'):
     for ext in ('jpg', 'jpeg', 'png', 'webp'):
-        if (PEOPLE / f'{slug}.{ext}').is_file():
-            return (f'<img src="{base}assets/img/people/{slug}.{ext}" alt="" '
+        if (people / f'{slug}.{ext}').is_file():
+            return (f'<img src="{base}{url}{slug}.{ext}" alt="" '
                     f'width="320" height="320" loading="lazy" decoding="async">')
     return f'<span class="person-initials" aria-hidden="true">{initials}</span>'
 
@@ -95,8 +97,9 @@ def page_url(lang, name):
     return SITE + ('ne/' if lang == 'ne' else '') + ('' if name == 'index.html' else name)
 
 
-def write_sitemap(built):
+def write_sitemap(built, plus2=()):
     urls = [page_url(lang, name) for lang, names in built for name in names]
+    urls += [plus2_url(name) for name in plus2]
     # notices.php is outside the build but public, in both languages.
     urls += [SITE + 'notices.php', SITE + 'notices.php?lang=ne']
     entries = ''.join(f'  <url><loc>{escape(u)}</loc></url>\n' for u in urls)
@@ -159,6 +162,76 @@ def build(lang, spec):
     return built
 
 
+# The +2 Science section: Shree Kamala Secondary School's pages, served from
+# /plus2/ on this same domain. They have a header and footer of their own
+# (the school's name and crest, not the campus's), share the site's CSS and
+# JS, and are English only for now, so they carry no hreflang pair.
+PLUS2 = {
+    'pages':    ROOT / 'src' / 'plus2' / 'pages',
+    'partials': ROOT / 'src' / 'plus2' / 'partials',
+    'out':      ROOT / 'plus2',
+    'people':   ROOT / 'plus2' / 'assets' / 'img' / 'people',
+}
+
+PLUS2_TEMPLATE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{title}</title>
+<meta name="description" content="{desc}">
+<link rel="canonical" href="{canonical}">
+{head}
+</head>
+<body data-page="{page}" class="plus2">
+
+{header}
+
+<main id="main">
+{body}
+</main>
+
+{footer}
+
+</body>
+</html>
+"""
+
+
+def plus2_url(name):
+    return SITE + 'plus2/' + ('' if name == 'index.html' else name)
+
+
+def build_plus2():
+    if not PLUS2['pages'].is_dir():
+        return []
+    head = (PLUS2['partials'] / 'head.html').read_text().strip()
+    header = (PLUS2['partials'] / 'header.html').read_text().strip()
+    footer = (PLUS2['partials'] / 'footer.html').read_text().strip()
+    built = []
+    for path in sorted(PLUS2['pages'].glob('*.html')):
+        src = path.read_text()
+        body = re.sub(r'<!--\s*(title|desc|page):.*?-->\s*', '', src, count=3).strip()
+        html = PLUS2_TEMPLATE.format(
+            canonical=plus2_url(path.name),
+            title=meta(src, 'title', 'Shree Kamala Secondary School — +2 Science'),
+            desc=meta(src, 'desc'),
+            page=meta(src, 'page'),
+            head=head,
+            header=header,
+            body=body,
+            footer=footer,
+        )
+        html = re.sub(r'\{\{PHOTO:([a-z0-9-]+):([^}]+)\}\}',
+                      lambda m: photo(m.group(1), m.group(2), '', PLUS2['people'], 'assets/img/people/'),
+                      html)
+        html = html.replace('{{V}}', asset_version())
+        # Pages live one level down, so the site-wide assets are one up.
+        html = html.replace('{{BASE}}', '../')
+        (PLUS2['out'] / path.name).write_text(html)
+        built.append(path.name)
+    return built
+
+
 if __name__ == '__main__':
     built = []
     for lang, spec in LANGS.items():
@@ -168,4 +241,6 @@ if __name__ == '__main__':
         names = build(lang, spec)
         built.append((lang, names))
         print(f'{lang}: {len(names)} pages -> {spec["out"].relative_to(ROOT) or "."}')
-    print(f'sitemap.xml: {write_sitemap(built)} URLs')
+    plus2 = build_plus2()
+    print(f'plus2: {len(plus2)} pages -> plus2')
+    print(f'sitemap.xml: {write_sitemap(built, plus2)} URLs')
