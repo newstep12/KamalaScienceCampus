@@ -1024,7 +1024,10 @@ then scale it to 192 and 512.
    user `plus2`, host `localhost`, a password, and under *Database for user
    account* grant all privileges on `plus2_test`. (The installer will not
    accept an empty password, so XAMPP's password-less `root` will not do.)
-4. Open <http://localhost/KamalaScienceCampus/plus2/portal/install.php> and
+4. Unlock the installer: create an empty file named `INSTALL-UNLOCK` in
+   `C:\xampp\htdocs\KamalaScienceCampus\plus2\portal\inc\` (see *Going
+   live* for why). Then open
+   <http://localhost/KamalaScienceCampus/plus2/portal/install.php> and
    enter host `localhost`, database `plus2_test`, user `plus2` and its
    password, and the administrator you want. The installer works out the
    portal's address from where it is running, so a subfolder is fine.
@@ -1033,8 +1036,9 @@ then scale it to 192 and 512.
    student and print the card.
 
 **On macOS / Linux**, with PHP 8 and MySQL/MariaDB installed: create the
-database the same way, then from the repository folder run
-`php -S 127.0.0.1:8080` and open <http://127.0.0.1:8080/plus2/portal/install.php>.
+database the same way, run `touch plus2/portal/inc/INSTALL-UNLOCK`, then from
+the repository folder run `php -S 127.0.0.1:8080` and open
+<http://127.0.0.1:8080/plus2/portal/install.php>.
 
 To start again from nothing, delete `plus2/portal/inc/config.php`, the files
 under `plus2/portal/uploads/` (not `.htaccess` or `.gitkeep`), and drop and
@@ -1045,14 +1049,28 @@ recreate the database.
 Nothing here is on the live site until this branch is merged into `main`
 (Hostinger deploys `main` only). After merging:
 
+Until step 3 is done, the +2 pages are live but the portal's Login and
+Register pages say *"The +2 Science portal is being set up"*, so do it soon
+after the merge.
+
 1. In hPanel, **Databases → Management**, create a **new** MySQL database
    for the +2 portal. **Do not reuse the campus portal's database** — the
    installer refuses it if you try.
-2. Visit `https://kamalasciencecampus.edu.np/plus2/portal/install.php`, enter
-   that database and the school office's administrator account.
-3. Delete `plus2/portal/install.php` in hPanel's File Manager. (It refuses to
-   run again once set up, but deleting it is tidier.)
-4. Sign in at `/plus2/portal/` and, as administrator:
+2. **Unlock the installer.** In hPanel's **File Manager**, open
+   `public_html/plus2/portal/inc/` and create an empty file named
+   `INSTALL-UNLOCK`. Until that file exists the installer shows nothing and
+   accepts nothing — otherwise whoever reached it first after the deploy could
+   point the portal at a database of their own and make themselves its
+   administrator. Only someone with access to the server's files can create
+   it; the name is git-ignored, so it can never arrive with a deploy. The
+   installer also accepts only `localhost` as the database host.
+3. Visit `https://kamalasciencecampus.edu.np/plus2/portal/install.php`, enter
+   that database (host `localhost`) and the school office's administrator
+   account. A successful setup **deletes `INSTALL-UNLOCK` itself**, locking
+   the installer again.
+4. Optionally delete `plus2/portal/install.php` in File Manager. It is locked
+   and refuses to run twice anyway.
+5. Sign in at `/plus2/portal/` and, as administrator:
    - **Signatures** — upload **two** signatures: the Principal's (title
      *Principal*) and the Coordinator's (title *+2 Coordinator*) — each a
      clean scan on white, or a transparent PNG (a PNG is stored exactly as

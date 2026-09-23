@@ -8,3 +8,4 @@ plus2/portal/inc/config.php
 plus2/portal/uploads/*
 !plus2/portal/uploads/.gitkeep
 !plus2/portal/uploads/.htaccess
+plus2/portal/inc/INSTALL-UNLOCK

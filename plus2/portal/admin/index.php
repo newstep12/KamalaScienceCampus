@@ -9,14 +9,6 @@ require_role(ROLE_ADMIN);
 $pending  = (int) scalar('SELECT COUNT(*) FROM users WHERE status = \'pending\'');
 $teachers = (int) scalar('SELECT COUNT(*) FROM users WHERE role = \'teacher\' AND status = \'active\'');
 
-$byClass = [];
-foreach (class_levels() as $c) {
-    $byClass[$c] = (int) scalar(
-        'SELECT COUNT(*) FROM users WHERE role = \'student\' AND status = \'active\' AND class_level = ?',
-        [$c]
-    );
-}
-
 // Active students by class and group — the two numbers the office is asked
 // for most. A student who has not chosen a group yet counts under "—".
 $byGroup = [];
@@ -27,17 +19,22 @@ foreach (all(
 ) as $r) {
     $byGroup[(int) $r['class_level']][(string) ($r['study_group'] ?? '')] = (int) $r['n'];
 }
+$byClass = [];
+foreach (class_levels() as $c) {
+    $byClass[$c] = array_sum($byGroup[$c] ?? []);
+}
 
 // Students with something still missing from their card, so the office can
 // chase them before a print run rather than after.
-$incomplete = (int) scalar(
-    'SELECT COUNT(*) FROM users
-      WHERE role = \'student\' AND status = \'active\'
-        AND (avatar_path IS NULL OR roll_no IS NULL OR roll_no = \'\'
-             OR guardian_phone IS NULL OR guardian_phone = \'\'
-             OR study_group IS NULL
-             OR date_of_birth IS NULL OR address IS NULL OR address = \'\')'
-);
+// Counted by the same rule the card page uses, id_card_missing(), rather than
+// a second list of columns that could drift from it — the names in particular
+// can only be judged there, by script.
+$incomplete = 0;
+foreach (all('SELECT * FROM users WHERE role = \'student\' AND status = \'active\'') as $s) {
+    if (id_card_missing($s)) {
+        $incomplete++;
+    }
+}
 
 $needsDbUpdate = !signature_tables_ready();
 

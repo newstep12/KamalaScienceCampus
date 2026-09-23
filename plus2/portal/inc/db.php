@@ -154,12 +154,14 @@ function config(): array
             // repository and has to be restored on the server.
             $ref = portal_error_reference();
             error_log('+2 portal error [' . $ref . ']: configuration missing at ' . $path);
+            // Public: every visitor sees this until the office has run the
+            // installer, so it names no file and no path. The log line above
+            // says what is missing for whoever reads the server's error log.
             portal_error_page(
                 503,
-                'The portal is not set up on this server yet.',
+                'The +2 Science portal is being set up.',
                 $ref,
-                'plus2/portal/inc/config.php is missing. It holds the database password, is deliberately '
-                . 'not kept in the repository. Run plus2/portal/install.php to create it.'
+                'Registration and sign-in will open here shortly. Please check back soon.'
             );
         }
         $config = require $path;

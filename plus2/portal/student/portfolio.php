@@ -31,7 +31,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // office's to change (Admin → People), because moving from class 11
         // to 12 is a promotion, not a detail. Numbers are stored in ASCII
         // digits whatever keyboard typed them.
+        $refused = false;             // a guardian detail kept back, below
         if ($user['role'] === ROLE_STUDENT) {
+            // The guardian's name and phone are held to registration's rule,
+            // because both print on the card and the phone is the one the
+            // school rings. A value that falls short is refused, and the one
+            // already on record is kept rather than blanked.
+            $guardianName  = $field('guardian_name', 120);
+            $guardianPhone = ascii_digits($field('guardian_phone', 30));
+            if (mb_strlen($guardianName) < 3) {
+                flash('error', t('err_guardian_name'));
+                $refused = true;
+                $guardianName = (string) ($user['guardian_name'] ?? '');
+            }
+            if (!preg_match('/[0-9]{7,}/', preg_replace('/\D+/', '', $guardianPhone) ?? '')) {
+                flash('error', t('err_guardian_phone'));
+                $refused = true;
+                $guardianPhone = (string) ($user['guardian_phone'] ?? '');
+            }
             q(
                 'UPDATE users SET section = ?, roll_no = ?, study_group = ?, guardian_name = ?,
                                   guardian_phone = ?
@@ -42,8 +59,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Biology or Computer Science, or what was already there:
                     // an empty or unknown value never wipes a group out.
                     study_group($field('study_group', 20)) ?? ($user['study_group'] ?? null),
-                    $field('guardian_name', 120) ?: null,
-                    ascii_digits($field('guardian_phone', 30)) ?: null,
+                    $guardianName !== '' ? $guardianName : null,
+                    $guardianPhone !== '' ? $guardianPhone : null,
                     $user['id'],
                 ]
             );
@@ -192,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        if (!$failed) {
+        if (!$failed && !$refused) {
             flash('ok', t('profile_saved'));
         }
         header('Location: ' . portal_url('/student/portfolio.php'));

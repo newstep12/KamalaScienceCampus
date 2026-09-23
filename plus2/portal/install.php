@@ -46,7 +46,34 @@ $errors     = [];
 $done       = false;
 $repair     = null;
 
-if ($installed && isset($_GET['repair'])) {
+/**
+ * The installer is locked unless the site's owner has unlocked it.
+ *
+ * A deploy puts this file on the live site before anybody has run it, and
+ * until then whoever reaches it first could point the portal at a database
+ * of their own and make themselves its administrator. So it does nothing —
+ * no form, no repair — until a file named INSTALL-UNLOCK exists in inc/,
+ * which only someone with access to the server's files can create (hPanel →
+ * File Manager). inc/ is never served, and the file is git-ignored so it can
+ * never arrive with a deploy. A successful setup deletes it again.
+ */
+$unlockPath = __DIR__ . '/inc/INSTALL-UNLOCK';
+$locked     = !is_file($unlockPath);
+if ($locked) {
+    http_response_code(403);
+}
+
+/**
+ * The database must be on this server. Hostinger's MySQL is "localhost", as
+ * is XAMPP's; a remote host is refused, so the installer can never be used
+ * to send the school's records to a database somewhere else.
+ */
+function local_db_host(string $host): bool
+{
+    return in_array(strtolower($host), ['localhost', '127.0.0.1', '::1'], true);
+}
+
+if (!$locked && $installed && isset($_GET['repair'])) {
     try {
         $c = require $configPath;
         $d = $c['db'];
@@ -61,7 +88,7 @@ if ($installed && isset($_GET['repair'])) {
     }
 }
 
-if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
+if (!$locked && !$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $dbHost = trim((string) ($_POST['db_host'] ?? 'localhost'));
     $dbName = trim((string) ($_POST['db_name'] ?? ''));
     $dbUser = trim((string) ($_POST['db_user'] ?? ''));
@@ -71,6 +98,7 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $adminEmail = strtolower(trim((string) ($_POST['admin_email'] ?? '')));
     $adminPass  = (string) ($_POST['admin_pass'] ?? '');
 
+    if (!local_db_host($dbHost))                            { $errors[] = 'The database host must be localhost — the database on this server.'; }
     if ($dbName === '' || $dbUser === '')                  { $errors[] = 'Enter the database name and user.'; }
     if ($adminName === '')                                  { $errors[] = 'Enter the administrator name.'; }
     if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL))    { $errors[] = 'Enter a valid administrator email.'; }
@@ -140,6 +168,8 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new RuntimeException('Could not write inc/config.php. Check the folder permissions.');
             }
             @chmod($configPath, 0640);
+            // Locked again: the unlock file has served its purpose.
+            @unlink($unlockPath);
             $done = true;
         } catch (Throwable $e) {
             $errors[] = 'Setup failed: ' . $e->getMessage();
@@ -161,7 +191,21 @@ if (!$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="portal">
 <div class="p-auth" style="max-width:600px;">
   <div class="p-card">
-  <?php if ($repair !== null): ?>
+  <?php if ($locked): ?>
+    <h1>The installer is locked</h1>
+    <p class="p-auth-intro">
+      <?php if ($installed): ?>
+        The +2 portal is already set up. <a href="index.php">Go to the portal</a>.
+      <?php else: ?>
+        For safety, the installer runs only after the site&rsquo;s owner unlocks
+        it. In hPanel&rsquo;s <strong>File Manager</strong>, open
+        <code>public_html/plus2/portal/inc/</code>, create an empty file named
+        <code>INSTALL-UNLOCK</code>, then reload this page. Setting up the portal
+        locks it again.
+      <?php endif; ?>
+    </p>
+
+  <?php elseif ($repair !== null): ?>
     <h1>Tables checked</h1>
     <p class="p-auth-intro">
       Ran <?= (int) $repair['ran'] ?> statements. The database now holds these tables:

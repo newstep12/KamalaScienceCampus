@@ -207,6 +207,10 @@ def build_plus2():
     head = (PLUS2['partials'] / 'head.html').read_text().strip()
     header = (PLUS2['partials'] / 'header.html').read_text().strip()
     footer = (PLUS2['partials'] / 'footer.html').read_text().strip()
+    # Worked out once, not once a page.
+    version = asset_version()
+    version2 = hashlib.sha1(
+        (PLUS2['out'] / 'assets' / 'css' / 'plus2.css').read_bytes()).hexdigest()[:10]
     built = []
     for path in sorted(PLUS2['pages'].glob('*.html')):
         src = path.read_text()
@@ -224,11 +228,13 @@ def build_plus2():
         html = re.sub(r'\{\{PHOTO:([a-z0-9-]+):([^}]+)\}\}',
                       lambda m: photo(m.group(1), m.group(2), '', PLUS2['people'], 'assets/img/people/'),
                       html)
-        html = html.replace('{{V}}', asset_version())
+        html = html.replace('{{V}}', version)
         # The +2 section's own stylesheet, versioned on its own, so editing it
         # never changes a campus page.
-        html = html.replace('{{V2}}', hashlib.sha1(
-            (PLUS2['out'] / 'assets' / 'css' / 'plus2.css').read_bytes()).hexdigest()[:10])
+        html = html.replace('{{V2}}', version2)
+        # The sources carry TODO notes for whoever fills the pages in; they are
+        # for the repository, not for anyone reading the live page's source.
+        html = re.sub(r'[ \t]*<!--.*?-->[ \t]*\n?', '', html, flags=re.S)
         # Pages live one level down, so the site-wide assets are one up.
         html = html.replace('{{BASE}}', '../')
         (PLUS2['out'] / path.name).write_text(html)
