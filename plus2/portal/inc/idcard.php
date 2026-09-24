@@ -531,5 +531,5 @@ function id_card_scripts(): void
  */
 function school_logo_url(bool $print = false): string
 {
-    return portal_url('/../assets/img/logo-' . ($print ? '512' : '192') . '.png');
+    return portal_url('/../assets/img/seal-' . ($print ? '512' : '192') . '.png');
 }

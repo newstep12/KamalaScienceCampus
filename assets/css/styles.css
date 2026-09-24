@@ -107,7 +107,7 @@ body.plus2 {
 
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .brand:hover { text-decoration: none; }
-/* The seal: assets/img/logo-192.png (campus) or plus2/assets/img/logo-192.png */
+/* The seal: assets/img/logo-192.png (campus) or plus2/assets/img/seal-192.png */
 .crest {
   width: 58px; height: 58px; flex: 0 0 58px;
   display: block;
