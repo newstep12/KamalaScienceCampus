@@ -1071,7 +1071,10 @@ stays readable (`plus2/assets/css/plus2.css`, loaded on the +2 pages only).
 
 **Logo:** the school's official seal — *Shree Kamala Secondary School ·
 Dhungrebas, Sindhuli*, the six-pointed star with the open book and
-**K S S D S S** in its points — cut out round on a transparent background:
+**K S S D S S** in its points, *Estd. 1951 AD* — cut out round on a
+transparent background. (The artwork as supplied read *1961 AD*; the school
+was established in **2007 BS / 1951 AD**, and the date on the seal was
+corrected to match.)
 `plus2/assets/img/logo-192.png` (site header, footer, portal header, browser
 and browser icon), `logo-512.png` (the identity card, front and as a faint
 watermark on the back, where it prints sharp) and `logo-touch.png` (the
