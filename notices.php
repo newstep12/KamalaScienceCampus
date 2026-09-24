@@ -46,7 +46,11 @@ try {
 
 $ne   = is_nepali();
 $base = '';
-$alt  = $ne ? '?lang=en' : '?lang=ne';
+// The same notices in the other language, keeping the category filter.
+$alt  = '?' . http_build_query(array_filter([
+    'cat'  => in_array($cat, $cats, true) ? $cat : null,
+    'lang' => $ne ? 'en' : 'ne',
+]));
 ?>
 <!doctype html>
 <html lang="<?= $ne ? 'ne' : 'en' ?>">
@@ -68,46 +72,13 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
 <link rel="stylesheet" href="assets/css/styles.css?v=<?= (int) @filemtime(__DIR__ . '/assets/css/styles.css') ?>">
 <link rel="stylesheet" href="assets/css/portal.css?v=<?= (int) @filemtime(__DIR__ . '/assets/css/portal.css') ?>">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/img/logo-192.png">
+<meta name="alt-page" content="<?= e($alt) ?>">
+<script src="assets/js/lang.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/lang.js') ?>"></script>
 </head>
-<body<?= $ne ? ' class="lang-ne"' : '' ?>>
-<a class="skip" href="#main"><?= $ne ? 'मुख्य सामग्रीमा जानुहोस्' : 'Skip to main content' ?></a>
-
-<div class="topbar">
-  <div class="wrap">
-    <div class="topbar-meta">
-      <span><?= $ne ? 'ढुंग्रेबास, कमलामाई, सिन्धुली' : 'Dhungrebas, Kamalamai, Sindhuli' ?></span>
-    </div>
-    <div class="topbar-meta">
-      <a href="portal/index.php"><?= $ne ? 'विद्यार्थी पोर्टल' : 'Student portal' ?></a>
-    </div>
-  </div>
-</div>
-
-<header class="site-header">
-  <div class="wrap">
-    <a class="brand" href="<?= $ne ? 'ne/index.html' : 'index.html' ?>">
-      <img class="crest" src="assets/img/logo-192.png" alt="" width="46" height="46">
-      <span class="brand-text">
-        <span class="brand-name"><?= $ne ? 'कमला साइन्स क्याम्पस' : 'Kamala Science Campus' ?></span>
-        <span class="brand-sub"><?= $ne ? 'सिन्धुली, नेपाल' : 'Sindhuli, Nepal' ?></span>
-      </span>
-    </a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav"
-            data-label-closed="&#9776; <?= $ne ? 'मेनु' : 'Menu' ?>" data-label-open="&#10005; <?= $ne ? 'बन्द' : 'Close' ?>">&#9776; <?= $ne ? 'मेनु' : 'Menu' ?></button>
-    <nav class="nav" id="primary-nav" aria-label="<?= $ne ? 'मुख्य मेनु' : 'Primary' ?>">
-      <ul>
-        <li><a href="<?= $ne ? 'ne/index.html' : 'index.html' ?>"><?= $ne ? 'गृहपृष्ठ' : 'Home' ?></a></li>
-        <li><a href="<?= $ne ? 'ne/programs.html' : 'programs.html' ?>"><?= $ne ? 'बी.एस्सी.' : 'B.Sc. Program' ?></a></li>
-        <li><a href="<?= $ne ? 'ne/admissions.html' : 'admissions.html' ?>"><?= $ne ? 'भर्ना' : 'Admissions' ?></a></li>
-        <li><a href="notices.php" aria-current="page"><?= $ne ? 'सूचना' : 'Notices' ?></a></li>
-        <li><a class="lang-switch" href="<?= e($alt) ?>" lang="<?= $ne ? 'en' : 'ne' ?>"><?= $ne ? 'English' : 'नेपाली' ?></a></li>
-        <li><a class="nav-cta" href="<?= $ne ? 'ne/contact.html' : 'contact.html' ?>"><?= $ne ? 'सम्पर्क' : 'Contact' ?></a></li>
-      </ul>
-    </nav>
-  </div>
-</header>
-
-<main id="main">
+<body data-page="notices"<?= $ne ? ' class="lang-ne"' : '' ?>>
+<?php // The campus top bar and side menu, as build.py wrote them from src/partials. ?>
+<?= str_replace('{{ALT}}', e($alt), (string) file_get_contents(__DIR__ . '/portal/inc/site-nav-' . ($ne ? 'ne' : 'en') . '.html')) ?>
+<main id="main" class="site-main">
 <section class="page-head">
   <div class="wrap">
     <h1><?= $ne ? 'सूचनाहरू' : 'Notices' ?></h1>
@@ -230,6 +201,7 @@ $alt  = $ne ? '?lang=en' : '?lang=ne';
   </div>
 </section>
 </main>
+</div>
 
 <footer class="site-footer">
   <div class="wrap">
