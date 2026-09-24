@@ -958,7 +958,8 @@ from the first button of their top bars.
 
 ### What a student registers with
 
-Name (English, and Nepali if they want), email, **class (11 or 12)**,
+Name (English, and Nepali — the Nepali box fills itself in from the English
+name as it is typed, for the student to check and correct), email, **class (11 or 12)**,
 **group (Biology or Computer Science)**, section, **roll number** (if known),
 **father's / guardian's name and phone number**, date of birth, address,
 photograph and password. After approval they keep the rest up to date from
@@ -967,8 +968,36 @@ the office changes (**People → Edit**), because the name and date of birth
 print on a card signed by the Principal and the Coordinator. The portfolio
 still covers their
 group, their card photograph and **their own signature**, which prints on the
-back as the card holder's signature (the paper is lifted off a photographed
-signature automatically, as on the campus card).
+back as the card holder's signature.
+
+**Photographs and signatures are prepared automatically as they are uploaded**
+(`plus2/portal/inc/photos.php`):
+
+- **Photo → round frame, centred on the face.** The face is found with a real
+  face detector — OpenCV's LBP frontal-face model (`inc/face-cascade.php`,
+  BSD licence, notice kept in the file), evaluated in plain PHP by
+  `inc/face.php`, so it runs on shared hosting with nothing to install — and
+  the frame is cut round it as a passport photo is framed: head and
+  shoulders, the face in the middle, whatever else is in the picture. A
+  photograph with no frontal face in it (a face turned well aside, or none)
+  falls back to the old rule. Under *My portfolio* a student can turn
+  *Centre the frame on my face automatically* off and place the frame by
+  hand, and turn it back on. Detection takes under a second on an ordinary
+  photo, up to about three when there is no face to find.
+- **Signature → ink on a transparent background.** `inc/ink.php` finds the
+  sheet of paper in the photo, marks the ink against the paper around it (so
+  shadows do not matter), keeps the strokes that make up the signature and
+  drops the desk, fingers, the torn edge of the sheet, shadows and specks,
+  then trims to the writing and darkens the ink. A photo that is not a
+  signature is kept as uploaded and the student is told.
+- **Nepali name.** Where a student has not typed one, the card writes it
+  from the English name (`inc/devanagari.php`, with the names that recur
+  written out in `inc/nepali-names.php` — romanised Nepali cannot say
+  whether an *a* is अ or आ, so Rajan राजन and Rahul राहुल only come out
+  right from a list). On the forms the same engine shows that spelling in
+  grey inside the empty Nepali box as the English name is typed
+  (`portal/name-ne.php`, `plus2/assets/js/name-ne.js`), so the student sees
+  what the card will print; typing their own spelling there overrides it.
 
 ### The identity card
 
@@ -1040,18 +1069,15 @@ own. To add a teacher, copy a card on `src/plus2/pages/teachers.html`.
 `plus2/assets/img/school-building.jpg`, under a dark gradient so the heading
 stays readable (`plus2/assets/css/plus2.css`, loaded on the +2 pages only).
 
-**Logo:** `plus2/assets/img/logo-192.png` (and `logo-512.png`) is the
-school's emblem **redrawn from its rubber stamp** — the double ring lettered
-*Shree Kamala Secondary School* over *★ Dhungrebas, Sindhuli ★*, the
-six-pointed star with an open book at its centre and **K S S D S S** in its
-points, and *Estd. 1951 AD* — in the colours of the emblem painted on the
-signboard (royal blue, a saffron disc, a white star). The source is
-`src/plus2-logo.svg`. The year on the stamp is smudged; **1951 AD** was read
-because it agrees with the signboard's *Estd. 2007 BS* — check it. If the
-school has the original artwork, replace both PNGs with it (transparent
-background). To re-render after editing the SVG, open it in a browser at
-800×800, save a screenshot with a transparent background, then scale it to
-192 and 512.
+**Logo:** the school's official seal — *Shree Kamala Secondary School ·
+Dhungrebas, Sindhuli*, the six-pointed star with the open book and
+**K S S D S S** in its points — cut out round on a transparent background:
+`plus2/assets/img/logo-192.png` (site header, footer, portal header, browser
+and browser icon), `logo-512.png` (the identity card, front and as a faint
+watermark on the back, where it prints sharp) and `logo-touch.png` (the
+phone home-screen icon, on white, since a phone fills transparent corners
+with black). To replace it,
+overwrite both files with a square transparent PNG of the new seal.
 
 ## Test it locally first
 
@@ -1115,9 +1141,12 @@ after the merge.
    it could not.
 5. Sign in at `/plus2/portal/` and, as administrator:
    - **Signatures** — upload **two** signatures: the Principal's (title
-     *Principal*) and the Coordinator's (title *+2 Coordinator*) — each a
-     clean scan on white, or a transparent PNG (a PNG is stored exactly as
-     uploaded). Point *Identity cards — Principal's signature* and *Identity
+     *Principal*) and the Coordinator's (title *+2 Coordinator*). A phone
+     photo of the signature on white paper is enough: with **Lift the
+     signature off the paper** ticked (the default) the paper, desk and
+     shadows are removed and the ink kept in its own colour on a transparent
+     background. Untick it only for a file that is already a finished
+     cut-out. Point *Identity cards — Principal's signature* and *Identity
      cards — Coordinator's signature* at them, then set each one's release to
      **Everyone signed in** so they print on cards students print themselves
      (*Administrators only* keeps them off those, for the office to sign).

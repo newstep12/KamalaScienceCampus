@@ -65,6 +65,7 @@ return [
     'reg_intro'        => 'For Class 11 and Class 12 Science students of Shree Kamala Secondary School. Register with the details on your school record. The school office checks every registration before it is activated — you can sign in once yours is approved, then add anything missing and print your identity card.',
     'full_name'        => 'Full name',
     'full_name_ne'     => 'Full name in Nepali',
+    'full_name_ne_hint' => 'Left empty, your card prints the Devanagari shown in grey, written from your English name as you type. If your name is spelt differently, type it here yourself.',
     // The label on every box that collects the Latin name, and the line the
     // card's missing list asks for when it has no Latin name to print. The
     // two say the same words on purpose: a student told their card is missing
@@ -462,11 +463,13 @@ return [
     // Photographs
     'photo'              => 'Photograph',
     'photo_hint'         => 'JPEG, PNG or WebP, up to 5 MB.',
-    'photo_idcard_note'  => 'A passport-style photo — head and shoulders, plain background, at least 200 pixels on each side. It is cropped to the card’s frame and turned the right way up for you, and then prints on your identity card.',
+    'photo_idcard_note'  => 'A passport-style photo — head and shoulders, plain background, at least 200 pixels on each side. Any clear photo of your face will do: it is turned the right way up, your face is found and centred in the card’s round frame for you — head and shoulders, whatever else is in the picture — and it then prints on your identity card.',
     'photo_removed'      => 'Your photograph has been removed.',
-    'photo_card_preview' => 'This is how it prints on your identity card. Move the frame below if it sits wrong, or upload another photograph.',
+    'photo_card_preview' => 'This is how it prints on your identity card, centred on your face. If it sits wrong, move the frame below or upload another photograph — one looking straight at the camera is found best.',
 
     // Placing the round frame on the photograph
+    'photo_auto'         => 'Centre the frame on my face automatically',
+    'photo_auto_hint'    => 'On for every new photograph. Turn it off to place the frame yourself — for a photograph where the face was not found, or where it found the wrong one.',
     'photo_place'        => 'Where the frame sits on your photograph',
     'photo_place_top'    => 'Keep the top',
     'photo_place_bottom' => 'Keep the bottom',
@@ -491,7 +494,7 @@ return [
     'blood_group_none'   => 'Not given',
     'blood_group_hint'   => 'Printed on the back of your identity card, where it is read in an emergency. Leave it blank and the line prints empty to write on.',
     'holder_signature'   => 'Your signature',
-    'holder_signature_hint' => 'Sign on plain paper and photograph or scan it — JPEG, PNG or WebP, at least 80 pixels on the short side. The paper is taken away for you: what is stored is your signature in black ink on a clear background, trimmed to the writing, so it prints on the card and not a photograph of a page. It goes above the signature line on the back; without one, that line prints blank for you to sign by hand.',
+    'holder_signature_hint' => 'Sign on plain paper and photograph or scan it — JPEG, PNG or WebP, at least 80 pixels on the short side. The paper, the desk, your fingers and any shadow are taken away for you, and the ink is darkened: what is stored is your signature in black ink on a clear background, trimmed to the writing, so it prints on the card and not a photograph of a page. It goes above the signature line on the back; without one, that line prints blank for you to sign by hand.',
     'holder_signature_preview' => 'This is how it prints on the back of your identity card.',
     'holder_signature_kept' => 'Your signature has been saved, but the paper could not be taken away from it: this picture has no clear difference between ink and paper. It prints as you uploaded it. A photograph of a signature on plain paper, with the paper filling the frame, works best.',
     'signature_removed'  => 'Your signature has been removed.',
@@ -575,7 +578,10 @@ return [
     'signature_add_intro'   => 'Upload one image per version of the signature — a black-ink scan for documents that will be photocopied, a blue-ink one where a wet signature is expected. Each is held separately, so the office chooses which is applied where.',
     'signature_file'     => 'Signature image',
     'signature_file_hint'   => 'PNG, JPEG or WebP, up to 5 MB.',
-    'signature_scan_hint'   => 'Scan or photograph the signature on white paper; a PNG with a transparent background prints best. About 600 pixels across keeps it sharp at the size a card prints it.',
+    'signature_scan_hint'   => 'Sign on plain white paper and photograph it with a phone — the whole signature in the picture, the paper filling most of it. About 600 pixels across keeps it sharp at the size a card prints it.',
+    'signature_clean'       => 'Lift the signature off the paper (recommended)',
+    'signature_clean_hint'  => 'The paper, the desk, fingers and shadows are removed, and the signature is kept in its own ink colour on a transparent background, trimmed to the writing. Untick it only for a file that is already a finished cut-out.',
+    'signature_clean_failed' => 'The signature could not be told apart from the paper in this picture, so it has been kept exactly as uploaded. A sharper photograph of the signature on plain white paper usually works.',
     'signature_locked_notice' => 'A new signature is held locked: it prints on nothing until an administrator releases it and chooses where it is applied.',
     'signature_uploaded' => 'The signature has been added to the library. It is locked — release it and choose where it applies before it prints on anything.',
     'signature_scope_saved'   => 'The release has been saved.',

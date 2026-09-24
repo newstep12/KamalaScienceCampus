@@ -524,11 +524,12 @@ function id_card_scripts(): void
 }
 
 /**
- * The school's crest, for the card and the portal header. plus2/assets/img/
- * logo-192.png — a file of its own, so replacing it with the school's seal
- * changes nothing on the campus's side.
+ * The school's seal — the official artwork, cut out round on a transparent
+ * ground — for the portal header, and at print resolution for the card.
+ * plus2/assets/img/, files of the school's own, so changing it changes nothing
+ * on the campus's side.
  */
-function school_logo_url(): string
+function school_logo_url(bool $print = false): string
 {
-    return portal_url('/../assets/img/logo-192.png');
+    return portal_url('/../assets/img/logo-' . ($print ? '512' : '192') . '.png');
 }

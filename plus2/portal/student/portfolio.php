@@ -126,21 +126,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // a failed update leaves the account naming a photograph that
                 // is no longer there.
                 //
-                // The placement goes back to the default with the photograph,
+                // The placement goes back to automatic with the photograph,
                 // because it described where the frame sat on the last one. A
                 // setting carried over from a picture nobody is looking at any
-                // more is a worse starting point than the rule.
+                // more is a worse starting point than the frame centred on the
+                // face in this one.
                 //
-                // Written out rather than left null, because null means "the
-                // default" and the default is a figure that can change. It has
-                // already changed once: a photograph cut at the old bias would
-                // have had the slider showing today's, reporting a crop the
-                // card was not printing. What is stored now is the placement
-                // the photograph on the card was actually cut at.
+                // Null is that mode — "centred on the face, or the rule where
+                // no face is found" — not a number standing in for a default.
+                // A figure in the column is always a placement somebody chose.
                 q(
-                    'UPDATE users SET avatar_path = ?, avatar_source_path = ?, avatar_focus = ?
+                    'UPDATE users SET avatar_path = ?, avatar_source_path = ?, avatar_focus = NULL
                       WHERE id = ?',
-                    [$stored['path'], $stored['source'], card_photo_focus(null), $user['id']]
+                    [$stored['path'], $stored['source'], $user['id']]
                 );
                 delete_upload($user['avatar_path']);
                 delete_upload($user['avatar_source_path'] ?? null);
@@ -180,33 +178,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         /**
-         * Moving the frame on a photograph already uploaded.
+         * Where the frame sits on a photograph already uploaded.
          *
-         * Only when the placement actually changed, there is a working copy
-         * with something to move, and no new photograph came with this
-         * submission — a new one has just been cut at the default, and cutting
-         * it again to a figure the person chose for the picture before it
-         * would undo that silently.
+         * Two ways: automatic — centred on the face, which is how every new
+         * photograph is cut — or by hand, with the slider, for a photograph
+         * the face-finder got wrong or could not read. Switching between them,
+         * or moving the slider, cuts the frame again from the working copy.
+         *
+         * Only when something actually changed, there is a working copy to
+         * cut from, and no new photograph came with this submission — a new
+         * one has just been cut automatically, and cutting it again to a
+         * setting chosen for the picture before it would undo that silently.
          *
          * A re-cut that fails changes nothing: the row still names the
          * photograph on the card, which is on disk, and the setting is left
          * where it was so the form does not claim a placement the card is not
          * printing.
          */
+        $storedAuto = !isset($user['avatar_focus']);
         $focus = array_key_exists('photo_focus', $_POST)
             ? card_photo_focus((int) $_POST['photo_focus'])
             : null;
+        // The box is only on the form when there is a photograph to place,
+        // so its absence from a submission that did not show it is not a
+        // choice to turn automatic off.
+        $auto = array_key_exists('photo_auto_shown', $_POST)
+            ? !empty($_POST['photo_auto'])
+            : $storedAuto;
 
-        $moved = $focus !== null && $focus !== card_photo_focus(
-            isset($user['avatar_focus']) ? (int) $user['avatar_focus'] : null
-        );
+        $want = null;                            // null: leave the frame alone
+        if ($auto && !$storedAuto) {
+            $want = 'auto';
+        } elseif (!$auto) {
+            $current = $storedAuto ? null : card_photo_focus((int) $user['avatar_focus']);
+            $chosen  = $focus ?? $current ?? card_photo_focus(null);
+            if ($storedAuto || $chosen !== $current) {
+                $want = $chosen;
+            }
+        }
 
-        if (!$placed && $moved && photo_can_be_placed($user['avatar_source_path'] ?? null)) {
-            $recut = recrop_from_source($user['avatar_source_path'] ?? null, $focus);
+        if (!$placed && $want !== null && photo_can_be_cropped($user['avatar_source_path'] ?? null)) {
+            $newFocus = $want === 'auto' ? null : $want;
+            $recut = recrop_from_source($user['avatar_source_path'] ?? null, $newFocus);
             if ($recut !== null) {
                 q(
                     'UPDATE users SET avatar_path = ?, avatar_focus = ? WHERE id = ?',
-                    [$recut, $focus, $user['id']]
+                    [$recut, $newFocus, $user['id']]
                 );
                 delete_upload($user['avatar_path']);
             } else {
@@ -285,7 +302,9 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
 
       <div class="p-field">
         <label for="full_name_ne"><?= te('full_name_ne') ?> <span class="hint"><?= te('optional') ?></span></label>
-        <input type="text" id="full_name_ne" name="full_name_ne" value="<?= e($user['full_name_ne']) ?>" lang="ne"<?= $identityLocked ? ' disabled' : '' ?>>
+        <input type="text" id="full_name_ne" name="full_name_ne" value="<?= e($user['full_name_ne']) ?>" lang="ne"<?= $identityLocked ? ' disabled' : '' ?>
+               data-suggest="<?= e(portal_url('/name-ne.php')) ?>">
+        <?php if (!$identityLocked): ?><span class="hint"><?= te('full_name_ne_hint') ?></span><?php endif; ?>
         <?php if ($identityLocked): ?>
           <span class="hint"><?= te('identity_locked_hint') ?></span>
         <?php endif; ?>
@@ -422,6 +441,14 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
       ?>
       <?php if ($user['avatar_path']): ?>
         <div class="p-field p-place">
+          <?php if ($source !== null): ?>
+            <input type="hidden" name="photo_auto_shown" value="1">
+            <label class="p-check">
+              <input type="checkbox" id="photo_auto" name="photo_auto" value="1"<?= !isset($user['avatar_focus']) ? ' checked' : '' ?>>
+              <?= te('photo_auto') ?>
+            </label>
+            <span class="hint"><?= te('photo_auto_hint') ?></span>
+          <?php endif; ?>
           <label for="photo_focus"><?= te('photo_place') ?></label>
           <?php if ($canPlace): ?>
             <input type="range" id="photo_focus" name="photo_focus" min="0" max="100" step="5"
@@ -558,4 +585,16 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
     </div>
   </aside>
 </div>
+<script>
+// The slider places the frame by hand, so it is off while "automatic" is on.
+(function () {
+  var auto = document.getElementById('photo_auto');
+  var slider = document.getElementById('photo_focus');
+  if (!auto || !slider) return;
+  var sync = function () { slider.disabled = auto.checked; };
+  auto.addEventListener('change', sync);
+  sync();
+})();
+</script>
+<script src="<?= e(portal_url('/../assets/js/name-ne.js?v=' . asset_version('/../assets/js/name-ne.js'))) ?>"></script>
 <?php layout_foot(); ?>

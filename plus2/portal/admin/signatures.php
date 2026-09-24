@@ -55,7 +55,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // photographed rather than scanned is turned the right way up as
             // it is stored; a PNG is never touched, so a transparent
             // background stays transparent.
-            $stored = store_signature_image($_FILES['signature'] ?? [], 'signature');
+            //
+            // With the box ticked, the signature is lifted off the photograph
+            // it is in — paper, desk and shadow gone, the ink kept in its own
+            // colour on a transparent ground. Unticked, a finished cut-out is
+            // stored as it arrived.
+            $clean  = !empty($_POST['clean']);
+            $stored = store_signature_image($_FILES['signature'] ?? [], 'signature', $clean, true);
             if (!$stored['ok']) {
                 flash('error', $stored['error'] === 'small' ? t('err_signature_small') : image_error_message($stored['error']));
             } else {
@@ -78,6 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // click, and the flash says so rather than leaving the admin to
                 // wonder why no card changed.
                 flash('ok', t('signature_uploaded'));
+                if ($clean && !$stored['inked']) {
+                    flash('info', t('signature_clean_failed'));
+                }
             }
         }
     } elseif ($action === 'release') {
@@ -296,6 +305,14 @@ layout_head(['title' => t('signatures_title'), 'active' => 'signatures', 'wide' 
       <label for="signature"><?= te('signature_file') ?> <span class="hint"><?= te('signature_file_hint') ?></span></label>
       <input type="file" id="signature" name="signature" accept="image/png,image/jpeg,image/webp" required>
       <span class="hint"><?= te('signature_scan_hint') ?></span>
+    </div>
+
+    <div class="p-field">
+      <label class="p-check">
+        <input type="checkbox" name="clean" value="1" checked>
+        <?= te('signature_clean') ?>
+      </label>
+      <span class="hint"><?= te('signature_clean_hint') ?></span>
     </div>
 
     <div class="p-field-row">

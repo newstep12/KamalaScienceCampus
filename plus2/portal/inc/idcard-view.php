@@ -72,7 +72,7 @@ function id_card_face(array $holder, array $ctx, string $side = 'front', ?array 
     <div class="idc idc-<?= e($side) ?>" data-theme="<?= e($theme) ?>" data-orientation="<?= e($orient) ?>">
     <?php if ($side === 'front'): ?>
       <header class="idc-top">
-        <img class="idc-crest" src="<?= e(school_logo_url()) ?>" alt="" width="60" height="60">
+        <img class="idc-crest" src="<?= e(school_logo_url(true)) ?>" alt="" width="60" height="60">
         <div class="idc-top-text">
           <span class="idc-campus-ne"><?= e($names['ne']) ?></span>
           <span class="idc-campus-en"><?= e($names['en']) ?></span>
@@ -193,6 +193,9 @@ function id_card_face(array $holder, array $ctx, string $side = 'front', ?array 
       </footer>
 
     <?php else: ?>
+      <?php /* The seal again, faint, behind the back's text: the side a
+               forger copies is the plain one. */ ?>
+      <img class="idc-watermark" src="<?= e(school_logo_url(true)) ?>" alt="" aria-hidden="true">
       <div class="idc-band"><?= te('id_card_heading') ?></div>
       <?php if ($ctx['school']['affiliation'] !== ''): ?>
         <div class="idc-affil"><?= e($ctx['school']['affiliation']) ?></div>
