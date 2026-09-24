@@ -31,7 +31,28 @@ plan runs; a Node backend would need a VPS.
 | `contact.html` | Address, phone, map, enquiry form |
 
 Each has a Nepali twin at `ne/<same-name>.html`, linked both ways by the
-language switch in the navigation and by `hreflang` alternates.
+language switch in the top bar and by `hreflang` alternates.
+
+### Layout and language
+
+Every page (campus and +2) has the same two-part navigation:
+
+- **The top bar** — the crest and name, then three buttons: the other half of
+  the site (**+2 Science** from the campus, **Kamala Science Campus** from
+  +2), the **language switch**, and **Login** (the portal of that half, in the
+  page's language). Campus pages are navy-to-teal; +2 pages royal blue, so a
+  visitor can tell which half they are in.
+- **The side menu** — every page of that half as a column of buttons down the
+  left, the current page filled in. Below 960px wide it becomes a drawer,
+  opened by the ☰ button at the left of the top bar.
+
+The language a visitor picks with the switch is remembered for a year (the
+`site_lang` cookie), and `assets/js/lang.js` sends them to their language
+whenever they arrive at a page in the other one from outside the site (a
+search, a bookmark, a shared link). Before they have picked, the language they
+chose inside a portal counts, then a browser set to Nepali. Links followed
+within the site are never redirected, so a visitor who wants the other
+language can always reach it.
 
 ## Editing
 
@@ -39,19 +60,25 @@ Pages are assembled from shared parts so the header, footer and `<head>` stay
 identical across every page and both languages:
 
 ```
-src/partials/head.html      <head> contents (shared by both languages)
-src/partials/header.html    English top bar + logo + navigation
-src/partials/footer.html    English footer + script tag
-src/pages/*.html            English page bodies
-src/partials-ne/header.html Nepali header
-src/partials-ne/footer.html Nepali footer
-src/pages-ne/*.html         Nepali page bodies
+src/partials/head.html       <head> contents (shared by both languages)
+src/partials/header.html     English top bar: crest, +2 / language / Login buttons
+src/partials/sidenav.html    English side menu (one button per page)
+src/partials/footer.html     English footer + script tag
+src/pages/*.html             English page bodies
+src/partials-ne/header.html  Nepali top bar
+src/partials-ne/sidenav.html Nepali side menu
+src/partials-ne/footer.html  Nepali footer
+src/pages-ne/*.html          Nepali page bodies
 ```
 
 Two placeholders are substituted per language: `{{BASE}}` (the prefix shared
 assets need — empty for English, `../` for Nepali) and `{{ALT}}` (a link to
 the same page in the other language). Add a page to **both** `src/pages/` and
-`src/pages-ne/` so the language switch never dead-ends.
+`src/pages-ne/` — `build.py` stops with an error if a page has no counterpart,
+since the language switch would dead-end — and give it a button in both
+`sidenav.html` files. `notices.php` is not built, but it prints the campus
+menu from `portal/inc/site-nav-en.html` / `-ne.html`, which `build.py` writes
+from the same partials, so it never falls out of step.
 
 Edit files under `src/`, then regenerate the root `.html` files:
 
@@ -64,9 +91,10 @@ overwrites them. Content-only edits go in `src/pages/`; anything shared goes in
 `src/partials/`.
 
 Styling lives in `assets/css/styles.css` (colours are CSS variables at the top).
-Behaviour — mobile menu, active nav link, the enquiry form — is in
-`assets/js/main.js`. Run `build.py` after editing either one too: it stamps a
-hash of both files onto their URLs (`styles.css?v=…`), because `.htaccess`
+Behaviour — the menu drawer, the current page's button, the enquiry form — is
+in `assets/js/main.js`, and the remembered language in `assets/js/lang.js`.
+Run `build.py` after editing any of them too: it stamps a hash of the files
+onto their URLs (`styles.css?v=…`), because `.htaccess`
 lets browsers cache CSS and JS for 7 days and would otherwise keep the old
 ones. The portal and `notices.php` do the same from the files' timestamps.
 
@@ -911,15 +939,18 @@ A campus account cannot sign in to the school portal and a school account
 cannot sign in to the campus portal; signing in or out of one does nothing to
 the other, even in the same browser. The school portal's code is a copy of the
 campus portal's (under `plus2/portal/`) rather than shared with it, so a change
-to either never reaches the other. The one change to the campus site is a
-**+2 Science** link in its navigation.
+to either never reaches the other. The campus and +2 pages link to each other
+from the first button of their top bars.
 
 ## What's in it
 
 - **Public pages** — `plus2/index.html` (the programme), `messages.html`
-  (the Principal's and the Coordinator's messages), `teachers.html`.
-  Sources in `src/plus2/pages/`, header and footer in `src/plus2/partials/`,
-  built by `python3 build.py` like the rest of the site. English only for now.
+  (the Principal's and the Coordinator's messages), `teachers.html`, in
+  English and in Nepali (`plus2/ne/`). Sources in `src/plus2/pages/` and
+  `src/plus2/pages-ne/`, top bar, side menu and footer in
+  `src/plus2/partials/` and `src/plus2/partials-ne/`, built by
+  `python3 build.py` like the rest of the site. Edit a page in both
+  languages; the Nepali messages are translations of the English drafts.
 - **The portal** — students of Class 11 and 12 register, the school office
   approves them, and they sign in to add their details and print their
   identity card. Roles: student, teacher, administrator.
@@ -992,6 +1023,7 @@ approve — edit them to the wording they sign off. Still to supply:
 - the programme introduction, subjects, seats and medium — `src/plus2/pages/index.html`
 - the wording of the **Principal's message** (Mr. Kamlesh Chaudhary) and the
   **Coordinator's message** (Mr. Bharat Malla) — `src/plus2/pages/messages.html`
+  and its Nepali version `src/plus2/pages-ne/messages.html`
   (their names are in; Mr. Malla's photo is the campus's own)
 - the subjects of each group — `src/plus2/pages/index.html`
 - the **teachers** — `src/plus2/pages/teachers.html` (copy a card per teacher)

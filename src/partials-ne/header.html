@@ -1,43 +1,24 @@
 <a class="skip" href="#main">मुख्य सामग्रीमा जानुहोस्</a>
 
-<div class="topbar">
-  <div class="wrap">
-    <div class="topbar-meta">
-      <span>ढुंग्रेबास, कमलामाई, सिन्धुली</span>
-      <span>त्रिभुवन विश्वविद्यालयबाट सम्बन्धन प्राप्त</span>
-    </div>
-    <div class="topbar-meta">
-      <a href="{{BASE}}portal/index.php">विद्यार्थी पोर्टल</a>
-      <a href="contact.html">सम्पर्क</a>
-    </div>
-  </div>
-</div>
+<header class="site-header sh">
+  <div class="sh-inner">
+    <button class="side-toggle" type="button" aria-expanded="false" aria-controls="side-nav"
+            aria-label="मेनु खोल्नुहोस्" data-label-open="मेनु खोल्नुहोस्" data-label-close="मेनु बन्द गर्नुहोस्">
+      <span class="side-toggle-bars" aria-hidden="true"></span>
+    </button>
 
-<header class="site-header">
-  <div class="wrap">
     <a class="brand" href="index.html">
-      <img class="crest" src="{{BASE}}assets/img/logo-192.png" alt="" width="58" height="58">
+      <img class="crest" src="{{BASE}}assets/img/logo-192.png" alt="" width="52" height="52">
       <span class="brand-text">
         <span class="brand-name">कमला साइन्स क्याम्पस</span>
         <span class="brand-sub">सिन्धुली, नेपाल &middot; स्थापना २०६६</span>
       </span>
     </a>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav"
-            data-label-closed="&#9776; मेनु" data-label-open="&#10005; बन्द">&#9776; मेनु</button>
-
-    <nav class="nav" id="primary-nav" aria-label="मुख्य मेनु">
-      <ul>
-        <li><a href="index.html" data-nav="home">गृहपृष्ठ</a></li>
-        <li><a href="about.html" data-nav="about">हाम्रो बारेमा</a></li>
-        <li><a href="programs.html" data-nav="programs">बी.एस्सी.</a></li>
-        <li><a href="admissions.html" data-nav="admissions">भर्ना</a></li>
-        <li><a href="scholarships.html" data-nav="scholarships">छात्रवृत्ति</a></li>
-        <li><a href="{{BASE}}plus2/index.html" data-nav="plus2">+२ विज्ञान</a></li>
-        <li><a href="{{BASE}}notices.php?lang=ne" data-nav="notices">सूचना</a></li>
-        <li><a class="lang-switch" href="{{ALT}}" hreflang="en" lang="en">English</a></li>
-        <li><a class="nav-login" href="{{BASE}}portal/index.php?lang=ne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20.2a7.4 7.4 0 0 1 14.8 0"/></svg><span>लग इन</span></a></li>
-      </ul>
+    <nav class="top-actions" aria-label="साइट">
+      <a class="top-btn top-btn-switch" href="{{BASE}}plus2/ne/index.html" data-nav="plus2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 3h6"/><path d="M10 3v6L5 18.5A1.8 1.8 0 0 0 6.6 21h10.8a1.8 1.8 0 0 0 1.6-2.5L14 9V3"/><path d="M7.5 15h9"/></svg><span class="tb-full">+२ विज्ञान</span><span class="tb-short">+२</span></a>
+      <a class="top-btn top-btn-lang lang-switch" href="{{ALT}}" hreflang="en" lang="en"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg><span>English</span></a>
+      <a class="top-btn top-btn-login" href="{{BASE}}portal/index.php?lang=ne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20.2a7.4 7.4 0 0 1 14.8 0"/></svg><span class="tb-full">लग इन</span></a>
     </nav>
   </div>
 </header>

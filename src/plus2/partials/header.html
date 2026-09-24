@@ -1,39 +1,24 @@
 <a class="skip" href="#main">Skip to main content</a>
 
-<div class="topbar">
-  <div class="wrap">
-    <div class="topbar-meta">
-      <span>Shree Kamala Secondary School</span>
-      <span>+2 Science &middot; Class 11 &amp; 12</span>
-    </div>
-    <div class="topbar-meta">
-      <a href="portal/index.php">+2 student portal</a>
-      <a href="{{BASE}}index.html">Kamala Science Campus</a>
-    </div>
-  </div>
-</div>
+<header class="site-header sh">
+  <div class="sh-inner">
+    <button class="side-toggle" type="button" aria-expanded="false" aria-controls="side-nav"
+            aria-label="Open the menu" data-label-open="Open the menu" data-label-close="Close the menu">
+      <span class="side-toggle-bars" aria-hidden="true"></span>
+    </button>
 
-<header class="site-header">
-  <div class="wrap">
     <a class="brand" href="index.html">
-      <img class="crest" src="assets/img/logo-192.png" alt="" width="58" height="58">
+      <img class="crest" src="{{P2}}assets/img/logo-192.png" alt="" width="52" height="52">
       <span class="brand-text">
         <span class="brand-name">Shree Kamala Secondary School</span>
         <span class="brand-sub">+2 Science &middot; Class 11 &amp; 12</span>
       </span>
     </a>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav"
-            data-label-closed="&#9776; Menu" data-label-open="&#10005; Close">&#9776; Menu</button>
-
-    <nav class="nav" id="primary-nav" aria-label="+2 Science">
-      <ul>
-        <li><a href="index.html" data-nav="home">+2 Science</a></li>
-        <li><a href="messages.html" data-nav="messages">Messages</a></li>
-        <li><a href="teachers.html" data-nav="teachers">Teachers</a></li>
-        <li><a href="portal/register.php" data-nav="register">Register</a></li>
-        <li><a class="nav-login" href="portal/index.php"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20.2a7.4 7.4 0 0 1 14.8 0"/></svg><span>Login</span></a></li>
-      </ul>
+    <nav class="top-actions" aria-label="Site">
+      <a class="top-btn top-btn-switch" href="{{BASE}}index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 9.5 12 5l10 4.5-10 4.5z"/><path d="M6 11.5V16c3.5 2.5 8.5 2.5 12 0v-4.5"/><path d="M22 9.5V15"/></svg><span class="tb-full">Kamala Science Campus</span><span class="tb-short">Campus</span></a>
+      <a class="top-btn top-btn-lang lang-switch" href="{{ALT}}" hreflang="ne" lang="ne"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg><span>नेपाली</span></a>
+      <a class="top-btn top-btn-login" href="{{P2}}portal/index.php?lang=en"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.6"/><path d="M4.6 20.2a7.4 7.4 0 0 1 14.8 0"/></svg><span class="tb-full">Login</span></a>
     </nav>
   </div>
 </header>
