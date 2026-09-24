@@ -37,14 +37,9 @@
   if (ref && ref.indexOf(window.location.origin + "/") === 0) return;
 
   var here = document.documentElement.getAttribute("lang") === "ne" ? "ne" : "en";
-  // Before any choice on the site, a language picked inside the portal counts
-  // (sksl for the +2 portal, kscl for the campus one), then the browser's own.
-  var wanted = known(cookie("site_lang")) ||
-    known(cookie(/\/plus2\//.test(window.location.pathname) ? "sksl" : "kscl"));
-  if (!wanted) {
-    var browser = (navigator.languages && navigator.languages[0]) || navigator.language || "";
-    if (/^ne(-|$)/i.test(browser)) wanted = "ne";
-  }
+  // English is the default: only a language the visitor chose with the
+  // switch moves them, never their browser's settings.
+  var wanted = known(cookie("site_lang"));
   if (wanted && wanted !== here) {
     var a = document.createElement("a");
     a.href = alt.getAttribute("content");
