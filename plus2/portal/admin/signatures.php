@@ -25,16 +25,16 @@ if (!signature_tables_ready()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
-
-    // A signature file is a few hundred kilobytes at most, so a POST that PHP
-    // dropped for exceeding post_max_size is worth naming: $_POST comes back
-    // empty, which would otherwise look like an expired session.
+    // Checked before the CSRF token, because a POST that PHP dropped for
+    // exceeding post_max_size has no token left in it — checked after, it
+    // is reported as an expired session instead of a file that was too big.
     if (post_exceeded_limit()) {
         flash('error', t('err_file_too_large', format_bytes(upload_limit_bytes())));
         header('Location: ' . portal_url('/admin/signatures.php'));
         exit;
     }
+
+    verify_csrf();
 
     $action = (string) ($_POST['action'] ?? '');
     $id     = (int) ($_POST['signature_id'] ?? 0);

@@ -258,7 +258,7 @@ return [
     'seen_nobody'      => 'Not published',
     'err_notice_title' => 'Please give the notice a title in English.',
     'err_bad_url'      => 'That link does not look like a web address. It should begin with https://',
-    'err_file_too_large' => 'That file is too large. This server accepts attachments up to %s — try a smaller scan, or link to the file instead.',
+    'err_file_too_large' => 'That file is too large. This server accepts uploads up to %s — try a smaller photo.',
 
     // Errors
     // System / maintenance
@@ -744,4 +744,10 @@ return [
     'school_map_hint' => 'Printed on the back of every card as a QR code that opens the school’s location. Leave empty to use the link the school gave.',
     'theme_school' => 'School blue & yellow',
     'theme_saffron' => 'Blue & saffron',
+    'err_too_many_registrations' => 'Too many registrations have come from this network in the last hour. Please try again a little later, or ask the school office.',
+    'identity_locked_hint' => 'Your name and date of birth are printed on your signed identity card, so only the school office can change them. If something is wrong, ask the office to correct it.',
+    'id_card_name_derived_office' => 'The Nepali spelling on your card — %s — was written from your English name automatically. If it is not how you write your name, ask the school office to enter the right spelling.',
+    'edit_person_title' => 'Edit details: %s',
+    'edit_person_intro' => 'Correct a person’s details as the school records them. For a student, this is the only place their name and date of birth can be changed. Every change is written to the activity log.',
+    'edit_no_change' => 'Nothing was changed.',
 ];

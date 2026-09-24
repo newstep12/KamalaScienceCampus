@@ -4,83 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lang.php';
 
-/** Extensions teachers may upload, mapped from the real MIME type we detect. */
-const ALLOWED_UPLOADS = [
-    'application/pdf' => 'pdf',
-    'application/msword' => 'doc',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-    'application/vnd.ms-powerpoint' => 'ppt',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
-    'application/vnd.ms-excel' => 'xls',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
-    'text/plain' => 'txt',
-    'text/csv' => 'csv',
-    'image/jpeg' => 'jpg',
-    'image/png' => 'png',
-    'image/gif' => 'gif',
-    'image/webp' => 'webp',
-    'application/zip' => 'zip',
-];
-
-/**
- * Validate and store one uploaded file under uploads/<subdir>/.
- *
- * On failure 'error' is 'size' (bigger than the server allows), 'type' (not
- * an accepted format) or 'upload' (anything else).
- *
- * @return array{ok:bool, error?:string, path?:string, name?:string, size?:int}
- */
-function store_upload(array $file, string $subdir): array
-{
-    $err = $file['error'] ?? UPLOAD_ERR_NO_FILE;
-    if ($err !== UPLOAD_ERR_OK) {
-        // PHP's own size refusals are reported as such rather than as a
-        // generic failure: "the file is too large" tells the person what to
-        // do next, "the upload failed" does not.
-        $tooBig = $err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE;
-        return ['ok' => false, 'error' => $tooBig ? 'size' : 'upload'];
-    }
-    if (!is_uploaded_file($file['tmp_name'])) {
-        return ['ok' => false, 'error' => 'upload'];
-    }
-    if ($file['size'] <= 0) {
-        return ['ok' => false, 'error' => 'upload'];
-    }
-    if ($file['size'] > upload_limit_bytes()) {
-        return ['ok' => false, 'error' => 'size'];
-    }
-
-    // Trust the sniffed type, never the browser-supplied one or the extension.
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $mime  = (string) $finfo->file($file['tmp_name']);
-    if (!isset(ALLOWED_UPLOADS[$mime])) {
-        return ['ok' => false, 'error' => 'type'];
-    }
-    $ext = ALLOWED_UPLOADS[$mime];
-
-    $dir = __DIR__ . '/../uploads/' . $subdir;
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
-        return ['ok' => false, 'error' => 'upload'];
-    }
-
-    // Random stored name: the original never reaches the filesystem.
-    $stored = bin2hex(random_bytes(16)) . '.' . $ext;
-    if (!move_uploaded_file($file['tmp_name'], $dir . '/' . $stored)) {
-        return ['ok' => false, 'error' => 'upload'];
-    }
-    @chmod($dir . '/' . $stored, 0644);
-
-    $original = (string) ($file['name'] ?? $stored);
-    $original = preg_replace('/[^\p{L}\p{N}. \-_]+/u', '_', $original) ?? $stored;
-
-    return [
-        'ok'   => true,
-        'path' => $subdir . '/' . $stored,
-        'name' => mb_substr($original, 0, 190),
-        'size' => (int) $file['size'],
-    ];
-}
-
+/** Remove one stored upload, if it is inside the uploads directory. */
 function delete_upload(?string $relPath): void
 {
     if (!$relPath) {
@@ -257,57 +181,6 @@ function image_error_message(string $error): string
     return $error === 'small' ? t('err_photo_small') : t('err_photo');
 }
 
-/**
- * The error string key store_upload() returned, as a translated message.
- * The size case names the actual limit: "too large" without a figure leaves
- * whoever is uploading guessing at how much smaller the file has to be.
- */
-function upload_error_message(string $error): string
-{
-    return match ($error) {
-        'size'  => t('err_file_too_large', format_bytes(upload_limit_bytes())),
-        'type'  => t('err_file_type'),
-        default => t('err_upload'),
-    };
-}
-
-/* ---------------------------------------------------------------- serving -- */
-
-/**
- * Types a browser can render in place. A notice is meant to be read, not
- * collected, so these are sent with Content-Disposition: inline and the real
- * type — with nosniff alongside, the browser shows the PDF in its own viewer
- * instead of dropping a file in the Downloads folder.
- *
- * Deliberately narrower than ALLOWED_UPLOADS: nothing here can carry script.
- * SVG and HTML are absent for that reason and must stay absent.
- */
-const INLINE_TYPES = [
-    'application/pdf' => 'pdf',
-    'image/jpeg'      => 'jpg',
-    'image/png'       => 'png',
-    'image/gif'       => 'gif',
-    'image/webp'      => 'webp',
-];
-
-/**
- * Whether a stored upload is something the page can show in place.
- *
- * Reads the stored extension rather than the original filename: store_upload()
- * derives it from the type sniffed out of the file, so it describes what the
- * file really is and not what it was called when it arrived.
- *
- * @return 'pdf'|'image'|'file'
- */
-function upload_kind(?string $relPath): string
-{
-    $ext = strtolower(pathinfo((string) $relPath, PATHINFO_EXTENSION));
-    if ($ext === 'pdf') {
-        return 'pdf';
-    }
-    return in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? 'image' : 'file';
-}
-
 function uploads_root(): string
 {
     $root = realpath(__DIR__ . '/../uploads');
@@ -331,57 +204,6 @@ function resolve_upload(?string $relPath): ?string
     }
     return $full;
 }
-
-/**
- * The filename parameters for a Content-Disposition header.
- *
- * Two of them, per RFC 6266: a plain ASCII `filename` that any client
- * understands, and `filename*` carrying the real UTF-8 name. Without the
- * second, a notice saved as "सूचना.pdf" reaches the visitor as a row of
- * underscores — which on a bilingual campus site is most of the point of
- * keeping the original name at all.
- */
-function disposition_filename(string $name): string
-{
-    $name  = str_replace(['"', '\\', "\r", "\n"], '', $name);
-    $ascii = preg_replace('/[^\x20-\x7e]+/', '_', $name) ?: 'file';
-    $ascii = preg_replace('/[^\w. \-]+/', '_', $ascii) ?: 'file';
-
-    $header = 'filename="' . $ascii . '"';
-    if ($name !== $ascii && $name !== '') {
-        $header .= "; filename*=UTF-8''" . rawurlencode($name);
-    }
-    return $header;
-}
-
-/**
- * Send a stored upload and stop. $inline asks for it to be displayed rather
- * than downloaded, which is honoured only when the type sniffed from the file
- * itself is one a browser renders safely — the stored name never decides.
- */
-function serve_upload(?string $relPath, ?string $downloadName, bool $inline = false, string $cacheControl = 'private, max-age=0, must-revalidate'): void
-{
-    $full = resolve_upload($relPath);
-    if ($full === null) {
-        http_response_code(404);
-        exit('Not found.');
-    }
-
-    $mime   = (string) (new finfo(FILEINFO_MIME_TYPE))->file($full);
-    $inline = $inline && isset(INLINE_TYPES[$mime]);
-    $name   = $downloadName ?: basename($full);
-
-    header('Content-Type: ' . ($inline ? $mime : 'application/octet-stream'));
-    header('Content-Length: ' . filesize($full));
-    header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; ' . disposition_filename($name));
-    // Without nosniff a browser may second-guess the type we just declared.
-    header('X-Content-Type-Options: nosniff');
-    header('Cache-Control: ' . $cacheControl);
-    readfile($full);
-    exit;
-}
-
-/* ----------------------------------------------------------- size limits -- */
 
 /** A php.ini size such as "8M" or "512K" as a byte count. */
 function ini_bytes(string $value): int
@@ -409,7 +231,9 @@ function ini_bytes(string $value): int
  */
 function upload_limit_bytes(): int
 {
-    $limits = [(int) (config()['max_upload'] ?? 20 * 1024 * 1024)];
+    // This portal takes only photographs and signatures, each capped at
+    // MAX_IMAGE_UPLOAD; a form carries at most two of them.
+    $limits = [2 * MAX_IMAGE_UPLOAD];
     foreach (['upload_max_filesize', 'post_max_size'] as $key) {
         $bytes = ini_bytes((string) ini_get($key));
         if ($bytes > 0) {

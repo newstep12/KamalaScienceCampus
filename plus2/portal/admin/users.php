@@ -12,7 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     // An admin must never be able to lock themselves out.
-    if ($id === (int) $admin['id'] && in_array($action, ['suspend', 'set_role'], true)) {
+    // Nor reset their own password here: that would sign them out with the
+    // temporary one still unread. Their own is changed from My portfolio.
+    if ($id === (int) $admin['id'] && in_array($action, ['suspend', 'set_role', 'reset_password'], true)) {
         flash('error', t('forbidden_body'));
         header('Location: ' . portal_url('/admin/users.php'));
         exit;
@@ -408,6 +410,7 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
             </td>
             <td><span class="p-tag <?= e($tagClass) ?>"><?= te('status_' . $u['status']) ?></span></td>
             <td class="nowrap">
+              <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e(portal_url('/admin/edit.php?user=' . (int) $u['id'])) ?>"><?= te('edit') ?></a>
               <?php if ($u['status'] === 'active'): ?>
                 <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e(portal_url('/id-card.php?user=' . (int) $u['id'])) ?>">
                   <?= te('print_id_card') ?>

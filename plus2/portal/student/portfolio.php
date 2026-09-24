@@ -7,6 +7,12 @@ require_once __DIR__ . '/../inc/idcard.php';
 
 $user = require_login();
 
+// A student's name and date of birth are the school's record, printed on a
+// card that carries the Principal's and the Coordinator's signatures, so once
+// approved they are corrected by the office (Admin → People → Edit), not by
+// the holder. Staff keep theirs editable.
+$identityLocked = $user['role'] === ROLE_STUDENT;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Checked before the CSRF token, because when PHP discards an oversized
     // request body there is no token left to check — the form comes through
@@ -71,11 +77,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               pan_no = ?, bio = ?
               WHERE id = ?',
             [
-                $field('full_name', 120) ?: $user['full_name'],
-                $field('full_name_ne', 120) ?: null,
+                $identityLocked ? $user['full_name'] : ($field('full_name', 120) ?: $user['full_name']),
+                $identityLocked ? ($user['full_name_ne'] ?? null) : ($field('full_name_ne', 120) ?: null),
                 ascii_digits($field('phone', 30)) ?: null,
                 $field('address', 190) ?: null,
-                parse_date($field('date_of_birth', 10)),
+                $identityLocked ? ($user['date_of_birth'] ?? null) : parse_date($field('date_of_birth', 10)),
                 // One of the eight or nothing at all. Anything else is stored
                 // as nothing, which leaves the line on the card blank rather
                 // than printing a group nobody typed.
@@ -241,13 +247,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!password_verify($current, $user['password_hash'])) {
             flash('error', t('err_current_pw'));
-        } elseif (mb_strlen($new) < 8 || !preg_match('/\p{L}/u', $new) || !preg_match('/\d/', $new)) {
+        } elseif (!password_is_strong($new)) {
             flash('error', t('err_pw_weak'));
         } elseif ($new !== $confirm) {
             flash('error', t('err_pw_match'));
         } else {
-            q('UPDATE users SET password_hash = ? WHERE id = ?',
-              [password_hash($new, PASSWORD_DEFAULT), $user['id']]);
+            $hash = password_hash($new, PASSWORD_DEFAULT);
+            q('UPDATE users SET password_hash = ? WHERE id = ?', [$hash, $user['id']]);
+            // This session stays signed in; any other one of theirs does not.
+            keep_session_after_password_change($hash);
             log_activity((int) $user['id'], 'password_change', $user['email']);
             flash('ok', t('password_changed'));
         }
@@ -272,12 +280,15 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
 
       <div class="p-field">
         <label for="full_name"><?= te('full_name_en') ?></label>
-        <input type="text" id="full_name" name="full_name" value="<?= e($user['full_name']) ?>" required>
+        <input type="text" id="full_name" name="full_name" value="<?= e($user['full_name']) ?>" required<?= $identityLocked ? ' disabled' : '' ?>>
       </div>
 
       <div class="p-field">
         <label for="full_name_ne"><?= te('full_name_ne') ?> <span class="hint"><?= te('optional') ?></span></label>
-        <input type="text" id="full_name_ne" name="full_name_ne" value="<?= e($user['full_name_ne']) ?>" lang="ne">
+        <input type="text" id="full_name_ne" name="full_name_ne" value="<?= e($user['full_name_ne']) ?>" lang="ne"<?= $identityLocked ? ' disabled' : '' ?>>
+        <?php if ($identityLocked): ?>
+          <span class="hint"><?= te('identity_locked_hint') ?></span>
+        <?php endif; ?>
       </div>
 
       <div class="p-field">
@@ -334,7 +345,7 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
         </div>
         <div class="p-field">
           <label for="date_of_birth"><?= te('date_of_birth') ?></label>
-          <input type="date" id="date_of_birth" name="date_of_birth" value="<?= e($user['date_of_birth']) ?>">
+          <input type="date" id="date_of_birth" name="date_of_birth" value="<?= e($user['date_of_birth']) ?>"<?= $identityLocked ? ' disabled' : '' ?>>
         </div>
       </div>
 
@@ -541,7 +552,7 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
       <?php endif; ?>
       <?php /* The box that fixes it is on this very page, a few fields up. */ ?>
       <?php if ($cardNames['deva_derived']): ?>
-        <p class="p-idcard-note"><?= e(t('id_card_name_derived', $cardNames['deva'])) ?></p>
+        <p class="p-idcard-note"><?= e(t($identityLocked ? 'id_card_name_derived_office' : 'id_card_name_derived', $cardNames['deva'])) ?></p>
       <?php endif; ?>
       <a class="p-btn p-btn-primary" href="<?= e(portal_url('/id-card.php')) ?>"><?= te('id_card_open') ?></a>
     </div>

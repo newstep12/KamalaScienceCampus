@@ -81,7 +81,8 @@ if ($missing) {
     $notes[] = t($own ? 'id_card_missing' : 'id_card_missing_other', join_list($missing));
 }
 if ($ctx['holder_names']['deva_derived']) {
-    $notes[] = t($own ? 'id_card_name_derived' : 'id_card_name_derived_other',
+    $notes[] = t(!$own ? 'id_card_name_derived_other'
+                 : ($holder['role'] === ROLE_STUDENT ? 'id_card_name_derived_office' : 'id_card_name_derived'),
                  $ctx['holder_names']['deva']);
 }
 ?>

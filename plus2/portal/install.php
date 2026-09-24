@@ -44,7 +44,6 @@ $configPath = __DIR__ . '/inc/config.php';
 $installed  = is_file($configPath);
 $errors     = [];
 $done       = false;
-$repair     = null;
 
 /**
  * The installer is locked unless the site's owner has unlocked it.
@@ -73,19 +72,15 @@ function local_db_host(string $host): bool
     return in_array(strtolower($host), ['localhost', '127.0.0.1', '::1'], true);
 }
 
-if (!$locked && $installed && isset($_GET['repair'])) {
-    try {
-        $c = require $configPath;
-        $d = $c['db'];
-        $pdo = new PDO(
-            "mysql:host={$d['host']};dbname={$d['name']};charset=utf8mb4",
-            $d['user'], $d['password'],
-            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-        );
-        $repair = run_schema($pdo);
-    } catch (Throwable $e) {
-        $errors[] = 'Repair failed: ' . $e->getMessage();
-    }
+// Once the portal is set up there is nothing left for this page to do: the
+// schema is kept current from Admin → System → Run database updates, behind
+// sign-in. An unlock file left behind — the delete below failed, or somebody
+// created it again — is removed on sight, and if it cannot be the page says
+// so plainly rather than sitting unlocked.
+$unlockStuck = false;
+if ($installed && is_file($unlockPath)) {
+    @unlink($unlockPath);
+    $unlockStuck = is_file($unlockPath);
 }
 
 if (!$locked && !$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -212,27 +207,14 @@ if (!$locked && !$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php endif; ?>
     </p>
 
-  <?php elseif ($repair !== null): ?>
-    <h1>Tables checked</h1>
-    <p class="p-auth-intro">
-      Ran <?= (int) $repair['ran'] ?> statements. The database now holds these tables:
-    </p>
-    <ul style="font-size:.92rem;color:var(--ink-soft);line-height:1.9;">
-      <?php foreach ($repair['tables'] as $tbl): ?>
-        <li><code><?= htmlspecialchars((string) $tbl, ENT_QUOTES) ?></code></li>
-      <?php endforeach; ?>
-    </ul>
-    <p class="p-auth-intro"><strong>Now delete <code>plus2/portal/install.php</code> from the server.</strong></p>
-    <a class="p-btn p-btn-primary p-btn-block" href="index.php">Go to the portal</a>
-
-  <?php elseif ($errors && $installed): ?>
-    <h1>Repair failed</h1>
-    <?php foreach ($errors as $err): ?>
-      <div class="p-flash p-flash-error"><?= htmlspecialchars($err, ENT_QUOTES) ?></div>
-    <?php endforeach; ?>
-
   <?php elseif ($installed): ?>
     <h1>Already set up</h1>
+    <?php if ($unlockStuck): ?>
+      <div class="p-flash p-flash-error">
+        <strong>Delete <code>plus2/portal/inc/INSTALL-UNLOCK</code> now</strong> in hPanel&rsquo;s
+        File Manager. This page could not remove it itself.
+      </div>
+    <?php endif; ?>
     <p class="p-auth-intro">
       The portal is configured. For safety, delete <code>plus2/portal/install.php</code>
       from the server — it will refuse to run again, but removing it is tidier.

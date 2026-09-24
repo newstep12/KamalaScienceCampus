@@ -83,7 +83,7 @@ function layout_head(array $opts = []): void
             <span class="p-user-role"><?= e(role_label($user)) ?></span>
           </span>
         </a>
-        <a class="p-signout" href="<?= e(portal_url('/logout.php')) ?>"><?= te('sign_out') ?></a>
+        <a class="p-signout" href="<?= e(logout_url()) ?>"><?= te('sign_out') ?></a>
       <?php else: ?>
         <a class="p-signout" href="<?= e(portal_url('/../index.html')) ?>"><?= te('back_to_site') ?></a>
       <?php endif; ?>

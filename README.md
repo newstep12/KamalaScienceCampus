@@ -929,8 +929,11 @@ to either never reaches the other. The one change to the campus site is a
 Name (English, and Nepali if they want), email, **class (11 or 12)**,
 **group (Biology or Computer Science)**, section, **roll number** (if known),
 **father's / guardian's name and phone number**, date of birth, address,
-photograph and password. After approval they can edit all of these from
-**My portfolio** except the class, which the office sets — including their
+photograph and password. After approval they keep the rest up to date from
+**My portfolio** — except their **name, date of birth and class**, which only
+the office changes (**People → Edit**), because the name and date of birth
+print on a card signed by the Principal and the Coordinator. The portfolio
+still covers their
 group, their card photograph and **their own signature**, which prints on the
 back as the card holder's signature (the paper is lifted off a photographed
 signature automatically, as on the campus card).
@@ -1072,8 +1075,11 @@ after the merge.
    that database (host `localhost`) and the school office's administrator
    account. A successful setup **deletes `INSTALL-UNLOCK` itself**, locking
    the installer again.
-4. Optionally delete `plus2/portal/install.php` in File Manager. It is locked
-   and refuses to run twice anyway.
+4. Optionally delete `plus2/portal/install.php` in File Manager. Once set up
+   it does nothing at all — it has no repair mode (keeping the tables current
+   is **Admin → System → Run database updates**, behind sign-in) — and if it
+   ever finds `INSTALL-UNLOCK` lying around it deletes it, or says in red that
+   it could not.
 5. Sign in at `/plus2/portal/` and, as administrator:
    - **Signatures** — upload **two** signatures: the Principal's (title
      *Principal*) and the Coordinator's (title *+2 Coordinator*) — each a
@@ -1092,6 +1098,23 @@ after the merge.
      (Principal, Vice-Principal, +2 Coordinator, Teacher, …) goes on their card.
 
 `plus2/portal/inc/config.php` is git-ignored, like the campus one.
+
+## Accounts and sessions
+
+- **The office corrects details** from **People → Edit**: name (both
+  scripts), date of birth, class, group, section, roll number, guardian,
+  phone, address; for staff, the designation and government numbers. Every
+  change is written to the activity log with the fields that changed.
+- **A password change or reset signs out every other session** of that
+  account, so resetting a password actually shuts out whoever had the old
+  one. Somebody changing their own password stays signed in where they are.
+- **Registration is limited to 60 successful sign-ups an hour from one
+  network address** — two whole classes on the school's connection fit; a
+  script filling the server with photographs does not.
+- **Signing out needs the portal's own link** (it carries a token), so another
+  page cannot sign people out.
+- The portal keeps its user under session keys of its own (`sks_uid`), so a
+  campus session could never be read as a signed-in user here.
 
 ## Each new session
 

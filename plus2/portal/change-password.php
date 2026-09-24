@@ -24,8 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (password_verify($new, $user['password_hash'])) {
         $error = t('err_pw_same');
     } else {
-        q('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?',
-          [password_hash($new, PASSWORD_DEFAULT), $user['id']]);
+        $hash = password_hash($new, PASSWORD_DEFAULT);
+        q('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?', [$hash, $user['id']]);
+        keep_session_after_password_change($hash);
         log_activity((int) $user['id'], 'first_password_set', $user['email']);
         flash('ok', t('password_changed'));
         header('Location: ' . home_for($user));
@@ -64,7 +65,7 @@ layout_head(['title' => t('set_password_title'), 'nav' => []]);
     </form>
 
     <p class="p-auth-alt">
-      <a href="<?= e(portal_url('/logout.php')) ?>"><?= te('sign_out') ?></a>
+      <a href="<?= e(logout_url()) ?>"><?= te('sign_out') ?></a>
     </p>
   </div>
 </div>
