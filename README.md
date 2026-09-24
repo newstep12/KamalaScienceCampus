@@ -994,24 +994,28 @@ approve — edit them to the wording they sign off. Still to supply:
 - the **teachers** — `src/plus2/pages/teachers.html` (copy a card per teacher)
 - the school's address, phone and email — the footer and the *At a glance* panel
 
-Photos: save square photos to `plus2/assets/img/people/<slug>.jpg`
-(`kamlesh-chaudhary`, `teacher-1`, … — the `{{PHOTO:slug:XY}}` markers) and
-run `python3 build.py`.
+Photos live in `plus2/assets/img/people/<slug>.jpg` — the `{{PHOTO:slug:XY}}`
+markers — and appear after `python3 build.py`. Mr. Chaudhary's is cropped
+from a photograph taken at the school and lightly enhanced (levels, colour,
+sharpening); Mr. Malla's, Mr. Mahato's and Mr. Yadav's are the campus site's
+own. To add a teacher, copy a card on `src/plus2/pages/teachers.html`.
 
 **Hero photo:** the +2 home page opens on the school building,
 `plus2/assets/img/school-building.jpg`, under a dark gradient so the heading
 stays readable (`plus2/assets/css/plus2.css`, loaded on the +2 pages only).
 
-**Logo:** `plus2/assets/img/logo-192.png` (and `logo-512.png`) is a **redraw**
-of the emblem painted on the school's signboard — the white ring lettered
-*Shree Kamala Secondary School · Dhungrebas, Sindhuli*, the saffron disc, the
-six-pointed star and the open book. The only copy to hand was about 100
-pixels across in a photograph of the sign, too small to print from, so it was
-redrawn as a vector: `src/plus2-logo.svg`. **Check it against the school's
-own artwork**, and if the school has the original file, replace both PNGs
-with it (transparent background). To re-render after editing the SVG, open it
-in a browser at 800×800 and save a screenshot with a transparent background,
-then scale it to 192 and 512.
+**Logo:** `plus2/assets/img/logo-192.png` (and `logo-512.png`) is the
+school's emblem **redrawn from its rubber stamp** — the double ring lettered
+*Shree Kamala Secondary School* over *★ Dhungrebas, Sindhuli ★*, the
+six-pointed star with an open book at its centre and **K S S D S S** in its
+points, and *Estd. 1951 AD* — in the colours of the emblem painted on the
+signboard (royal blue, a saffron disc, a white star). The source is
+`src/plus2-logo.svg`. The year on the stamp is smudged; **1951 AD** was read
+because it agrees with the signboard's *Estd. 2007 BS* — check it. If the
+school has the original artwork, replace both PNGs with it (transparent
+background). To re-render after editing the SVG, open it in a browser at
+800×800, save a screenshot with a transparent background, then scale it to
+192 and 512.
 
 ## Test it locally first
 
