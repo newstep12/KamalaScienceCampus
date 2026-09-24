@@ -49,10 +49,11 @@ Every page (campus and +2) has the same two-part navigation:
 The language a visitor picks with the switch is remembered for a year (the
 `site_lang` cookie), and `assets/js/lang.js` sends them to their language
 whenever they arrive at a page in the other one from outside the site (a
-search, a bookmark, a shared link). Before they have picked, the language they
-chose inside a portal counts, then a browser set to Nepali. Links followed
-within the site are never redirected, so a visitor who wants the other
-language can always reach it.
+search, a bookmark, a shared link). English is the default: until a visitor
+picks Nepali with the switch, every page opens in the language of its address
+(English at `/` and `/plus2/`), whatever their browser is set to. Links
+followed within the site are never redirected, so a visitor who wants the
+other language can always reach it.
 
 ## Editing
 
