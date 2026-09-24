@@ -6,6 +6,8 @@ declare(strict_types=1);
  * that prepared statements are genuinely prepared server-side.
  */
 
+require_once __DIR__ . '/config-path.php';
+
 // Don't advertise the exact PHP version in every response.
 header_remove('X-Powered-By');
 
@@ -143,8 +145,8 @@ function config(): array
 {
     static $config = null;
     if ($config === null) {
-        $path = __DIR__ . '/config.php';
-        if (!is_file($path)) {
+        $path = portal_config_file();
+        if ($path === null) {
             // This used to redirect to portal/install.php. The installer has
             // since been deleted and .htaccess 404s that path, so the redirect
             // presented a missing configuration as a missing page — every
@@ -153,7 +155,8 @@ function config(): array
             // git-ignored, so it is absent from any fresh checkout of this
             // repository and has to be restored on the server.
             $ref = portal_error_reference();
-            error_log('+2 portal error [' . $ref . ']: configuration missing at ' . $path);
+            error_log('+2 portal error [' . $ref . ']: configuration missing; looked for '
+                . implode(' and ', portal_config_paths()));
             // Public: every visitor sees this until the office has run the
             // installer, so it names no file and no path. The log line above
             // says what is missing for whoever reads the server's error log.
