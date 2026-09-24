@@ -49,6 +49,9 @@ function layout_head(array $opts = []): void
 <link rel="stylesheet" href="<?= e(portal_url('/../../assets/css/styles.css?v=' . asset_version('/../../assets/css/styles.css'))) ?>">
 <link rel="stylesheet" href="<?= e(portal_url('/../assets/css/portal.css?v=' . asset_version('/../assets/css/portal.css'))) ?>">
 <link rel="icon" type="image/png" sizes="192x192" href="<?= e(school_logo_url()) ?>">
+<?php /* Opaque, on white: a phone fills a home-screen icon's transparent
+         corners with black. */ ?>
+<link rel="apple-touch-icon" href="<?= e(portal_url('/../assets/img/logo-touch.png')) ?>">
 </head>
 <body class="portal<?= is_nepali() ? ' lang-ne' : '' ?>">
 <a class="skip" href="#main"><?= te('nav_overview') ?></a>
@@ -60,7 +63,7 @@ function layout_head(array $opts = []): void
               aria-label="<?= te('menu') ?>">☰</button>
     <?php endif; ?>
     <a class="p-brand" href="<?= e($user ? home_for($user) : portal_url('/index.php')) ?>">
-      <img class="crest" src="<?= e(school_logo_url()) ?>" alt="" width="38" height="38">
+      <img class="crest" src="<?= e(school_logo_url()) ?>" alt="" width="44" height="44">
       <span class="p-brand-text">
         <span class="p-brand-name"><?= te('campus_name') ?></span>
         <span class="p-brand-sub"><?= te('portal') ?></span>

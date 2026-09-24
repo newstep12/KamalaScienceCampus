@@ -45,7 +45,9 @@ function nepali_name_words(): array
         return $words;
     }
 
-    return $words = [
+    // The longer list in nepali-names.php is laid over this one: where both
+    // hold a name, its spelling is the one used.
+    return $words = (require __DIR__ . '/nepali-names.php') + [
         /* ---- surnames ---- */
         'acharya' => 'आचार्य',      'adhikari' => 'अधिकारी',    'aryal' => 'अर्याल',
         'bajracharya' => 'बज्राचार्य', 'bam' => 'बम',            'baral' => 'बराल',
@@ -292,6 +294,25 @@ function transliterate_to_devanagari(string $word): string
                 $matched = true;
                 break;
             }
+            /**
+             * The vowel ऋ, which romanised names spell "ri" after a
+             * consonant: Kripa कृपा, Mrigendra मृगेन्द्र, Hridaya हृदय,
+             * Dhriti धृति. Only after the consonants where that reading is
+             * the usual one, and only with a consonant following — Kriya is
+             * क्रिया and Priya प्रिया, where the r is a र and the i an इ. Not
+             * after s or g: Sriram is श्रीराम and Grishma ग्रीष्म, and the
+             * Sri- names that do take ऋ (Srijana, Srishti) are in the
+             * dictionary.
+             */
+            if ($vowel === null && in_array($roman, ['k', 'd', 'm', 'h', 'dh'], true)
+                && substr($word, $pos, 2) === 'ri'
+                && ($after = devanagari_consonant_at($word, $pos + 2)) !== null && $after !== 'य') {
+                $out .= $letter . 'ृ';
+                $pos += 2;
+                $matched = true;
+                break;
+            }
+
             $out .= ($roman === 'ng' && $vowel !== null && ($pos - $n) !== 0) ? 'ङ्ग' : $letter;
 
             // What comes after decides how this consonant is finished off.

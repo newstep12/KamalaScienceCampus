@@ -182,7 +182,9 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
 
       <div class="p-field">
         <label for="full_name_ne"><?= te('full_name_ne') ?> <span class="hint"><?= te('optional') ?></span></label>
-        <input type="text" id="full_name_ne" name="full_name_ne" value="<?= e($in['full_name_ne']) ?>" lang="ne">
+        <input type="text" id="full_name_ne" name="full_name_ne" value="<?= e($in['full_name_ne']) ?>" lang="ne"
+               data-suggest="<?= e(portal_url('/name-ne.php')) ?>">
+        <span class="hint"><?= te('full_name_ne_hint') ?></span>
       </div>
 
       <div class="p-field <?= isset($errors['email']) ? 'error' : '' ?>">
@@ -305,4 +307,5 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
   <?php endif; ?>
   </div>
 </div>
+<script src="<?= e(portal_url('/../assets/js/name-ne.js?v=' . asset_version('/../assets/js/name-ne.js'))) ?>"></script>
 <?php layout_foot(); ?>
