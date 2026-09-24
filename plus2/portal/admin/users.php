@@ -12,7 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     // An admin must never be able to lock themselves out.
-    if ($id === (int) $admin['id'] && in_array($action, ['suspend', 'set_role'], true)) {
+    // Nor reset their own password here: that would sign them out with the
+    // temporary one still unread. Their own is changed from My portfolio.
+    if ($id === (int) $admin['id'] && in_array($action, ['suspend', 'set_role', 'reset_password'], true)) {
         flash('error', t('forbidden_body'));
         header('Location: ' . portal_url('/admin/users.php'));
         exit;

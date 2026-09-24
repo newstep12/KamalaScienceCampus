@@ -55,7 +55,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
     } else {
         $new += [
-            'designation' => in_array($_POST['designation'] ?? '', designations(), true) ? $_POST['designation'] : null,
+            // One of the list, or the title already on record — a title typed
+            // in by hand before the list existed is offered as its own option
+            // below, and saving must not quietly erase it.
+            'designation' => (static function (string $d, ?string $current): ?string {
+                if (in_array($d, designations(), true)) {
+                    return $d;
+                }
+                return ($d !== '' && $d === (string) $current) ? $d : null;
+            })(is_string($_POST['designation'] ?? null) ? $_POST['designation'] : '', $u['designation'] ?? null),
             'national_id' => id_number($field('national_id', 30), 30) ?: null,
             'pan_no'      => id_number($field('pan_no', 20), 20) ?: null,
         ];
@@ -171,8 +179,12 @@ layout_head(['title' => t('edit_person_title', $u['full_name']), 'active' => 'us
       <label for="designation"><?= te('designation') ?></label>
       <select id="designation" name="designation">
         <option value="">—</option>
+        <?php $custom = (string) ($u['designation'] ?? ''); ?>
+        <?php if ($custom !== '' && !in_array($custom, designations(), true)): ?>
+          <option value="<?= e($custom) ?>" selected><?= e($custom) ?></option>
+        <?php endif; ?>
         <?php foreach (designations() as $d): ?>
-          <option value="<?= e($d) ?>" <?= ($u['designation'] ?? '') === $d ? 'selected' : '' ?>><?= e(designation_label($d)) ?></option>
+          <option value="<?= e($d) ?>" <?= $custom === $d ? 'selected' : '' ?>><?= e(designation_label($d)) ?></option>
         <?php endforeach; ?>
       </select>
     </div>
