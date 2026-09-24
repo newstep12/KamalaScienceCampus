@@ -51,7 +51,7 @@ function layout_head(array $opts = []): void
 <link rel="icon" type="image/png" sizes="192x192" href="<?= e(school_logo_url()) ?>">
 <?php /* Opaque, on white: a phone fills a home-screen icon's transparent
          corners with black. */ ?>
-<link rel="apple-touch-icon" href="<?= e(portal_url('/../assets/img/logo-touch.png')) ?>">
+<link rel="apple-touch-icon" href="<?= e(portal_url('/../assets/img/seal-touch.png')) ?>">
 </head>
 <body class="portal<?= is_nepali() ? ' lang-ne' : '' ?>">
 <a class="skip" href="#main"><?= te('nav_overview') ?></a>

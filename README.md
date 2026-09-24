@@ -1075,12 +1075,20 @@ Dhungrebas, Sindhuli*, the six-pointed star with the open book and
 transparent background. (The artwork as supplied read *1961 AD*; the school
 was established in **2007 BS / 1951 AD**, and the date on the seal was
 corrected to match.)
-`plus2/assets/img/logo-192.png` (site header, footer, portal header, browser
-and browser icon), `logo-512.png` (the identity card, front and as a faint
-watermark on the back, where it prints sharp) and `logo-touch.png` (the
+`plus2/assets/img/seal-192.png` (site header and footer, portal header,
+browser icon), `seal-512.png` (the identity card, front and as a faint
+watermark on the back, where it prints sharp) and `seal-touch.png` (the
 phone home-screen icon, on white, since a phone fills transparent corners
-with black). To replace it,
-overwrite both files with a square transparent PNG of the new seal.
+with black).
+
+To replace the seal, save the new one under **new file names** and change
+the references (`src/plus2/partials*/`, `school_logo_url()` in
+`plus2/portal/inc/idcard.php`, the touch icon in `plus2/portal/inc/layout.php`),
+then run `python3 build.py`. Do not overwrite the files in place: `.htaccess`
+lets browsers keep images for 30 days, so an image changed under the same
+name goes on showing the old one to everybody who has seen it. That is what
+happened when the seal first replaced the redrawn logo, which lived at
+`logo-192.png`; the move to `seal-*.png` is the fix.
 
 ## Test it locally first
 
