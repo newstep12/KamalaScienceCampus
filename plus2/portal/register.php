@@ -32,7 +32,17 @@ function birth_date_is_plausible(string $date): bool
     return $date <= date('Y-m-d') && $age >= 12 && $age <= 40;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_exceeded_limit()) {
+    // A photograph too big for the server: PHP drops the whole form, token
+    // and all, so say what happened rather than "your session expired".
+    $errors['photo'] = t('err_file_too_large', format_bytes(upload_limit_bytes()));
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && recent_registrations(client_ip()) >= MAX_REGISTRATIONS_PER_HOUR) {
+    // The form is public and every submission can store two pictures, so one
+    // address gets a handful an hour — a whole class registering from the
+    // school's own connection fits; a script filling the disk does not.
+    verify_csrf();
+    $errors['email'] = t('err_too_many_registrations');
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
 
     // Trim to the column widths in sql/schema.sql: MySQL runs in strict mode,
@@ -128,6 +138,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]
         );
         log_activity(null, 'register', $email, 'Class ' . $class);
+        // Counted only once something was stored: a student correcting a typo
+        // has not used up anybody's allowance, and a refused form stores no
+        // files.
+        record_registration(client_ip());
 
         // Best-effort: a failed notification must not fail the registration.
         notify_admins_of_registration([

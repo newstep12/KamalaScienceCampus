@@ -408,6 +408,7 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
             </td>
             <td><span class="p-tag <?= e($tagClass) ?>"><?= te('status_' . $u['status']) ?></span></td>
             <td class="nowrap">
+              <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e(portal_url('/admin/edit.php?user=' . (int) $u['id'])) ?>"><?= te('edit') ?></a>
               <?php if ($u['status'] === 'active'): ?>
                 <a class="p-btn p-btn-ghost p-btn-sm" href="<?= e(portal_url('/id-card.php?user=' . (int) $u['id'])) ?>">
                   <?= te('print_id_card') ?>

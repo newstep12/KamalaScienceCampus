@@ -8,6 +8,7 @@ const ROLE_TEACHER = 'teacher';
 const ROLE_ADMIN    = 'admin';
 
 const MAX_LOGIN_ATTEMPTS = 6;      // per email+IP
+const MAX_REGISTRATIONS_PER_HOUR = 60;   // per IP, successful ones — two classes on one school connection fit
 const LOGIN_WINDOW_MIN   = 15;     // minutes
 
 function start_session(): void
@@ -55,13 +56,21 @@ function current_user(): ?array
     $loaded = true;
 
     start_session();
-    if (empty($_SESSION['uid'])) {
+    // sks_uid, not uid: the campus portal keeps its user in $_SESSION['uid'],
+    // in the same PHP session store. A campus session id presented under this
+    // portal's cookie name is already refused by the fingerprint check, but a
+    // key of its own means it could never be read as a signed-in user here
+    // even if that check changed.
+    if (empty($_SESSION['sks_uid'])) {
         return null;
     }
-    $user = one('SELECT * FROM users WHERE id = ? LIMIT 1', [(int) $_SESSION['uid']]);
+    $user = one('SELECT * FROM users WHERE id = ? LIMIT 1', [(int) $_SESSION['sks_uid']]);
 
-    // A user deleted or suspended mid-session loses access immediately.
-    if (!$user || $user['status'] !== 'active') {
+    // A user deleted or suspended mid-session loses access immediately — and
+    // so does every session signed in before the password last changed, so a
+    // reset by the office actually shuts out whoever had the old one.
+    if (!$user || $user['status'] !== 'active'
+        || !hash_equals((string) ($_SESSION['sks_pwv'] ?? ''), password_version((string) $user['password_hash']))) {
         $user = null;
         session_unset();
         session_destroy();
@@ -159,6 +168,26 @@ function record_attempt(string $email, string $ip, bool $ok): void
     }
 }
 
+/**
+ * Registrations are counted in login_attempts under a marker that can never
+ * be an email address, so no second table is needed and the same daily
+ * pruning clears them.
+ */
+function recent_registrations(string $ip): int
+{
+    return (int) scalar(
+        'SELECT COUNT(*) FROM login_attempts
+          WHERE email = \'#register\' AND ip_address = ?
+            AND attempted_at > (NOW() - INTERVAL 1 HOUR)',
+        [$ip]
+    );
+}
+
+function record_registration(string $ip): void
+{
+    record_attempt('#register', $ip, false);
+}
+
 function client_ip(): string
 {
     return substr((string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'), 0, 45);
@@ -212,17 +241,45 @@ function attempt_login(string $email, string $password): array
     }
 
     if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
-        q('UPDATE users SET password_hash = ? WHERE id = ?',
-          [password_hash($password, PASSWORD_DEFAULT), $user['id']]);
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        q('UPDATE users SET password_hash = ? WHERE id = ?', [$hash, $user['id']]);
     }
 
     record_attempt($email, $ip, true);
     start_session();
     session_regenerate_id(true);
-    $_SESSION['uid'] = (int) $user['id'];
+    $_SESSION['sks_uid'] = (int) $user['id'];
+    $_SESSION['sks_pwv'] = password_version($hash);    // the hash as stored now
     q('UPDATE users SET last_login_at = NOW() WHERE id = ?', [$user['id']]);
 
     return ['ok' => true, 'user' => $user];
+}
+
+/**
+ * A short fingerprint of the stored password hash, kept in the session at
+ * sign-in. When the password changes the hash changes, and every session
+ * holding the old fingerprint is signed out on its next request.
+ */
+function password_version(string $hash): string
+{
+    return substr(hash('sha256', $hash), 0, 24);
+}
+
+/**
+ * Keep the current session signed in after its own user changes their
+ * password — every other session of theirs is signed out.
+ */
+function keep_session_after_password_change(string $newHash): void
+{
+    start_session();
+    session_regenerate_id(true);
+    $_SESSION['sks_pwv'] = password_version($newHash);
+}
+
+/** The sign-out link, carrying a token so another site cannot sign people out. */
+function logout_url(): string
+{
+    return portal_url('/logout.php?t=' . urlencode(csrf_token()));
 }
 
 function logout(): void
