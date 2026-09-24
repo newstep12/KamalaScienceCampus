@@ -40,8 +40,14 @@ function run_schema(PDO $pdo): array
     return ['ran' => $ran, 'tables' => $tables];
 }
 
-$configPath = __DIR__ . '/inc/config.php';
-$installed  = is_file($configPath);
+require_once __DIR__ . '/inc/config-path.php';
+
+// Outside public_html when the server allows it, so a deploy cannot delete
+// it — see inc/config-path.php. $configPath is wherever it ends up.
+$configPaths = portal_config_paths();
+$configPath  = portal_config_file() ?? reset($configPaths);
+$installed   = portal_config_file() !== null;
+$savedInside = false;
 $errors     = [];
 $done       = false;
 
@@ -166,8 +172,24 @@ if (!$locked && !$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     'school_name' => 'Shree Kamala Secondary School',
                 ], true) . ";\n";
 
-            if (file_put_contents($configPath, $config) === false) {
-                throw new RuntimeException('Could not write inc/config.php. Check the folder permissions.');
+            // Outside the website first; inside inc/ only if the server will not
+            // allow that, in which case the page says so.
+            $written = false;
+            foreach ($configPaths as $where => $candidate) {
+                if (@file_put_contents($candidate, $config) !== false) {
+                    $configPath  = $candidate;
+                    $savedInside = $where === 'inside' && isset($configPaths['outside']);
+                    $written     = true;
+                    break;
+                }
+            }
+            if (!$written) {
+                throw new RuntimeException('Could not write the settings file. Check the folder permissions.');
+            }
+            // A copy left inside from an earlier install is removed, so there
+            // is only ever one file holding the password.
+            if ($configPath !== $configPaths['inside'] && is_file($configPaths['inside'])) {
+                @unlink($configPaths['inside']);
             }
             @chmod($configPath, 0640);
             // Locked again: the unlock file has served its purpose.
@@ -227,7 +249,19 @@ if (!$locked && !$installed && $_SERVER['REQUEST_METHOD'] === 'POST') {
       The database tables were created and your administrator account is ready.
       Sign in with the email and password you just chose.
     </p>
-    <p class="p-auth-intro"><strong>Now delete <code>plus2/portal/install.php</code> from the server.</strong></p>
+    <?php if ($savedInside): ?>
+      <div class="p-flash p-flash-error">
+        The server would not allow the settings file outside the website, so it was
+        saved in <code>plus2/portal/inc/config.php</code>. A deploy that rewrites the
+        site can remove it; if the portal ever says it is being set up again, run
+        this installer again — nothing already in the portal is lost.
+      </div>
+    <?php else: ?>
+      <p class="p-auth-intro" style="font-size:.9rem;">
+        The settings file was saved outside the website, where updates to the site
+        cannot remove it.
+      </p>
+    <?php endif; ?>
     <a class="p-btn p-btn-primary p-btn-block" href="index.php">Sign in</a>
 
   <?php else: ?>

@@ -1097,7 +1097,22 @@ after the merge.
    - **People** — add teachers and office staff; their designation
      (Principal, Vice-Principal, +2 Coordinator, Teacher, …) goes on their card.
 
-`plus2/portal/inc/config.php` is git-ignored, like the campus one.
+**Where the settings file lives.** The installer saves the portal's settings
+(the database name and password) **outside `public_html`**, as
+`domains/kamalasciencecampus.edu.np/kssd-plus2-config.php` on Hostinger —
+not served, and out of reach of deploys. A deploy was seen to rewrite
+`public_html/plus2/portal/inc/` wholesale and take the old
+`inc/config.php` with it, after which every visitor got *"The +2 Science
+portal is being set up"*. `inc/config.php` is still read as a fallback (and is
+git-ignored); when the site is tested from a folder under XAMPP's `htdocs`
+the file stays there, because the folder above would be `htdocs` itself.
+
+**If the portal ever says "being set up" again:** the settings file is gone.
+Create `plus2/portal/inc/INSTALL-UNLOCK` in File Manager and run
+`/plus2/portal/install.php` with the same database details. Nothing in the
+portal is lost — tables are only created if missing, and the administrator's
+password is reset to the one entered. The server error log line for the
+reference on that page lists both places the portal looked.
 
 ## Accounts and sessions
 
