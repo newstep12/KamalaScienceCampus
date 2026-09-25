@@ -296,6 +296,13 @@ body.lang-ne .p-tag { text-transform: none; letter-spacing: 0; font-size: .78rem
 .p-auth .p-card { padding: 34px; }
 .p-auth h1 { font-size: 1.55rem; margin-bottom: .3em; }
 .p-auth-intro { color: var(--ink-soft); font-size: .95rem; margin-bottom: 26px; }
+/* On the sign-in and registration pages: the way to the other portal. */
+.p-auth-other {
+  margin: -8px 0 22px; padding: 10px 13px;
+  border-radius: 10px; background: #fff7e6; border: 1px solid #f0d9a8;
+  font-size: .88rem; color: #5c4210; line-height: 1.5;
+}
+.p-auth-other a { font-weight: 600; white-space: nowrap; }
 .p-auth-alt { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line);
               font-size: .92rem; color: var(--ink-soft); text-align: center; }
 

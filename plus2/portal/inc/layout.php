@@ -6,6 +6,22 @@ require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/idcard.php';
 
 /**
+ * On the sign-in and registration pages: whose portal this is not, and the way
+ * to the other one. The campus's B.Sc. portal and the school's +2 portal look
+ * alike and neither account opens the other, so a student who has come to the
+ * wrong one is sent to the right one rather than left to fail to sign in.
+ */
+function other_portal_notice(): void
+{
+    ?>
+    <p class="p-auth-other">
+      <?= te('other_portal') ?>
+      <a href="<?= e(portal_url('/../../portal/index.php?lang=' . current_lang())) ?>"><?= te('other_portal_link') ?> &rarr;</a>
+    </p>
+    <?php
+}
+
+/**
  * Page chrome. Every portal page calls layout_head() then layout_foot().
  *
  * $opts: title, nav (array of [href,label,key]), active (key), wide (bool)

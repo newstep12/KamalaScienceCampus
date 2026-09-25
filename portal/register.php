@@ -150,6 +150,7 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
   <?php else: ?>
     <h1><?= te('reg_title') ?></h1>
     <p class="p-auth-intro"><?= te('reg_intro') ?></p>
+    <?php other_portal_notice(); ?>
 
     <?php if ($errors): ?>
       <div class="p-flash p-flash-error" role="alert"><?= e(reset($errors)) ?></div>
