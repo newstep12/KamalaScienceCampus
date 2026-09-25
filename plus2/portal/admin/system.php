@@ -147,6 +147,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 log_activity((int) $admin['id'], 'save_school');
                 flash('ok', t('school_saved'));
             }
+        } elseif ($action === 'recentre_photos') {
+            // Photographs already on cards, cut again centred on the head —
+            // what a new upload gets. Hand-placed ones are left alone.
+            $pass = recentre_stored_photos();
+            log_activity((int) $admin['id'], 'recentre_photos', (string) $pass['done']);
+            flash('ok', t(
+                'photos_recentred',
+                localize_digits((string) $pass['done']),
+                localize_digits((string) $pass['skipped'])
+            ));
+            if ($pass['left']) {
+                flash('info', t('photos_more', localize_digits((string) $pass['left'])));
+            }
         } elseif ($action === 'recrop_photos') {
             // Photographs uploaded before the crop existed are still whatever
             // shape they arrived in. Bring them to the card's frame so a card
@@ -178,6 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'save_idcard'   => '#id-cards',
             'save_school'   => '#school',
             'recrop_photos' => '#photos',
+            'recentre_photos' => '#photos',
         ][$action] ?? '';
         header('Location: ' . portal_url('/admin/system.php' . $anchor));
         exit;
@@ -437,6 +451,11 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
   <form method="post" style="margin-top:14px;">
     <?= csrf_field() ?>
     <button class="p-btn p-btn-gold" type="submit" name="action" value="recrop_photos"><?= te('photos_run') ?></button>
+  </form>
+  <p style="color:var(--ink-soft);font-size:.94rem;margin-top:18px;"><?= te('photos_recentre_intro') ?></p>
+  <form method="post" style="margin-top:10px;">
+    <?= csrf_field() ?>
+    <button class="p-btn p-btn-primary" type="submit" name="action" value="recentre_photos"><?= te('photos_recentre_run') ?></button>
   </form>
 </section>
 

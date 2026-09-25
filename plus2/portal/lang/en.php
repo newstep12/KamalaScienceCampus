@@ -482,6 +482,9 @@ return [
     'photos_count'       => '%s photographs on file.',
     'photos_more'        => '%s were left for the next run — it stops after twenty seconds so the page cannot be killed mid-pass. Run it again to continue.',
     'photos_run'         => 'Crop the photographs already uploaded',
+    'photos_recentre_intro' => 'New photographs are framed round the head: centred in the circle, with room above the hair. Photographs already on cards keep the frame they were cut with until this is run. It cuts every automatically framed photograph again from the picture that was uploaded; photographs a student has placed by hand are left as they are.',
+    'photos_recentre_run'   => 'Re-centre the photographs on cards',
+    'photos_recentred'   => '%s photographs cut again the current way — centred on the head wherever a face was found. %s could not be re-cut, or had changed meanwhile, and were left as they were. Photographs already up to date are not counted.',
     'photos_done'        => '%s photographs cropped to the card’s frame. %s could not be read and were left exactly as they were.',
     'remove_photo'       => 'Remove photograph',
 

@@ -977,8 +977,15 @@ back as the card holder's signature.
   face detector — OpenCV's LBP frontal-face model (`inc/face-cascade.php`,
   BSD licence, notice kept in the file), evaluated in plain PHP by
   `inc/face.php`, so it runs on shared hosting with nothing to install — and
-  the frame is cut round it as a passport photo is framed: head and
-  shoulders, the face in the middle, whatever else is in the picture. A
+  the frame is cut round the **head**, not just the features: the head's
+  middle is measured (from where its skin ends at eye level, or where its
+  outline meets the background at hair level when the wall is
+  skin-coloured), so a turned face and the hair above it sit centred in the
+  circle, with room above the hair, as a passport photo frames them. Near an
+  edge of the picture the frame is made smaller before it is ever moved off
+  the head. Photographs already on cards are re-cut the same way with
+  **Admin → System → Photographs → Re-centre the photographs on cards**
+  (photographs placed by hand are left alone). A
   photograph with no frontal face in it (a face turned well aside, or none)
   falls back to the old rule. Under *My portfolio* a student can turn
   *Centre the frame on my face automatically* off and place the frame by
