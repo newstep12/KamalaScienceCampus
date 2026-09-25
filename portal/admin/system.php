@@ -574,6 +574,9 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
 
 <section class="p-card" id="photos">
   <h2><?= te('photos_title') ?></h2>
+  <?php if (uploads_at_risk()): ?>
+    <div class="p-flash p-flash-error" role="alert"><?= te('uploads_at_risk') ?></div>
+  <?php endif; ?>
   <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('photos_intro') ?></p>
   <?php /* A count, not a survey: working out how many still need cropping
            means opening every photograph on disk, which is no business of a

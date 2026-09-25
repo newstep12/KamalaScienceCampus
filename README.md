@@ -297,7 +297,23 @@ one-click "enrol every active student of this year".
    switch their role in Admin → People), courses, and notices.
 
 `portal/inc/config.php` holds the database password and is git-ignored — it
-never enters this repository, and a redeploy does not overwrite it.
+never enters this repository. **It is still where the settings are edited**,
+but on the live site the portal keeps a private copy of it *outside*
+`public_html`, as `domains/kamalasciencecampus.edu.np/ksc-portal-config.php`,
+and uses that copy: made the first time the file is read, and made again
+whenever `inc/config.php` is edited. A deploy that deletes `inc/config.php`
+(the +2 portal lost its settings file to a deploy) no longer takes the portal
+down; restore `inc/config.php` from the copy if it ever goes.
+
+**Uploads** — photographs, signatures, learning materials, notice attachments
+and documents — are kept outside `public_html` too, in
+`domains/kamalasciencecampus.edu.np/ksc-portal-uploads/`, and streamed by
+`portal/download.php` and `notice-file.php`. They used to be kept in
+`portal/uploads/`, where a deploy can delete them; any files still there are
+moved out, all of them, on the first request after the update, whatever the
+page. If the folder cannot be created, or a file cannot be moved,
+**Admin → System → Photographs** says so in red: create `ksc-portal-uploads`
+beside `public_html` in File Manager and make it writable.
 
 ### Identity cards
 
@@ -931,7 +947,7 @@ kept apart from Kamala Science Campus in everything that matters:
 | Portal | `/portal/` | `/plus2/portal/` |
 | Database | the campus database | **a database of its own** |
 | Sign-in cookie | `kscportal`, path `/` | `sksportal`, path `/plus2/portal/` |
-| Uploads | `portal/uploads/` | `kssd-plus2-uploads/` above `public_html` (live); `plus2/portal/uploads/` when tested locally |
+| Uploads | `ksc-portal-uploads/` above `public_html` (live); `portal/uploads/` when tested locally | `kssd-plus2-uploads/` above `public_html` (live); `plus2/portal/uploads/` when tested locally |
 | ID card name | Kamala Science Campus | Shree Kamala Secondary School |
 | ID card signatories | Campus Chief | **+2 Coordinator and Principal** |
 | ID card number | `KSC-S-0042` | `KSSD-XI-1`, `KSSD-XII-2` |

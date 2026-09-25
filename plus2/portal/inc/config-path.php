@@ -24,9 +24,12 @@ declare(strict_types=1);
 function portal_config_paths(): array
 {
     $paths   = [];
-    $outside = portal_outside_dir();
-    if ($outside !== null) {
-        $paths['outside'] = $outside . '/kssd-plus2-config.php';
+    // Looked for beside the site's own folder even on a request whose
+    // document root is not the site (an alias, a preview address), so that
+    // such a request still finds the settings the installer put there.
+    $outside = (portal_outside_dir() ?? dirname(__DIR__, 4)) . '/kssd-plus2-config.php';
+    if (portal_outside_dir() !== null || @is_file($outside)) {
+        $paths['outside'] = $outside;
     }
     $paths['inside'] = __DIR__ . '/config.php';
     return $paths;
@@ -45,9 +48,13 @@ function portal_config_paths(): array
  */
 function portal_outside_dir(): ?string
 {
-    $site    = dirname(__DIR__, 3);                     // public_html on the live server
-    $docroot = realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
-    return ($docroot !== false && $docroot === realpath($site)) ? dirname($site) : null;
+    static $dir = false;
+    if ($dir === false) {
+        $site    = dirname(__DIR__, 3);                 // public_html on the live server
+        $docroot = realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
+        $dir     = ($docroot !== false && $docroot === realpath($site)) ? dirname($site) : null;
+    }
+    return $dir;
 }
 
 /** The settings file in use, or null when the portal has not been set up. */

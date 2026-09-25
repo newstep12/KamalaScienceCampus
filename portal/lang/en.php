@@ -1,6 +1,7 @@
 <?php
 // English strings. Keys are shared with ne.php; anything missing there falls back here.
 return [
+    'uploads_at_risk'    => 'Uploads — photographs, signatures, learning materials and attachments — are being saved inside the website folder, because the folder ksc-portal-uploads beside public_html could not be created or written to. Anything saved there can be deleted by the next update of the site. In hPanel → File Manager, create ksc-portal-uploads next to public_html (not inside it) and make it writable; the portal moves the files there by itself.',
     // Brand & chrome
     'campus_name'      => 'Kamala Science Campus',
     'portal'           => 'Student Portal',
