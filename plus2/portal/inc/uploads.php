@@ -3,17 +3,19 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lang.php';
+require_once __DIR__ . '/config-path.php';
 
-/** Remove one stored upload, if it is inside the uploads directory. */
+/** Remove one stored upload, wherever it is kept. */
 function delete_upload(?string $relPath): void
 {
     if (!$relPath) {
         return;
     }
-    $root = realpath(__DIR__ . '/../uploads');
-    $full = realpath($root . '/' . $relPath);
-    if ($full && str_starts_with($full, $root . DIRECTORY_SEPARATOR) && is_file($full)) {
-        @unlink($full);
+    foreach (uploads_roots() as $root) {
+        $full = realpath($root . '/' . $relPath);
+        if ($full && str_starts_with($full, $root . DIRECTORY_SEPARATOR) && is_file($full)) {
+            @unlink($full);
+        }
     }
 }
 
@@ -155,8 +157,8 @@ function store_image(array $file, string $subdir, int $minSide = MIN_PHOTO_SIDE)
     $mime = $check['mime'];
     $size = [$check['width'], $check['height']];
 
-    $dir = __DIR__ . '/../uploads/' . $subdir;
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+    $dir = upload_dir($subdir);
+    if ($dir === null) {
         return ['ok' => false, 'error' => 'upload'];
     }
 
@@ -181,28 +183,159 @@ function image_error_message(string $error): string
     return $error === 'small' ? t('err_photo_small') : t('err_photo');
 }
 
+/**
+ * Where uploads are kept: photographs, their working copies, and signatures.
+ *
+ * Outside the website on the live server — kssd-plus2-uploads/ beside the
+ * settings file, in the directory above public_html (portal_outside_dir()).
+ * They used to be kept in plus2/portal/uploads/, and the deploy, which
+ * rewrites public_html from the repository, deleted them every time: after an
+ * update every card came back without its photograph and with a broken image
+ * where each signature had been, although the database still named them all.
+ * Nothing the repository does not hold survives a deploy inside public_html.
+ *
+ * Every folder that exists is read, the outside one first; new files are
+ * written to the first that can be written to. Files still in the old place
+ * are moved out, all of them, the first time this runs with the outside
+ * folder in place (uploads_move_out()) — not one by one as they happen to be
+ * asked for, since a file nobody opens before the next deploy would go with it.
+ *
+ * The outside folder is found even on a request whose document root is not
+ * public_html (an alias, a preview address), as long as it exists; it is only
+ * ever created from the site itself. Where there is no directory above the
+ * website to use (a test copy under htdocs), uploads stay in
+ * plus2/portal/uploads/ as before, which .htaccess denies to the web.
+ *
+ * @return list<string> absolute paths, the outside folder first when there is one
+ */
+function uploads_roots(): array
+{
+    static $roots = null;
+    if ($roots !== null) {
+        return $roots;
+    }
+    $inside  = realpath(__DIR__ . '/../uploads') ?: __DIR__ . '/../uploads';
+    $outside = uploads_outside_path();
+    $roots   = [];
+    // @: a host whose open_basedir stops at public_html warns on a path
+    // above it; that is an answer of "not here", not an error.
+    if ($outside !== null && (@is_dir($outside) || (portal_outside_dir() !== null && @mkdir($outside, 0755, true)))) {
+        $roots[] = realpath($outside) ?: $outside;
+    }
+    $roots[] = $inside;
+    $roots = array_values(array_unique($roots));
+    if (count($roots) > 1 && @is_writable($roots[0])) {
+        uploads_move_out($roots[1], $roots[0]);
+    }
+    return $roots;
+}
+
+/** Where the outside folder is, or would be: beside public_html. Null when there is no such place. */
+function uploads_outside_path(): ?string
+{
+    $above = portal_outside_dir() ?? dirname(__DIR__, 4);
+    $path  = $above . '/kssd-plus2-uploads';
+    // Without a document root that is the site, only an outside folder that
+    // already exists is used — never one invented beside some other folder.
+    return (portal_outside_dir() !== null || @is_dir($path)) ? $path : null;
+}
+
+/** Where new uploads are written: the first folder that can be written to. */
 function uploads_root(): string
 {
-    $root = realpath(__DIR__ . '/../uploads');
-    return $root === false ? __DIR__ . '/../uploads' : $root;
+    foreach (uploads_roots() as $root) {
+        if (@is_writable($root)) {
+            return $root;
+        }
+    }
+    return uploads_roots()[count(uploads_roots()) - 1];
+}
+
+/**
+ * True when uploads are going into the website folder although there is a
+ * folder above it they belong in — the outside folder could not be created
+ * or written to — so they will be lost at the next deploy. Admin → System
+ * says so.
+ */
+function uploads_at_risk(): bool
+{
+    $inside = realpath(__DIR__ . '/../uploads') ?: __DIR__ . '/../uploads';
+    return portal_outside_dir() !== null && uploads_root() === $inside;
+}
+
+/**
+ * A folder under the uploads root, created if need be, or null if it cannot
+ * be. The one place new files' folders come from.
+ */
+function upload_dir(string $subdir): ?string
+{
+    $dir = uploads_root() . '/' . $subdir;
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+        return null;
+    }
+    return $dir;
+}
+
+/**
+ * Move every file from the old uploads folder to the new one, keeping the
+ * same relative paths. A file already present at the destination is left
+ * where it is (it is then served from the new place, and the old copy is
+ * harmless). .htaccess and .gitkeep belong to the repository and stay.
+ */
+function uploads_move_out(string $from, string $to): void
+{
+    if (!is_dir($from)) {
+        return;
+    }
+    try {
+        $it = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($from, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+        foreach ($it as $file) {
+            if (!$file->isFile() || in_array($file->getFilename(), ['.htaccess', '.gitkeep'], true)) {
+                continue;
+            }
+            $rel    = substr($file->getPathname(), strlen($from) + 1);
+            $target = $to . '/' . $rel;
+            $dir    = dirname($target);
+            if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+                continue;
+            }
+            if (!file_exists($target)) {
+                @rename($file->getPathname(), $target);
+            }
+        }
+    } catch (Throwable $e) {
+        // A folder that cannot be read is left for the next request to try.
+        error_log('+2 portal: moving uploads out of the website folder: ' . $e->getMessage());
+    }
 }
 
 /**
  * The absolute path of a stored upload, or null when it is missing or the
  * relative path tries to climb out of the uploads tree. realpath resolves
  * any ../ first, so the prefix check below cannot be talked around.
+ *
+ * Looked up once per request: the card, the page header and the portfolio
+ * all ask about the same few files.
  */
 function resolve_upload(?string $relPath): ?string
 {
+    static $seen = [];
     if (!$relPath) {
         return null;
     }
-    $root = uploads_root();
-    $full = realpath($root . '/' . $relPath);
-    if ($full === false || !is_file($full) || !str_starts_with($full, $root . DIRECTORY_SEPARATOR)) {
-        return null;
+    if (array_key_exists($relPath, $seen)) {
+        return $seen[$relPath];
     }
-    return $full;
+    foreach (uploads_roots() as $root) {
+        $full = realpath($root . '/' . $relPath);
+        if ($full !== false && is_file($full) && str_starts_with($full, $root . DIRECTORY_SEPARATOR)) {
+            return $seen[$relPath] = $full;
+        }
+    }
+    return $seen[$relPath] = null;
 }
 
 /** A php.ini size such as "8M" or "512K" as a byte count. */

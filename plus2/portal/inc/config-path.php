@@ -23,14 +23,31 @@ declare(strict_types=1);
  */
 function portal_config_paths(): array
 {
-    $site    = dirname(__DIR__, 3);                     // public_html on the live server
-    $docroot = realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
     $paths   = [];
-    if ($docroot !== false && $docroot === realpath($site)) {
-        $paths['outside'] = dirname($site) . '/kssd-plus2-config.php';
+    $outside = portal_outside_dir();
+    if ($outside !== null) {
+        $paths['outside'] = $outside . '/kssd-plus2-config.php';
     }
     $paths['inside'] = __DIR__ . '/config.php';
     return $paths;
+}
+
+/**
+ * The directory above the website — on the live server the account's own
+ * domains/<domain>/, which no deploy reaches and the web cannot read — or null
+ * when the repository is not the web root (a test copy under XAMPP's htdocs,
+ * where the directory above is htdocs and is served).
+ *
+ * What lives there: this portal's settings file, and everything people upload
+ * (see uploads_root()). Both are deliberately never in the repository, and a
+ * deploy rewrites public_html from the repository — so anything kept inside it
+ * that the repository does not hold is lost on the next deploy.
+ */
+function portal_outside_dir(): ?string
+{
+    $site    = dirname(__DIR__, 3);                     // public_html on the live server
+    $docroot = realpath((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''));
+    return ($docroot !== false && $docroot === realpath($site)) ? dirname($site) : null;
 }
 
 /** The settings file in use, or null when the portal has not been set up. */
