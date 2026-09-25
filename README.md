@@ -931,7 +931,7 @@ kept apart from Kamala Science Campus in everything that matters:
 | Portal | `/portal/` | `/plus2/portal/` |
 | Database | the campus database | **a database of its own** |
 | Sign-in cookie | `kscportal`, path `/` | `sksportal`, path `/plus2/portal/` |
-| Uploads | `portal/uploads/` | `plus2/portal/uploads/` |
+| Uploads | `portal/uploads/` | `kssd-plus2-uploads/` above `public_html` (live); `plus2/portal/uploads/` when tested locally |
 | ID card name | Kamala Science Campus | Shree Kamala Secondary School |
 | ID card signatories | Campus Chief | **+2 Coordinator and Principal** |
 | ID card number | `KSC-S-0042` | `KSSD-XI-1`, `KSSD-XII-2` |
@@ -1125,8 +1125,10 @@ the repository folder run `php -S 127.0.0.1:8080` and open
 <http://127.0.0.1:8080/plus2/portal/install.php>.
 
 To start again from nothing, delete `plus2/portal/inc/config.php`, the files
-under `plus2/portal/uploads/` (not `.htaccess` or `.gitkeep`), and drop and
-recreate the database.
+under `plus2/portal/uploads/` (not `.htaccess` or `.gitkeep`) — or, when the
+repository folder is itself the web root, `kssd-plus2-uploads/` and
+`kssd-plus2-config.php` in the folder above it — and drop and recreate the
+database.
 
 ## Going live
 
@@ -1186,6 +1188,20 @@ not served, and out of reach of deploys. A deploy was seen to rewrite
 portal is being set up"*. `inc/config.php` is still read as a fallback (and is
 git-ignored); when the site is tested from a folder under XAMPP's `htdocs`
 the file stays there, because the folder above would be `htdocs` itself.
+
+**Where uploads live.** Photographs, their working copies and signatures are
+kept **outside `public_html`** too, in
+`domains/kamalasciencecampus.edu.np/kssd-plus2-uploads/`, and streamed to
+the page by `plus2/portal/download.php`. They used to be kept in
+`plus2/portal/uploads/`, and every deploy deleted them: after an update each
+card came back without its photograph and with a broken image where each
+signature had been. **Files lost that way cannot be brought back — upload
+them again.** Any files still in the old place are all moved out the first
+time the portal runs with the new folder in place. If the folder cannot be
+created, **Admin → System → Photographs** says so in red: create
+`kssd-plus2-uploads` beside `public_html` in File Manager. A photo or signature whose file is missing now
+shows as the empty frame or the blank signature line, and **Admin →
+Signatures** says which signatures need uploading again.
 
 **If the portal ever says "being set up" again:** the settings file is gone.
 Create `plus2/portal/inc/INSTALL-UNLOCK` in File Manager and run

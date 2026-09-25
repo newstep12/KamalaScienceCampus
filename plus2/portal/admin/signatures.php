@@ -192,7 +192,11 @@ layout_head(['title' => t('signatures_title'), 'active' => 'signatures', 'wide' 
           $scope = signature_scope($s['release_scope']); ?>
         <article class="p-sig">
           <div class="p-sig-image">
-            <img src="<?= e(signature_url($s)) ?>" alt="<?= e($s['label']) ?>">
+            <?php if (signature_file_present($s)): ?>
+              <img src="<?= e(signature_url($s)) ?>" alt="<?= e($s['label']) ?>">
+            <?php else: ?>
+              <p class="p-sig-missing" role="alert"><?= te('signature_file_missing') ?></p>
+            <?php endif; ?>
           </div>
 
           <div class="p-sig-meta">

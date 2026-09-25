@@ -58,6 +58,8 @@ body.lang-ne h1, body.lang-ne h2, body.lang-ne h3, body.lang-ne .p-brand-name {
   border-radius: 50%; background: #fff;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 2px 6px rgba(0, 0, 0, .25);
 }
+/* A signature whose file has gone from the server. */
+.p-sig-missing { margin: 0; padding: 10px 12px; font-size: .84rem; line-height: 1.45; color: #8a1c1c; background: #fdecec; border-radius: 8px; }
 /* A checkbox beside its label, on one line. */
 .p-check { display: flex; align-items: center; gap: 9px; font-weight: 500; }
 .p-check input { width: auto; flex: 0 0 auto; }

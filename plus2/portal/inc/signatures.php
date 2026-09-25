@@ -131,7 +131,15 @@ function signature_released_to(?array $sig, ?array $viewer): bool
 function applied_signature(string $use, ?array $viewer): ?array
 {
     $sig = signature_for_use($use);
-    return signature_released_to($sig, $viewer) ? $sig : null;
+    // A signature whose file is gone prints the blank line, not a broken
+    // image: the Signatures page says which ones need uploading again.
+    return signature_released_to($sig, $viewer) && signature_file_present($sig) ? $sig : null;
+}
+
+/** Whether a signature's image is actually on disk. */
+function signature_file_present(?array $sig): bool
+{
+    return $sig !== null && resolve_upload($sig['file_path'] ?? null) !== null;
 }
 
 /**

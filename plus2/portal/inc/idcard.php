@@ -375,7 +375,9 @@ function id_card_chief_name(array $s): string
 
 function photo_src(array $u): ?string
 {
-    return empty($u['avatar_path'])
+    // A row naming a file that is no longer there gets the empty frame and
+    // the prompt to add one, not a broken image.
+    return empty($u['avatar_path']) || resolve_upload($u['avatar_path']) === null
         ? null
         : portal_url('/download.php?photo=' . (int) $u['id']);
 }
@@ -388,7 +390,7 @@ function photo_src(array $u): ?string
  */
 function holder_signature_src(array $u): ?string
 {
-    return empty($u['signature_path'])
+    return empty($u['signature_path']) || resolve_upload($u['signature_path']) === null
         ? null
         : portal_url('/download.php?holder_signature=' . (int) $u['id']);
 }
@@ -434,7 +436,7 @@ function can_view_photo(array $viewer, int $targetId): bool
 function id_card_missing(array $u, ?array $names = null): array
 {
     $missing = [];
-    if (empty($u['avatar_path']))   { $missing[] = t('photo'); }
+    if (photo_src($u) === null)     { $missing[] = t('photo'); }   // none, or its file is gone
     // By script, not by column — see name_by_script() — and in the order the
     // card is read, so a name sits with the name rather than at the end of
     // the sentence. A student who typed their Devanagari name into the

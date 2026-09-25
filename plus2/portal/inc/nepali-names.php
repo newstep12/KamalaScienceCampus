@@ -160,5 +160,6 @@ return [
     'mukti' => 'मुक्ति',             'bhakti' => 'भक्ति',             'shakti' => 'शक्ति',
     'kranti' => 'क्रान्ति',           'sriram' => 'श्रीराम',          'srikant' => 'श्रीकान्त',
     'srinivas' => 'श्रीनिवास',       'grishma' => 'ग्रीष्म',          'kanchha' => 'कान्छा',
+    'triloknath' => 'त्रिलोकनाथ',     'trilok' => 'त्रिलोक',
     'tenzing' => 'तेन्जिङ',          'ngima' => 'ङिमा',             'pemba' => 'पेम्बा',
 ];

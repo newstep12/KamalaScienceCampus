@@ -7,9 +7,10 @@ require_once __DIR__ . '/inc/idcard.php';
 require_once __DIR__ . '/inc/signatures.php';
 
 /**
- * Photographs and signatures are stored outside the web's reach (uploads/
- * denies direct access) and streamed through here, so only permitted users
- * can see them.
+ * Photographs and signatures are stored outside the web's reach — above
+ * public_html on the live server, or in uploads/, which denies direct access
+ * (uploads_roots()) — and streamed through here, so only permitted users can
+ * see them.
  */
 
 $user = require_login();
