@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/lang.php';
+require_once __DIR__ . '/config-path.php';
 
 /** Extensions teachers may upload, mapped from the real MIME type we detect. */
 const ALLOWED_UPLOADS = [
@@ -58,8 +59,8 @@ function store_upload(array $file, string $subdir): array
     }
     $ext = ALLOWED_UPLOADS[$mime];
 
-    $dir = __DIR__ . '/../uploads/' . $subdir;
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+    $dir = upload_dir($subdir);
+    if ($dir === null) {
         return ['ok' => false, 'error' => 'upload'];
     }
 
@@ -86,10 +87,14 @@ function delete_upload(?string $relPath): void
     if (!$relPath) {
         return;
     }
-    $root = realpath(__DIR__ . '/../uploads');
-    $full = realpath($root . '/' . $relPath);
-    if ($full && str_starts_with($full, $root . DIRECTORY_SEPARATOR) && is_file($full)) {
-        @unlink($full);
+    $seen = &upload_lookups();
+    unset($seen[$relPath]);
+    // Wherever it is kept — see uploads_roots().
+    foreach (uploads_roots() as $root) {
+        $full = realpath($root . '/' . $relPath);
+        if ($full && str_starts_with($full, $root . DIRECTORY_SEPARATOR) && is_file($full)) {
+            @unlink($full);
+        }
     }
 }
 
@@ -231,8 +236,8 @@ function store_image(array $file, string $subdir, int $minSide = MIN_PHOTO_SIDE)
     $mime = $check['mime'];
     $size = [$check['width'], $check['height']];
 
-    $dir = __DIR__ . '/../uploads/' . $subdir;
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+    $dir = upload_dir($subdir);
+    if ($dir === null) {
         return ['ok' => false, 'error' => 'upload'];
     }
 
@@ -308,80 +313,226 @@ function upload_kind(?string $relPath): string
     return in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? 'image' : 'file';
 }
 
+/**
+ * Where uploads are kept.
+ *
+ * Outside the website on the live server — ksc-portal-uploads/ beside the
+ * settings file, in the directory above public_html (portal_outside_dir()).
+ * They used to be kept in portal/uploads/, inside public_html, where a
+ * deploy — which rewrites public_html from the repository — deletes them: the
+ * +2 portal lost every photograph and signature that way, although its
+ * database still named them all. Nothing the repository does not hold is safe
+ * inside public_html.
+ *
+ * Every folder that exists is read, the outside one first; new files are
+ * written to the first that can be written to. Files still in the old place
+ * are all moved out the first time this runs with the outside folder in place
+ * (uploads_move_out()) — called from config(), so on the very first request
+ * after an update, whatever the page.
+ *
+ * The outside folder is found even on a request whose document root is not
+ * public_html (an alias, a preview address), as long as it exists; it is only
+ * ever created from the site itself. Where there is no directory above the
+ * website to use (a test copy under htdocs), uploads stay in
+ * portal/uploads/ as before, which .htaccess denies to the web.
+ *
+ * @return list<string> absolute paths, the outside folder first when there is one
+ */
+function uploads_roots(): array
+{
+    static $roots = null;
+    if ($roots !== null) {
+        return $roots;
+    }
+    $inside  = uploads_inside_path();
+    $outside = uploads_outside_path();
+    $roots   = [];
+    // @: a host whose open_basedir stops at public_html warns on a path
+    // above it; that is an answer of "not here", not an error.
+    if ($outside !== null && (@is_dir($outside) || (portal_outside_dir() !== null && @mkdir($outside, 0755, true)))) {
+        $roots[] = realpath($outside) ?: $outside;
+    }
+    $roots[] = $inside;
+    $roots = array_values(array_unique($roots));
+    if (count($roots) > 1 && @is_writable($roots[0])) {
+        uploads_move_out($inside, $roots[0]);
+    }
+    return $roots;
+}
+
+/** The old folder, inside the website. */
+function uploads_inside_path(): string
+{
+    static $inside = null;
+    return $inside ??= (realpath(__DIR__ . '/../uploads') ?: __DIR__ . '/../uploads');
+}
+
+/** Where the outside folder is, or would be: beside public_html. Null when there is no such place. */
+function uploads_outside_path(): ?string
+{
+    static $path = false;
+    if ($path !== false) {
+        return $path;
+    }
+    $candidate = (portal_outside_dir() ?? dirname(__DIR__, 3)) . '/ksc-portal-uploads';
+    // Without a document root that is the site, only an outside folder that
+    // already exists is used — never one invented beside some other folder.
+    return $path = (portal_outside_dir() !== null || @is_dir($candidate)) ? $candidate : null;
+}
+
+/** Where new uploads are written: the first folder that can be written to. */
 function uploads_root(): string
 {
-    $root = realpath(__DIR__ . '/../uploads');
-    return $root === false ? __DIR__ . '/../uploads' : $root;
+    $roots = uploads_roots();
+    foreach ($roots as $root) {
+        if (@is_writable($root)) {
+            return $root;
+        }
+    }
+    return $roots[count($roots) - 1];
+}
+
+/**
+ * True when uploads are at risk from the next deploy: new ones are going into
+ * the website folder although there is a folder above it they belong in, or
+ * files are left there that could not be moved out. Admin → System says so.
+ */
+function uploads_at_risk(): bool
+{
+    if (portal_outside_dir() === null) {
+        return false;
+    }
+    return uploads_root() === uploads_inside_path() || uploads_inside_files() > 0;
+}
+
+/** How many uploaded files are still in the old folder inside the website. */
+function uploads_inside_files(): int
+{
+    static $count = null;
+    if ($count !== null) {
+        return $count;
+    }
+    $count = 0;
+    $inside = uploads_inside_path();
+    if (!is_dir($inside) || in_array($inside, array_slice(uploads_roots(), 0, 1), true)) {
+        return $count;
+    }
+    try {
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($inside, FilesystemIterator::SKIP_DOTS));
+        foreach ($it as $file) {
+            if ($file->isFile() && !in_array($file->getFilename(), ['.htaccess', '.gitkeep'], true)) {
+                $count++;
+            }
+        }
+    } catch (Throwable $e) {
+        // Unreadable: counted as nothing rather than failing the page.
+    }
+    return $count;
+}
+
+/**
+ * A folder under the uploads root, created if need be, or null if it cannot
+ * be. The one place new files' folders come from.
+ */
+function upload_dir(string $subdir): ?string
+{
+    $dir = uploads_root() . '/' . $subdir;
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+        return null;
+    }
+    return $dir;
+}
+
+/**
+ * Move every file from the old uploads folder to the new one, keeping the same
+ * relative paths, then remove the folders it leaves empty — so once the move
+ * is done, the check on each later request finds nothing but the
+ * repository's own .htaccess and .gitkeep and costs next to nothing.
+ *
+ * A file already present at the destination is left where it is (it is then
+ * served from the new place). A file changed in the last minute is left for a
+ * later request: it may still be being written by a request that chose this
+ * folder before the move. A file that cannot be moved is logged, and
+ * uploads_at_risk() then reports it.
+ */
+function uploads_move_out(string $from, string $to): void
+{
+    if (!is_dir($from)) {
+        return;
+    }
+    $keep = ['.htaccess', '.gitkeep'];
+    // The quick answer, on every request after the move: nothing but the
+    // repository's own files at the top of the folder.
+    $top = @scandir($from) ?: [];
+    if (!array_diff($top, array_merge(['.', '..'], $keep))) {
+        return;
+    }
+    try {
+        $it = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($from, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($it as $file) {
+            $path = $file->getPathname();
+            if ($file->isDir()) {
+                @rmdir($path);                           // only succeeds when empty
+                continue;
+            }
+            if (in_array($file->getFilename(), $keep, true) || $file->getMTime() > time() - 60) {
+                continue;
+            }
+            $target = $to . substr($path, strlen($from));
+            $dir    = dirname($target);
+            if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+                error_log('Campus portal: could not create ' . $dir . ' to move an upload out of the website folder');
+                continue;
+            }
+            if (!file_exists($target) && !@rename($path, $target)) {
+                error_log('Campus portal: could not move ' . $path . ' out of the website folder');
+            }
+        }
+    } catch (Throwable $e) {
+        error_log('Campus portal: moving uploads out of the website folder: ' . $e->getMessage());
+    }
+}
+
+/**
+ * What resolve_upload() has already answered in this request. Shared with
+ * delete_upload(), which must forget a file it deletes.
+ */
+function &upload_lookups(): array
+{
+    static $seen = [];
+    return $seen;
 }
 
 /**
  * The absolute path of a stored upload, or null when it is missing or the
  * relative path tries to climb out of the uploads tree. realpath resolves
  * any ../ first, so the prefix check below cannot be talked around.
+ *
+ * Looked up once per request: the card, the page header and the portfolio
+ * all ask about the same few files.
  */
 function resolve_upload(?string $relPath): ?string
 {
     if (!$relPath) {
         return null;
     }
-    $root = uploads_root();
-    $full = realpath($root . '/' . $relPath);
-    if ($full === false || !is_file($full) || !str_starts_with($full, $root . DIRECTORY_SEPARATOR)) {
-        return null;
+    $seen = &upload_lookups();
+    if (isset($seen[$relPath])) {
+        return $seen[$relPath];
     }
-    return $full;
-}
-
-/**
- * The filename parameters for a Content-Disposition header.
- *
- * Two of them, per RFC 6266: a plain ASCII `filename` that any client
- * understands, and `filename*` carrying the real UTF-8 name. Without the
- * second, a notice saved as "सूचना.pdf" reaches the visitor as a row of
- * underscores — which on a bilingual campus site is most of the point of
- * keeping the original name at all.
- */
-function disposition_filename(string $name): string
-{
-    $name  = str_replace(['"', '\\', "\r", "\n"], '', $name);
-    $ascii = preg_replace('/[^\x20-\x7e]+/', '_', $name) ?: 'file';
-    $ascii = preg_replace('/[^\w. \-]+/', '_', $ascii) ?: 'file';
-
-    $header = 'filename="' . $ascii . '"';
-    if ($name !== $ascii && $name !== '') {
-        $header .= "; filename*=UTF-8''" . rawurlencode($name);
+    foreach (uploads_roots() as $root) {
+        $full = realpath($root . '/' . $relPath);
+        if ($full !== false && is_file($full) && str_starts_with($full, $root . DIRECTORY_SEPARATOR)) {
+            return $seen[$relPath] = $full;
+        }
     }
-    return $header;
+    // Not remembered: a file that is not there yet may be written later in
+    // this same request.
+    return null;
 }
-
-/**
- * Send a stored upload and stop. $inline asks for it to be displayed rather
- * than downloaded, which is honoured only when the type sniffed from the file
- * itself is one a browser renders safely — the stored name never decides.
- */
-function serve_upload(?string $relPath, ?string $downloadName, bool $inline = false, string $cacheControl = 'private, max-age=0, must-revalidate'): void
-{
-    $full = resolve_upload($relPath);
-    if ($full === null) {
-        http_response_code(404);
-        exit('Not found.');
-    }
-
-    $mime   = (string) (new finfo(FILEINFO_MIME_TYPE))->file($full);
-    $inline = $inline && isset(INLINE_TYPES[$mime]);
-    $name   = $downloadName ?: basename($full);
-
-    header('Content-Type: ' . ($inline ? $mime : 'application/octet-stream'));
-    header('Content-Length: ' . filesize($full));
-    header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; ' . disposition_filename($name));
-    // Without nosniff a browser may second-guess the type we just declared.
-    header('X-Content-Type-Options: nosniff');
-    header('Cache-Control: ' . $cacheControl);
-    readfile($full);
-    exit;
-}
-
-/* ----------------------------------------------------------- size limits -- */
 
 /** A php.ini size such as "8M" or "512K" as a byte count. */
 function ini_bytes(string $value): int

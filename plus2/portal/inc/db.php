@@ -168,6 +168,12 @@ function config(): array
             );
         }
         $config = require $path;
+        // On the first request after an update, anything people uploaded
+        // that is still inside the website folder is moved beside the
+        // settings file, out of the next deploy's reach — whatever page that
+        // request is for. See uploads_roots().
+        require_once __DIR__ . '/uploads.php';
+        uploads_roots();
     }
     return $config;
 }

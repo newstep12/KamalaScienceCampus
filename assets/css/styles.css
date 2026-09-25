@@ -711,6 +711,10 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
    abreast, then 2x2, then one up. Left to auto-fill they break into three
    with the fourth orphaned on a row of its own at tablet widths. */
 .people-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* A row that is not a fixed four: three abreast, and a shorter last row
+   centred under them rather than left-aligned with a gap beside it. */
+.people-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px; }
+.people-flex > * { flex: 0 1 calc((100% - 44px) / 3); min-width: 0; }
 .people-group {
   font-family: var(--sans); font-size: .8rem; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft);
@@ -735,6 +739,7 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
 
 @media (max-width: 1000px) {
   .people-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .people-flex > * { flex-basis: calc((100% - 22px) / 2); }
 }
 @media (max-width: 900px) {
   .message { grid-template-columns: 1fr; gap: 26px; padding: 30px; }
@@ -748,6 +753,7 @@ body.lang-ne .hero h1 { font-size: clamp(1.6rem, 3.6vw, 2.5rem); }
 }
 @media (max-width: 520px) {
   .people-row { grid-template-columns: minmax(0, 1fr); }
+  .people-flex > * { flex-basis: 100%; }
 }
 
 body.lang-ne .person-name, body.lang-ne .message-sign { font-family: var(--deva); }

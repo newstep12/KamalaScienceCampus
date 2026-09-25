@@ -9,6 +9,8 @@ declare(strict_types=1);
 // Don't advertise the exact PHP version in every response.
 header_remove('X-Powered-By');
 
+require_once __DIR__ . '/config-path.php';
+
 /**
  * Thrown by db() when it cannot connect. A public page that must survive a
  * database outage catches it; anywhere else it reaches the handler below.
@@ -143,7 +145,9 @@ function config(): array
 {
     static $config = null;
     if ($config === null) {
-        $path = __DIR__ . '/config.php';
+        // Outside the website on the live server, copied there from
+        // inc/config.php the first time it is read — see config-path.php.
+        $path = portal_config_file() ?? __DIR__ . '/config.php';
         if (!is_file($path)) {
             // This used to redirect to portal/install.php. The installer has
             // since been deleted and .htaccess 404s that path, so the redirect
@@ -158,11 +162,18 @@ function config(): array
                 503,
                 'The portal is not set up on this server yet.',
                 $ref,
-                'portal/inc/config.php is missing. It holds the database password, is deliberately '
+                'The settings file is missing (ksc-portal-config.php beside public_html, or '
+                . 'portal/inc/config.php). It holds the database password, is deliberately '
                 . 'not kept in the repository, and has to be restored on the server.'
             );
         }
         $config = require $path;
+        // On the first request after an update, anything people uploaded
+        // that is still inside the website folder is moved beside the
+        // settings file, out of the next deploy's reach — whatever page that
+        // request is for. See uploads_roots().
+        require_once __DIR__ . '/uploads.php';
+        uploads_roots();
     }
     return $config;
 }

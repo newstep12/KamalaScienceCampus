@@ -162,8 +162,8 @@ function store_card_photo(array $file, string $subdir = 'photos'): array
     $card = crop_to_card_frame($src);
     imagedestroy($src);
 
-    $dir = __DIR__ . '/../uploads/' . $subdir;
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+    $dir = upload_dir($subdir);
+    if ($dir === null) {
         imagedestroy($card);
         // Nothing will ever name the working copy if the photograph itself
         // cannot be stored.
@@ -206,8 +206,8 @@ function store_card_photo(array $file, string $subdir = 'photos'): array
  */
 function store_photo_source(GdImage $src): ?string
 {
-    $dir = __DIR__ . '/../uploads/' . CARD_PHOTO_SOURCE_DIR;
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+    $dir = upload_dir(CARD_PHOTO_SOURCE_DIR);
+    if ($dir === null) {
         return null;
     }
     $copy   = shrink_within($src, CARD_PHOTO_SOURCE_SIDE);
@@ -252,9 +252,9 @@ function recrop_from_source(?string $sourcePath, ?int $focus = null, string $sub
     $card = crop_to_card_frame($src, $focus);
     imagedestroy($src);
 
-    $dir    = __DIR__ . '/../uploads/' . $subdir;
+    $dir    = upload_dir($subdir);
     $stored = bin2hex(random_bytes(16)) . '.jpg';
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+    if ($dir === null) {
         imagedestroy($card);
         return null;
     }
@@ -417,8 +417,8 @@ function store_signature_image(array $file, string $subdir, bool $ink = false): 
         return store_signature_as_it_came($file, $subdir);
     }
 
-    $dir = __DIR__ . '/../uploads/' . $subdir;
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+    $dir = upload_dir($subdir);
+    if ($dir === null) {
         imagedestroy($out);
         return ['ok' => false, 'error' => 'upload'];
     }
