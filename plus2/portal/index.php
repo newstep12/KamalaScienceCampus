@@ -42,6 +42,7 @@ layout_head(['title' => t('sign_in'), 'nav' => []]);
   <div class="p-card">
     <h1><?= te('login_title') ?></h1>
     <p class="p-auth-intro"><?= te('login_intro') ?></p>
+    <?php other_portal_notice(); ?>
 
     <?php if ($error): ?>
       <div class="p-flash p-flash-error" role="alert"><?= e($error) ?></div>

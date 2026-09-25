@@ -153,12 +153,15 @@ body.plus2 {
 /* The language switch is written in the language it switches to. */
 .top-btn-lang { font-family: var(--deva); }
 .top-btn-lang[lang="en"] { font-family: var(--sans); }
-/* Sign-in is the one solid button: the action most visitors come for. */
-.top-btn-login {
-  background: var(--gold); border-color: var(--gold); color: #2b1d02;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
-}
-.top-btn-login:hover { background: #ebb04a; border-color: #ebb04a; transform: translateY(-1px); }
+/* The two sign-ins are the solid buttons — the actions most visitors come
+   for — and each keeps its own colour on every page of the site, so a student
+   learns one: gold for +2, white for B.Sc. */
+.top-btn-login { box-shadow: 0 2px 8px rgba(0, 0, 0, .18); }
+.top-btn-login:hover { transform: translateY(-1px); }
+.top-btn-plus2 { background: var(--gold); border-color: var(--gold); color: #2b1d02; }
+.top-btn-plus2:hover { background: #ebb04a; border-color: #ebb04a; }
+.top-btn-bsc { background: #fff; border-color: #fff; color: #0b4f55; }
+.top-btn-bsc:hover { background: #e3f3f2; border-color: #e3f3f2; }
 
 .side-toggle {
   display: none;
@@ -542,6 +545,28 @@ textarea { min-height: 130px; resize: vertical; }
   .split, .contact-grid { grid-template-columns: 1fr; gap: 30px; }
 }
 
+/* Four buttons beside the brand. On a narrower desktop — where a +2 page's
+   long school name and the long "Kamala Science Campus" switch would meet —
+   the brand's second line goes, and the switch shows its short name. */
+@media (max-width: 1060px) and (min-width: 961px) {
+  .sh .brand-sub { display: none; }
+  .top-btn-switch .tb-full { display: none; }
+  .top-btn-switch .tb-short { display: inline; }
+  .top-actions { gap: 8px; }
+  .top-btn { padding: 0 13px; }
+}
+
+/* From where the side menu becomes a drawer, the buttons get a row of their
+   own below the brand — four abreast, the switch by its short name — so the
+   brand keeps its whole width. */
+@media (max-width: 960px) {
+  .sh-inner { flex-wrap: wrap; gap: 10px 12px; padding: 10px 16px 12px; }
+  .top-actions { width: 100%; margin: 0; gap: 8px; flex-wrap: wrap; }
+  .top-btn { flex: 1 1 0; min-width: 0; padding: 0 10px; min-height: 40px; font-size: .86rem; }
+  .top-btn .tb-full { display: none; }
+  .top-btn .tb-short { display: inline; }
+}
+
 /* The side menu becomes a drawer: the content gets the whole width, and the
    button at the left of the top bar slides the menu in over it. */
 @media (max-width: 960px) {
@@ -570,18 +595,14 @@ textarea { min-height: 130px; resize: vertical; }
   body.side-open { overflow: hidden; }
 }
 
-/* Below this the brand and the three buttons no longer fit on one line; the
-   buttons get a row of their own, side by side at equal width. The bar stops
-   following the page down, so it does not hold a third of a phone screen. */
+/* On a phone the bar stops following the page down, so it does not hold a
+   third of the screen, and the four buttons go two by two: the other half of
+   the site and the language, then the two sign-ins, each wide enough for its
+   whole name. */
 @media (max-width: 720px) {
   :root { --sh-h: 64px; }
   .sh { position: relative; }
-  .sh-inner { flex-wrap: wrap; gap: 10px 12px; padding: 10px 16px 12px; }
-  .top-actions { width: 100%; margin: 0; gap: 8px; }
-  .top-btn { flex: 1 1 0; min-width: 0; padding: 0 10px; min-height: 40px; font-size: .86rem; }
-  .top-btn .tb-full { display: none; }
-  .top-btn .tb-short { display: inline; }
-  .top-btn-login .tb-full { display: inline; }
+  .top-btn { flex: 1 1 calc(50% - 4px); }
 }
 
 @media (max-width: 820px) {
@@ -761,3 +782,36 @@ body.lang-ne .person-role, body.lang-ne .people-group { text-transform: none; le
 
 /* The campus email is one long unbroken word; let it wrap in narrow columns */
 .site-footer li, table.table-kv td { overflow-wrap: anywhere; }
+
+/* ---------- Student services: the two groups, side by side ---------- */
+
+.svc-pick {
+  display: grid; gap: 26px;
+  grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr));
+}
+.svc {
+  --svc: #1d3b8f; --svc-soft: #eef2fb;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  border-top: 5px solid var(--svc);
+  box-shadow: var(--shadow-sm);
+  padding: 30px 30px 26px;
+}
+.svc-bsc { --svc: #0e7c7b; --svc-soft: #e8f4f3; }
+.svc-tag {
+  display: inline-block; margin: 0 0 10px; padding: 4px 11px;
+  border-radius: 999px; background: var(--svc-soft); color: var(--svc);
+  font-size: .76rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+}
+.svc h2 { margin-bottom: .35em; color: var(--svc); }
+.svc-who { color: var(--ink-soft); }
+.svc-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 20px; }
+.svc-main { background: var(--svc); color: #fff; }
+.svc-main:hover { filter: brightness(1.1); }
+.svc-plus2 .svc-main { background: var(--gold); color: #2b1d02; }
+.svc-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.svc-list li { padding: 11px 2px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; }
+.svc-list a { font-weight: 600; color: var(--svc); }
+.svc-list span { font-size: .84rem; color: var(--ink-soft); }
+.svc-help { margin-top: 16px; font-size: .88rem; color: var(--ink-soft); }
+.svc-notes li { margin-bottom: .7em; }
+body.lang-ne .svc-tag { text-transform: none; letter-spacing: .02em; }

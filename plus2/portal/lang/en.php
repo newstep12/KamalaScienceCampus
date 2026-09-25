@@ -1,6 +1,8 @@
 <?php
 // English strings. Keys are shared with ne.php; anything missing there falls back here.
 return [
+    'other_portal_link' => 'Go to B.Sc. Login',
+    'other_portal' => 'Studying a B.Sc. at Kamala Science Campus? This is not your portal.',
     // Brand & chrome
     'campus_name'      => 'Shree Kamala Secondary School',
     'portal'           => '+2 Science Portal',
@@ -46,8 +48,8 @@ return [
     'status_suspended' => 'Suspended',
 
     // Login
-    'login_title'      => 'Sign in to the +2 Science portal',
-    'login_intro'      => 'For Class 11 and Class 12 Science students, teachers and the office of Shree Kamala Secondary School. This is not the Kamala Science Campus portal — campus students sign in there.',
+    'login_title'      => '+2 Login',
+    'login_intro'      => 'The +2 Science portal of Shree Kamala Secondary School — for Class 11 and 12 Science students, teachers and the school office.',
     'email'            => 'Email address',
     'password'         => 'Password',
     'show_password'    => 'Show password',

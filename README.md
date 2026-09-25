@@ -37,14 +37,25 @@ language switch in the top bar and by `hreflang` alternates.
 
 Every page (campus and +2) has the same two-part navigation:
 
-- **The top bar** — the crest and name, then three buttons: the other half of
+- **The top bar** — the crest and name, then four buttons: the other half of
   the site (**+2 Science** from the campus, **Kamala Science Campus** from
-  +2), the **language switch**, and **Login** (the portal of that half, in the
-  page's language). Campus pages are navy-to-teal; +2 pages royal blue, so a
-  visitor can tell which half they are in.
+  +2), the **language switch**, and the two sign-ins, **+2 Login** (gold, the
+  +2 portal) and **B.Sc. Login** (white, the campus portal). Both sign-ins are
+  on every page, in the same colours, so a student finds theirs wherever they
+  are. Campus pages are navy-to-teal; +2 pages royal blue, so a visitor can
+  tell which half they are in. On a phone the four buttons sit in two rows.
 - **The side menu** — every page of that half as a column of buttons down the
-  left, the current page filled in. Below 960px wide it becomes a drawer,
-  opened by the ☰ button at the left of the top bar.
+  left, the current page filled in, with **Student services** second on both
+  halves. Below 960px wide it becomes a drawer, opened by the ☰ button at the
+  left of the top bar.
+
+**Student services** (`students.html`, `ne/students.html`) is the one page for
+both groups of students: +2 Science (Shree Kamala Secondary School) and B.Sc.
+(Kamala Science Campus) side by side, each with its login, registration,
+identity card, notices or messages, and whose office to ask — and a short
+"which login is mine?" note. Each portal's sign-in and registration pages say
+whose portal they are (**B.Sc. Login**, **+2 Login**) and link to the other
+one, since the two look alike and neither account opens the other.
 
 The language a visitor picks with the switch is remembered for a year (the
 `site_lang` cookie), and `assets/js/lang.js` sends them to their language

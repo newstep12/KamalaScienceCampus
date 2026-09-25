@@ -1,10 +1,12 @@
 <?php
 // English strings. Keys are shared with ne.php; anything missing there falls back here.
 return [
+    'other_portal_link' => 'Go to +2 Login',
+    'other_portal' => 'Studying in Class 11 or 12 at Shree Kamala Secondary School? This is not your portal.',
     'uploads_at_risk'    => 'Uploads — photographs, signatures, learning materials and attachments — are being saved inside the website folder, because the folder ksc-portal-uploads beside public_html could not be created or written to. Anything saved there can be deleted by the next update of the site. In hPanel → File Manager, create ksc-portal-uploads next to public_html (not inside it) and make it writable; the portal moves the files there by itself.',
     // Brand & chrome
     'campus_name'      => 'Kamala Science Campus',
-    'portal'           => 'Student Portal',
+    'portal'           => 'B.Sc. Portal',
     'portal_full'      => 'Kamala Science Campus — Portal',
     'back_to_site'     => 'Back to main site',
     'language'         => 'Language',
@@ -47,8 +49,8 @@ return [
     'status_suspended' => 'Suspended',
 
     // Login
-    'login_title'      => 'Sign in to the portal',
-    'login_intro'      => 'For students, lecturers and administrators of Kamala Science Campus.',
+    'login_title'      => 'B.Sc. Login',
+    'login_intro'      => 'The Kamala Science Campus portal — for B.Sc. students, lecturers and the campus office.',
     'email'            => 'Email address',
     'password'         => 'Password',
     'show_password'    => 'Show password',
@@ -62,7 +64,7 @@ return [
     'welcome_back'     => 'Welcome back, %s.',
 
     // Registration
-    'reg_title'        => 'Create your student account',
+    'reg_title'        => 'Create your B.Sc. student account',
     'reg_intro'        => 'Register with the details on your campus record. An administrator checks every registration before it is activated — you will be able to sign in once yours is approved.',
     'full_name'        => 'Full name',
     'full_name_ne'     => 'Full name in Nepali',
