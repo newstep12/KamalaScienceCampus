@@ -117,6 +117,15 @@ function card_photo_focus(?int $percent): int
  * and small enough that keeping one per person is not a burden on a shared
  * plan.
  */
+/**
+ * Marks a card photograph cut by the current way of cutting, at the front of
+ * its file name. It is how recentre_stored_photos() knows which photographs
+ * are already up to date — without a column to migrate, a cursor to keep, or
+ * any way for two runs to cut the same photograph twice. Change it whenever
+ * the cut changes, and the office's button brings every card up to date.
+ */
+const CARD_CROP_VERSION = 'h2-';
+
 const CARD_PHOTO_SOURCE_SIDE    = 1200;
 const CARD_PHOTO_SOURCE_QUALITY = 82;
 const CARD_PHOTO_SOURCE_DIR     = 'photo-source';
@@ -173,7 +182,7 @@ function store_card_photo(array $file, string $subdir = 'photos'): array
         return ['ok' => false, 'error' => 'upload'];
     }
 
-    $stored = bin2hex(random_bytes(16)) . '.jpg';
+    $stored = CARD_CROP_VERSION . bin2hex(random_bytes(16)) . '.jpg';
     $ok     = imagejpeg($card, $dir . '/' . $stored, CARD_PHOTO_QUALITY);
     $w      = imagesx($card);
     $h      = imagesy($card);
@@ -255,7 +264,7 @@ function recrop_from_source(?string $sourcePath, ?int $focus = null, string $sub
     imagedestroy($src);
 
     $dir    = __DIR__ . '/../uploads/' . $subdir;
-    $stored = bin2hex(random_bytes(16)) . '.jpg';
+    $stored = CARD_CROP_VERSION . bin2hex(random_bytes(16)) . '.jpg';
     if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
         imagedestroy($card);
         return null;
@@ -525,6 +534,70 @@ function recrop_stored_photos(): array
     return ['done' => $done, 'skipped' => $skipped, 'left' => $left, 'total' => count($rows)];
 }
 
+/**
+ * Cut every automatically placed photograph again from its working copy, so
+ * photographs already on cards get what a new upload gets today: the frame
+ * centred on the head. Photographs somebody has placed by hand are left
+ * alone, and so are those with no working copy to cut from.
+ *
+ * Only photographs not yet cut the current way are touched — their file
+ * names do not start with CARD_CROP_VERSION — so stopping on the time budget
+ * loses nothing and running it again simply carries on, and a photograph cut
+ * once is never cut again for nothing.
+ *
+ * Each photograph follows the same order as recrop_stored_photos(): new file,
+ * then the row, then the old file removed. The row is changed only if it
+ * still names the photograph this read — the holder may have uploaded a new
+ * one, or placed it by hand, or another run may have got there first — and
+ * otherwise the file just written is the one that goes.
+ *
+ * @return array{done:int, skipped:int, left:int}
+ */
+function recentre_stored_photos(): array
+{
+    $deadline = microtime(true) + RECROP_SECONDS;
+    $rows     = all(
+        'SELECT id, avatar_path, avatar_source_path FROM users
+          WHERE avatar_source_path IS NOT NULL AND avatar_source_path <> \'\'
+            AND avatar_focus IS NULL AND avatar_path IS NOT NULL
+            AND avatar_path NOT LIKE ?
+          ORDER BY id',
+        ['%/' . CARD_CROP_VERSION . '%']
+    );
+
+    $done = $skipped = 0;
+    $slowest = 0.0;
+    foreach ($rows as $n => $person) {
+        if (microtime(true) + $slowest * 1.5 > $deadline) {
+            return ['done' => $done, 'skipped' => $skipped, 'left' => count($rows) - $n];
+        }
+        $began   = microtime(true);
+        $new     = recrop_from_source((string) $person['avatar_source_path'], null);
+        $slowest = max($slowest, microtime(true) - $began);
+        if ($new === null) {
+            $skipped++;
+            continue;
+        }
+        try {
+            $moved = q(
+                'UPDATE users SET avatar_path = ?
+                  WHERE id = ? AND avatar_focus IS NULL AND avatar_path = ? AND avatar_source_path = ?',
+                [$new, (int) $person['id'], $person['avatar_path'], $person['avatar_source_path']]
+            )->rowCount();
+        } catch (Throwable $e) {
+            $moved = 0;
+        }
+        if ($moved === 0) {
+            delete_upload($new);
+            $skipped++;
+            continue;
+        }
+        delete_upload((string) $person['avatar_path']);
+        $done++;
+    }
+    return ['done' => $done, 'skipped' => $skipped, 'left' => 0];
+}
+
 /** True when a photograph is already stored at the card's proportions. */
 function is_card_shaped(?string $relPath): bool
 {
@@ -656,12 +729,19 @@ function apply_exif_orientation(GdImage $im, string $path): GdImage
 
 /**
  * How much of the picture the round frame takes in round a face, as a
- * multiple of the face's own size (brows to chin): head, hair and the top of
- * the shoulders, as a passport photograph frames them.
+ * multiple of the face's own size (brows to mouth): the whole head with clear
+ * space round it and the top of the shoulders, as a passport photograph frames
+ * them — the head about half the circle's height.
  */
-const CARD_FACE_ZOOM = 3.0;
-/** Where the face's centre sits, as a share of the frame's height from the top. */
-const CARD_FACE_LEVEL = 0.49;
+const CARD_FACE_ZOOM = 3.3;
+/**
+ * Where the head's middle sits, as a share of the frame's height from the
+ * top: a touch above the circle's middle, so the space above the hair matches
+ * the space the shoulders take up below the chin.
+ */
+const CARD_FACE_LEVEL = 0.47;
+/** The least room round a face worth cutting: less, and the circle clips the head. */
+const CARD_FACE_MIN_ZOOM = 2.6;
 /** The smallest square worth cutting round a face: below it the card prints soft. */
 const CARD_FACE_MIN_CROP = 320;
 
@@ -719,13 +799,16 @@ function crop_to_card_frame(GdImage $src, ?int $focus = null): GdImage
 }
 
 /**
- * The square to cut round the face in a photograph, as [x, y, width, height],
- * or null when there is no face to cut round.
+ * The square to cut round the head in a photograph, as [x, y, width,
+ * height], or null when there is no face to cut round.
  *
- * The square is as large as CARD_FACE_ZOOM makes it, but never larger than
- * the picture and never smaller than CARD_FACE_MIN_CROP when the picture has
- * that much to give; it is then slid, not shrunk, to stay inside the picture,
- * so a face near an edge ends up off-centre rather than cut off.
+ * Centred on the head (face_head_centre()), and kept centred: the square is
+ * made smaller, down to CARD_FACE_MIN_ZOOM, before it is ever slid off the
+ * head to stay inside the picture. Sliding is what used to happen first, and
+ * on a photograph with the face near an edge — a tight crop, a head at one side
+ * of a group — it left the head hard against one side of the circle. Only
+ * where even the smallest square will not fit round the head centred is it
+ * slid, as little as it has to be.
  *
  * @return array{0: int, 1: int, 2: int, 3: int}|null
  */
@@ -736,12 +819,20 @@ function face_crop_box(GdImage $src): ?array
         return null;
     }
     [$cx, $cy, $size] = $face;
+    [$hx, $hy] = face_head_centre($src, $cx, $cy, $size);
     $sw = imagesx($src);
     $sh = imagesy($src);
 
+    // As much as the zoom asks for (and enough to print sharp), then no more
+    // than fits round the head with the head in the middle...
     $side = max($size * CARD_FACE_ZOOM, min(CARD_FACE_MIN_CROP, $sw, $sh));
+    $fits = min(2 * $hx, 2 * ($sw - $hx), $hy / CARD_FACE_LEVEL, ($sh - $hy) / (1 - CARD_FACE_LEVEL));
+    $side = min($side, max($fits, $size * CARD_FACE_MIN_ZOOM));
+    // ...but still enough to print sharp, and never more than the picture.
+    $side = max($side, min(CARD_FACE_MIN_CROP, $sw, $sh));
     $side = (int) round(min($side, $sw, $sh));
-    $x = (int) round($cx - $side / 2);
-    $y = (int) round($cy - $side * CARD_FACE_LEVEL);
+
+    $x = (int) round($hx - $side / 2);
+    $y = (int) round($hy - $side * CARD_FACE_LEVEL);
     return [max(0, min($x, $sw - $side)), max(0, min($y, $sh - $side)), $side, $side];
 }
