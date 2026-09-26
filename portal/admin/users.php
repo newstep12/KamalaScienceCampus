@@ -144,6 +144,7 @@ layout_head(['title' => t('manage_people'), 'active' => 'users', 'wide' => true]
 ?>
 <div class="p-page-head">
   <h1><?= te('manage_people') ?></h1>
+  <p><a class="p-btn p-btn-ghost p-btn-sm" href="<?= e(portal_url('/admin/id-cards.php')) ?>"><?= te('bulk_link') ?></a></p>
 </div>
 
 <?php /* Shown once, straight after an account is made or a password reset.

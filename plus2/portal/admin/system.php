@@ -71,6 +71,10 @@ function column_migrations(): array
         // The n in KSSD-XI-n; see assign_student_no().
         'student number' => 'ALTER TABLE users ADD COLUMN student_no INT UNSIGNED NULL AFTER study_group',
         'student number key' => 'ALTER TABLE users ADD UNIQUE KEY uq_users_student_no (student_no)',
+        // When the holder's card last went through the bulk print page, and
+        // what it printed; see card_print_tracking(), which also adds them.
+        'card printed' => 'ALTER TABLE users ADD COLUMN card_printed_at DATETIME NULL',
+        'card printed fingerprint' => 'ALTER TABLE users ADD COLUMN card_printed_sig CHAR(40) NULL',
     ];
 }
 

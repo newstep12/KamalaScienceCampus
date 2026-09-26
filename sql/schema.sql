@@ -38,6 +38,11 @@ CREATE TABLE IF NOT EXISTS users (
   signature_path  VARCHAR(255)  NULL,
   rejection_note  VARCHAR(255)  NULL,
   must_change_password TINYINT(1) NOT NULL DEFAULT 0,
+  -- When the holder's card last went through the bulk print page, and a
+  -- fingerprint of what it printed (card_fingerprint()), so a card whose
+  -- details change afterwards is due again.
+  card_printed_at DATETIME      NULL,
+  card_printed_sig CHAR(40)     NULL,
   created_at      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   approved_at     DATETIME      NULL,
   approved_by     INT UNSIGNED  NULL,

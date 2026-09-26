@@ -320,8 +320,18 @@ function id_card_settings(): array
  */
 function id_card_context(array $holder, ?array $viewer = null): array
 {
-    $card   = id_card_settings();
     $viewer = $viewer ?? current_user();
+    return id_card_shared_context($viewer) + id_card_holder_context($holder, $viewer);
+}
+
+/**
+ * The half of a card's context that is the same on every card this viewer
+ * prints: the design, the two signers and the school. Split out so a batch of
+ * cards (admin/id-cards.php) asks the database for it once, not once a card.
+ */
+function id_card_shared_context(?array $viewer): array
+{
+    $card   = id_card_settings();
     $sig    = applied_signature('id_card', $viewer);
     $named  = $sig ?: signature_for_use('id_card');   // withheld, but it still names the signer
     $coordSig   = applied_signature('id_card_coordinator', $viewer);
@@ -331,11 +341,7 @@ function id_card_context(array $holder, ?array $viewer = null): array
         'card'        => $card,
         'theme'       => $card['theme'],
         'orientation' => $card['orientation'],
-        'photo'       => photo_src($holder),
         'signature'   => $sig ? signature_url($sig) : null,
-        'holder_sig'  => can_view_holder_signature($viewer, (int) $holder['id'])
-            ? holder_signature_src($holder)
-            : null,
         'chief'       => $named ? signature_owner_name($named) : id_card_chief_name($card),
         'chief_title' => designation_label(
             ($named['owner_title'] ?? '') ?: ($card['chief_title'] ?: 'principal')
@@ -348,9 +354,20 @@ function id_card_context(array $holder, ?array $viewer = null): array
         'coord_title' => designation_label(
             ($coordNamed['owner_title'] ?? '') ?: ($card['coord_title'] ?: 'coordinator')
         ),
-        'holder_names' => id_card_names($holder),
         'names'       => school_names(),
         'school'      => school_details(),
+    ];
+}
+
+/** The half of a card's context that is its holder's own. */
+function id_card_holder_context(array $holder, ?array $viewer): array
+{
+    return [
+        'photo'       => photo_src($holder),
+        'holder_sig'  => can_view_holder_signature($viewer, (int) $holder['id'])
+            ? holder_signature_src($holder)
+            : null,
+        'holder_names' => id_card_names($holder),
         'issued'      => $holder['approved_at'] ?: $holder['created_at'],
     ];
 }
@@ -534,4 +551,59 @@ function id_card_scripts(): void
 function school_logo_url(bool $print = false): string
 {
     return portal_url('/../assets/img/seal-' . ($print ? '512' : '192') . '.png');
+}
+
+/**
+ * What a holder's card says, as a fingerprint: every detail printed on a card
+ * of their kind — the photograph, the holder's signature, both names as
+ * printed (a Nepali one written from the English included), the issue date —
+ * and the lines every card shares: the session, the validity and who signs.
+ * The bulk print page stores it beside the date a card was printed, so a card
+ * whose details have changed since — a new photo, a corrected name, a class
+ * moved up, a new session — goes back into the next run on its own, whatever
+ * page the change was made on.
+ *
+ * Only what is printed: a student's phone number, which no student card
+ * carries, can change without calling a card back. The design (colourway,
+ * orientation) and the signature images are left out too: they change how a
+ * card looks, not what it says, and a reprint for them is the office's call.
+ * A column an older database does not have yet counts as empty.
+ */
+function card_fingerprint(array $u): string
+{
+    static $shared = null;
+    if ($shared === null) {
+        $card   = id_card_settings();
+        $shared = array_intersect_key(id_card_shared_context(null), array_flip(['chief', 'chief_title', 'coord', 'coord_title']))
+            + ['session' => (string) $card['session'], 'valid' => (string) $card['valid_until']];
+    }
+    $student = $u['role'] === ROLE_STUDENT;
+    $printed = [];
+    foreach (array_merge(
+        ['role', 'date_of_birth', 'address', 'blood_group', 'avatar_path', 'signature_path'],
+        $student ? ['class_level', 'section', 'study_group', 'roll_no', 'student_no', 'guardian_name', 'guardian_phone']
+                 : ['designation', 'national_id', 'pan_no', 'phone']
+    ) as $col) {
+        $printed[$col] = isset($u[$col]) ? (string) $u[$col] : '';
+    }
+    $names = id_card_names($u);
+    $printed['names']  = [$names['latin'], $names['deva']];
+    $printed['issued'] = substr((string) ($u['approved_at'] ?: $u['created_at']), 0, 10);
+    $printed += $shared;
+    if (!$student) {
+        unset($printed['valid']);          // a staff card has no validity line
+    }
+    return sha1((string) json_encode($printed, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE));
+}
+
+/**
+ * Where a holder's card stands: 'new' (never printed), 'changed' (printed,
+ * but its details have changed since) or 'done'.
+ */
+function card_print_state(array $u, ?string $fingerprint = null): string
+{
+    if (empty($u['card_printed_at'])) {
+        return 'new';
+    }
+    return ($u['card_printed_sig'] ?? '') === ($fingerprint ?? card_fingerprint($u)) ? 'done' : 'changed';
 }
