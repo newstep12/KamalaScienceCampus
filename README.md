@@ -367,6 +367,51 @@ page itself — which faces, and which printer:
 Both choices live in the address (`?sides=&print=`), so a link prints the same
 way twice, and they work without JavaScript through an **Apply** button.
 
+#### Printing cards in bulk
+
+**Admin → ID cards** (`/portal/admin/id-cards.php`, and the same page in the
++2 portal at `/plus2/portal/admin/id-cards.php`) prints every approved card in
+one run, for the office to hand to a printer or a print shop. It is linked
+from the top of **Admin → People** too.
+
+1. **Whose cards** — students, staff or everyone; a year of study (B.Sc.) or a
+   class and group (+2); and *due* (never printed, or changed since),
+   *already printed* or both. Only active (approved) accounts are listed. A
+   run is at most 200 cards; a longer list is taken a run at a time with
+   *Next run*.
+2. **How they print** — one of three layouts, each at the true CR80 size:
+
+   | Layout | For | Per page |
+   | --- | --- | --- |
+   | **A4, both sides** | any duplex printer, on 250–300 gsm card or PVC-coated inkjet ID sheets | 9 portrait / 10 landscape |
+   | **A4, one side, fold-over** | a printer without duplex: each back sits beside its front, sharing the fold line | 3 portrait / 5 landscape |
+   | **PVC card printer** | CR80 blanks: one face per page, front then back | 1 |
+
+   plus front and back or front only, portrait or landscape, and the cutting
+   guides: **crop marks** in the margin (the default), a hairline **card
+   outline**, or **none** for pre-cut sheets.
+3. **Check the list** — each card shows what its holder has not filled in yet;
+   untick anyone to leave them out of this run.
+4. **Print** — *Print or save as PDF*, with the best settings for the chosen
+   layout written out beneath it (A4, scale 100%, margins None, background
+   graphics on, flip on long edge). Choosing *Save as PDF* in the same dialogue
+   gives a PDF at the exact card size for a print shop.
+
+On an A4 duplex run the backs are laid out mirror-wise — the back of the card
+at row *r*, column *c* is drawn at column (last − *c*) — so a sheet turned on
+its long edge puts every back behind its own front. Every card is placed at
+fixed millimetre offsets on a page with no browser margin, so fronts and backs
+share coordinates exactly; crop marks go on the fronts only.
+
+After printing, **Mark as printed** records on each card the date and a
+fingerprint of everything it printed (`users.card_printed_at` and
+`card_printed_sig`, added automatically the first time the page opens, or by
+*System → Update the database*). The next run is then only the cards that are
+due: students approved since, and any card whose details have changed since
+it was printed — a new photograph, a corrected name, a class moved up at the
+start of a session — whichever page the change was made on. The list says
+which is which (*Not yet* / *Changed since printed on …*).
+
 Details come from the person's own portfolio, so a card is only as complete as
 the profile behind it. Anything still blank — photograph, date of birth,
 address — prints as a rule to write on rather than disappearing, and the page

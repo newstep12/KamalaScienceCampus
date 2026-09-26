@@ -260,6 +260,7 @@ function default_nav(?array $user): array
             ['key' => 'home',      'href' => portal_url('/admin/index.php'),      'label' => t('nav_dashboard')],
             ['key' => 'approvals', 'href' => portal_url('/admin/approvals.php'),  'label' => t('nav_approvals')],
             ['key' => 'users',     'href' => portal_url('/admin/users.php'),      'label' => t('nav_users')],
+            ['key' => 'idcards',   'href' => portal_url('/admin/id-cards.php'),   'label' => t('nav_id_cards')],
             ['key' => 'signatures','href' => portal_url('/admin/signatures.php'), 'label' => t('nav_signatures')],
             ['key' => 'system',    'href' => portal_url('/admin/system.php'),     'label' => t('nav_system')],
             ['key' => 'portfolio', 'href' => portal_url('/student/portfolio.php'),'label' => t('nav_portfolio')],
