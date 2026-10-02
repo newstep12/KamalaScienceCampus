@@ -47,12 +47,12 @@ $own     = (int) $holder['id'] === (int) $viewer['id'];
 $ctx     = id_card_context($holder, $viewer);
 $card    = $ctx['card'];
 $missing = id_card_missing($holder, $ctx['holder_names']);
-$sides   = id_card_sides($_GET['sides'] ?? $card['sides']);
+$sides   = id_card_sides(is_string($_GET['sides'] ?? null) ? $_GET['sides'] : $card['sides']);
 $target  = in_array($_GET['print'] ?? '', ['sheet', 'card'], true) ? $_GET['print'] : 'sheet';
 // Portrait or landscape for this print run. The office's choice under System
 // is the default; whoever is printing can turn the card for their printer or
 // their lanyard without changing it for anybody else.
-$ctx['orientation'] = id_card_orientation($_GET['orient'] ?? $card['orientation']);
+$ctx['orientation'] = id_card_orientation(is_string($_GET['orient'] ?? null) ? $_GET['orient'] : $card['orientation']);
 
 layout_head([
     'title'  => $own ? t('id_card_title') : t('id_card_for', $holder['full_name']),

@@ -99,6 +99,46 @@ function portal_error_reference(): string
     }
 }
 
+/**
+ * A private copy of the error log, beside the settings file above
+ * public_html, which Admin → System searches by reference. On shared hosting
+ * nobody at the school can read the server's own log, so a reference that is
+ * written only there leads nowhere. Null where there is no directory above
+ * the website to keep it in (a test copy under htdocs).
+ */
+function portal_error_log_file(): ?string
+{
+    $dir = portal_outside_dir();
+    return $dir === null ? null : $dir . '/kssd-plus2-errors.log';
+}
+
+/**
+ * Write one failure to the server's error log and to portal_error_log_file().
+ * Never throws: it runs inside the exception handler, where a throw is fatal
+ * and turns the error page into a blank one.
+ */
+function portal_log_error(string $line): void
+{
+    error_log($line);
+    try {
+        $file = portal_error_log_file();
+        if ($file === null) {
+            return;
+        }
+        // Bounded: the newest half-megabyte, and the one before it.
+        if ((int) @filesize($file) > 512 * 1024) {
+            @rename($file, $file . '.1');
+        }
+        $new  = !@is_file($file);
+        $line = '[' . gmdate('Y-m-d H:i:s') . ' UTC] ' . str_replace(["\r", "\n"], ' ', $line) . "\n";
+        if (@file_put_contents($file, $line, FILE_APPEND | LOCK_EX) !== false && $new) {
+            @chmod($file, 0600);
+        }
+    } catch (Throwable $e) {
+        // It is in the server's log already; nothing more to do.
+    }
+}
+
 // Log the real error; never show it to a visitor.
 set_exception_handler(function (Throwable $e) {
     // A short reference, printed on the page and written into the log line.
@@ -109,10 +149,11 @@ set_exception_handler(function (Throwable $e) {
     $ref = portal_error_reference();
 
     if ($e instanceof DatabaseUnavailable) {
-        error_log('+2 portal error [' . $ref . ']: the database is unreachable');
+        portal_log_error('+2 portal error [' . $ref . ']: the database is unreachable: '
+            . ($e->getPrevious() ?? $e)->getMessage());
         portal_error_page(503, 'The portal is temporarily unavailable.', $ref);
     }
-    error_log(sprintf(
+    portal_log_error(sprintf(
         '+2 portal error [%s]: %s: %s @ %s:%d',
         $ref, get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()
     ));
@@ -155,7 +196,7 @@ function config(): array
             // git-ignored, so it is absent from any fresh checkout of this
             // repository and has to be restored on the server.
             $ref = portal_error_reference();
-            error_log('+2 portal error [' . $ref . ']: configuration missing; looked for '
+            portal_log_error('+2 portal error [' . $ref . ']: configuration missing; looked for '
                 . implode(' and ', portal_config_paths()));
             // Public: every visitor sees this until the office has run the
             // installer, so it names no file and no path. The log line above

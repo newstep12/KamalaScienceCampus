@@ -6,6 +6,7 @@ require_once __DIR__ . '/../inc/uploads.php';
 require_once __DIR__ . '/../inc/idcard-view.php';
 require_once __DIR__ . '/../inc/signatures.php';
 require_once __DIR__ . '/../inc/photos.php';
+require_once __DIR__ . '/../inc/diagnostics.php';
 require_once __DIR__ . '/../inc/translate.php';
 
 $admin = require_role(ROLE_ADMIN);
@@ -232,7 +233,7 @@ $seeded = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
-    $action = $_POST['action'] ?? '';
+    $action = is_string($_POST['action'] ?? null) ? $_POST['action'] : '';
 
     try {
         if ($action === 'migrate') {
@@ -389,6 +390,14 @@ $counts = [
     'photos'   => (int) scalar('SELECT COUNT(*) FROM users WHERE avatar_path IS NOT NULL AND avatar_path <> \'\''),
 ];
 
+// Site version and errors. The reference comes from the address so that a
+// link to this section with ?ref= opens on the answer.
+$version = site_version();
+$lookup  = is_string($_GET['ref'] ?? null) ? strtoupper(trim($_GET['ref'])) : '';
+$found   = $lookup !== '' ? find_error_reference($lookup) : [];
+$recent  = recent_errors();
+$hasLog  = portal_error_log_file() !== null;
+
 layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]);
 ?>
 <div class="p-page-head">
@@ -420,6 +429,58 @@ layout_head(['title' => t('system_title'), 'active' => 'system', 'wide' => true]
         <?= te('db_tables_now', localize_digits((string) count($result['tables']))) ?>
       </p>
     </div>
+  <?php endif; ?>
+</section>
+
+<section class="p-card" id="diagnostics">
+  <h2><?= te('diag_title') ?></h2>
+  <p style="color:var(--ink-soft);font-size:.94rem;"><?= te('diag_intro') ?></p>
+
+  <p><strong><?= te('diag_version') ?>:</strong>
+    <?php if ($version): ?>
+      <?php $short = substr($version['commit'], 0, 7); ?>
+      <?php if ($version['url']): ?>
+        <a href="<?= e($version['url']) ?>" target="_blank" rel="noopener noreferrer"><code><?= e($short) ?></code></a>
+      <?php else: ?>
+        <code><?= e($short) ?></code>
+      <?php endif; ?>
+      <?= $version['branch'] ? '(' . e($version['branch']) . ')' : '' ?>
+      <?php if ($version['updated']): ?>
+        <span style="color:var(--ink-soft);"> · <?= te('diag_updated', format_date(date('Y-m-d H:i:s', $version['updated']), true)) ?></span>
+      <?php endif; ?>
+    <?php else: ?>
+      <span style="color:var(--ink-soft);"><?= te('diag_version_unknown') ?></span>
+    <?php endif; ?>
+  </p>
+
+  <?php if (!$hasLog): ?>
+    <p style="color:var(--ink-soft);font-size:.92rem;"><?= te('diag_no_log') ?></p>
+  <?php else: ?>
+    <form method="get" action="#diagnostics" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="p-field" style="margin:0;">
+        <label for="ref"><?= te('diag_ref_label') ?></label>
+        <input type="text" id="ref" name="ref" value="<?= e($lookup) ?>" maxlength="6"
+               autocomplete="off" spellcheck="false" style="width:9em;font-family:monospace;text-transform:uppercase;">
+      </div>
+      <button class="p-btn p-btn-primary" type="submit"><?= te('diag_ref_find') ?></button>
+    </form>
+
+    <?php if ($lookup !== ''): ?>
+      <?php if ($found): ?>
+        <pre style="white-space:pre-wrap;word-break:break-word;font-size:.85rem;background:var(--bg-tint);border:1px solid var(--line);padding:12px;border-radius:var(--radius-sm);"><?php
+          foreach ($found as $line) { echo e($line), "\n"; } ?></pre>
+      <?php else: ?>
+        <p style="color:var(--ink-soft);"><?= te('diag_ref_none', $lookup) ?></p>
+      <?php endif; ?>
+    <?php endif; ?>
+
+    <h3 style="font-size:1rem;margin-top:18px;"><?= te('diag_recent') ?></h3>
+    <?php if ($recent): ?>
+      <pre style="white-space:pre-wrap;word-break:break-word;font-size:.85rem;background:var(--bg-tint);border:1px solid var(--line);padding:12px;border-radius:var(--radius-sm);max-height:22em;overflow:auto;"><?php
+        foreach ($recent as $line) { echo e($line), "\n"; } ?></pre>
+    <?php else: ?>
+      <p style="color:var(--ink-soft);"><?= te('diag_recent_none') ?></p>
+    <?php endif; ?>
   <?php endif; ?>
 </section>
 
