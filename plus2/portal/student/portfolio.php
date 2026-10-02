@@ -418,7 +418,8 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
             <p class="hint"><?= te('photo_card_preview') ?></p>
           </div>
         <?php endif; ?>
-        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
+        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp"
+               data-shrink="<?= image_upload_limit() ?>">
         <span class="hint"><?= te('photo_idcard_note') ?></span>
       </div>
 
@@ -480,7 +481,8 @@ layout_head(['title' => t('portfolio_title'), 'active' => 'portfolio']);
             <p class="hint"><?= te('holder_signature_preview') ?></p>
           </div>
         <?php endif; ?>
-        <input type="file" id="signature" name="signature" accept="image/jpeg,image/png,image/webp">
+        <input type="file" id="signature" name="signature" accept="image/jpeg,image/png,image/webp"
+               data-shrink="<?= image_upload_limit() ?>">
         <span class="hint"><?= te('holder_signature_hint') ?></span>
       </div>
 

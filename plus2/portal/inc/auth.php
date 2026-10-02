@@ -8,7 +8,11 @@ const ROLE_TEACHER = 'teacher';
 const ROLE_ADMIN    = 'admin';
 
 const MAX_LOGIN_ATTEMPTS = 6;      // per email+IP
-const MAX_REGISTRATIONS_PER_HOUR = 60;   // per IP, successful ones — two classes on one school connection fit
+// Per IP, successful ones. A whole registration drive on the school's own
+// connection has to fit — every student behind one Wi-Fi shares an address,
+// and so can a whole mobile network's — so this allows a few classes an
+// hour. 60 turned the 61st student of a drive away.
+const MAX_REGISTRATIONS_PER_HOUR = 300;
 const LOGIN_WINDOW_MIN   = 15;     // minutes
 
 function start_session(): void

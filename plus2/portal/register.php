@@ -32,6 +32,21 @@ function birth_date_is_plausible(string $date): bool
     return $date <= date('Y-m-d') && $age >= 12 && $age <= 40;
 }
 
+/**
+ * The same student sending the same form again — a second tap on a slow
+ * connection, or a reload of the page the first one returned. Their account
+ * is already waiting for approval, so what they need to see is that it
+ * arrived, not "an account with that email already exists", which reads as
+ * somebody else having taken their address. The password is what shows it is
+ * them.
+ */
+function is_repeat_registration(string $email, string $password): bool
+{
+    $row = one('SELECT password_hash, status FROM users WHERE email = ? LIMIT 1', [$email]);
+    return $row !== null && $row['status'] === 'pending'
+        && password_verify($password, (string) $row['password_hash']);
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_exceeded_limit()) {
     // A photograph too big for the server: PHP drops the whole form, token
     // and all, so say what happened rather than "your session expired".
@@ -89,14 +104,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_exceeded_limit()) {
     if ($password !== $confirm)                               { $errors['password_confirm'] = t('err_pw_match'); }
 
     if (!$errors && !$isBot && one('SELECT id FROM users WHERE email = ?', [$email])) {
-        $errors['email'] = t('err_email_taken');
+        if (is_repeat_registration($email, $password)) {
+            $done = true;
+        } else {
+            $errors['email'] = t('err_email_taken');
+        }
     }
 
     // The photograph is optional — a student can add one later from their
     // portfolio — but a file that was chosen and cannot be stored is an error
     // rather than something to drop silently. Stored only once the rest of
     // the form is good, so a rejected registration leaves no orphan file.
-    if (!$errors && !$isBot && upload_present($_FILES['photo'] ?? null)) {
+    if (!$errors && !$isBot && !$done && upload_present($_FILES['photo'] ?? null)) {
         $stored = store_card_photo($_FILES['photo'], 'photos');
         if ($stored['ok']) {
             $photoPath = $stored['path'];
@@ -111,32 +130,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post_exceeded_limit()) {
         }
     }
 
+    $inserted = false;
     if (!$errors && $isBot) {
         $done = true;
-    } elseif (!$errors) {
-        q(
-            'INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
-                                class_level, section, roll_no, study_group, guardian_name, guardian_phone,
-                                phone, date_of_birth, address, avatar_path, avatar_source_path)
-             VALUES (?, ?, ?, ?, \'student\', \'pending\', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [
-                $in['full_name'],
-                $in['full_name_ne'] !== '' ? $in['full_name_ne'] : null,
-                $email,
-                password_hash($password, PASSWORD_DEFAULT),
-                $class,
-                $in['section'] !== '' ? $in['section'] : null,
-                $in['roll_no'] !== '' ? $in['roll_no'] : null,
-                study_group($in['study_group']),
-                $in['guardian_name'],
-                $in['guardian_phone'],
-                $in['phone'] !== '' ? $in['phone'] : null,
-                $dob,
-                $in['address'],
-                $photoPath,
-                $photoSource,
-            ]
-        );
+    } elseif (!$errors && !$done) {
+        try {
+            q(
+                'INSERT INTO users (full_name, full_name_ne, email, password_hash, role, status,
+                                    class_level, section, roll_no, study_group, guardian_name, guardian_phone,
+                                    phone, date_of_birth, address, avatar_path, avatar_source_path)
+                 VALUES (?, ?, ?, ?, \'student\', \'pending\', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    $in['full_name'],
+                    $in['full_name_ne'] !== '' ? $in['full_name_ne'] : null,
+                    $email,
+                    password_hash($password, PASSWORD_DEFAULT),
+                    $class,
+                    $in['section'] !== '' ? $in['section'] : null,
+                    $in['roll_no'] !== '' ? $in['roll_no'] : null,
+                    study_group($in['study_group']),
+                    $in['guardian_name'],
+                    $in['guardian_phone'],
+                    $in['phone'] !== '' ? $in['phone'] : null,
+                    $dob,
+                    $in['address'],
+                    $photoPath,
+                    $photoSource,
+                ]
+            );
+            $inserted = true;
+        } catch (PDOException $e) {
+            // The check above passed for two requests at once — the same
+            // address sent from two devices, or a second tap that slipped
+            // past the button — and the unique key stopped the second. The
+            // photograph it stored belongs to no account.
+            if ($e->getCode() !== '23000') {
+                throw $e;
+            }
+            delete_uploads(array_filter([$photoPath, $photoSource]));
+            if (is_repeat_registration($email, $password)) {
+                $done = true;
+            } else {
+                $errors['email'] = t('err_email_taken');
+            }
+        }
+    }
+    if ($inserted) {
         log_activity(null, 'register', $email, 'Class ' . $class);
         // Counted only once something was stored: a student correcting a typo
         // has not used up anybody's allowance, and a refused form stores no
@@ -172,7 +211,7 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
       <div class="p-flash p-flash-error" role="alert"><?= e(reset($errors)) ?></div>
     <?php endif; ?>
 
-    <form method="post" enctype="multipart/form-data" novalidate>
+    <form method="post" enctype="multipart/form-data" novalidate data-once="<?= te('please_wait') ?>">
       <?= csrf_field() ?>
 
       <div class="p-field <?= isset($errors['full_name']) ? 'error' : '' ?>">
@@ -270,7 +309,8 @@ layout_head(['title' => t('reg_title'), 'nav' => []]);
 
       <div class="p-field <?= isset($errors['photo']) ? 'error' : '' ?>">
         <label for="photo"><?= te('photo') ?> <span class="hint"><?= te('photo_hint') ?></span></label>
-        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
+        <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp"
+               data-shrink="<?= image_upload_limit() ?>">
         <span class="hint"><?= te('photo_idcard_note') ?></span>
         <?php if (isset($errors['photo'])): ?><span class="err"><?= e($errors['photo']) ?></span><?php endif; ?>
       </div>
