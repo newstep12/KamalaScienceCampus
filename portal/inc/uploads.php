@@ -534,6 +534,56 @@ function resolve_upload(?string $relPath): ?string
     return null;
 }
 
+
+/**
+ * The filename parameters for a Content-Disposition header.
+ *
+ * Two of them, per RFC 6266: a plain ASCII `filename` that any client
+ * understands, and `filename*` carrying the real UTF-8 name. Without the
+ * second, a notice saved as "सूचना.pdf" reaches the visitor as a row of
+ * underscores — which on a bilingual campus site is most of the point of
+ * keeping the original name at all.
+ */
+function disposition_filename(string $name): string
+{
+    $name  = str_replace(['"', '\\', "\r", "\n"], '', $name);
+    $ascii = preg_replace('/[^\x20-\x7e]+/', '_', $name) ?: 'file';
+    $ascii = preg_replace('/[^\w. \-]+/', '_', $ascii) ?: 'file';
+
+    $header = 'filename="' . $ascii . '"';
+    if ($name !== $ascii && $name !== '') {
+        $header .= "; filename*=UTF-8''" . rawurlencode($name);
+    }
+    return $header;
+}
+
+/**
+ * Send a stored upload and stop. $inline asks for it to be displayed rather
+ * than downloaded, which is honoured only when the type sniffed from the file
+ * itself is one a browser renders safely — the stored name never decides.
+ */
+function serve_upload(?string $relPath, ?string $downloadName, bool $inline = false, string $cacheControl = 'private, max-age=0, must-revalidate'): void
+{
+    $full = resolve_upload($relPath);
+    if ($full === null) {
+        http_response_code(404);
+        exit('Not found.');
+    }
+
+    $mime   = (string) (new finfo(FILEINFO_MIME_TYPE))->file($full);
+    $inline = $inline && isset(INLINE_TYPES[$mime]);
+    $name   = $downloadName ?: basename($full);
+
+    header('Content-Type: ' . ($inline ? $mime : 'application/octet-stream'));
+    header('Content-Length: ' . filesize($full));
+    header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; ' . disposition_filename($name));
+    // Without nosniff a browser may second-guess the type we just declared.
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: ' . $cacheControl);
+    readfile($full);
+    exit;
+}
+
 /** A php.ini size such as "8M" or "512K" as a byte count. */
 function ini_bytes(string $value): int
 {
