@@ -257,6 +257,7 @@ return [
     'remove_attachment'=> 'Remove this attachment',
     'seen_by'          => 'Shown on',
     'seen_public'      => 'Public site',
+    'attachment_missing' => 'File missing — upload it again',
     'seen_portal_only' => 'Portal only',
     'seen_nobody'      => 'Not published',
     'err_notice_title' => 'Please give the notice a title in English.',

@@ -567,6 +567,25 @@ function disposition_filename(string $name): string
 function serve_upload(?string $relPath, ?string $downloadName, bool $inline = false, string $cacheControl = 'private, max-age=0, must-revalidate'): void
 {
     $full = resolve_upload($relPath);
+    if ($full === null && $relPath) {
+        // The record names a file and the viewer may have it, but the file
+        // itself is in none of the uploads folders — lost to a deploy while
+        // uploads were still kept inside public_html, most likely. A bare
+        // "Not found." read as the site being broken, and nothing told the
+        // office the cure is simply to upload the file again; this says so,
+        // and logs it where Admin → System shows it.
+        $ref = portal_error_reference();
+        portal_log_error('Portal error [' . $ref . ']: upload missing from the server: ' . $relPath
+            . ' (looked in ' . implode(', ', uploads_roots()) . ')');
+        portal_error_page(
+            404,
+            'This file is missing from the server.',
+            $ref,
+            'The notice or material is still listed, but its file is no longer on the server. '
+            . 'Whoever posted it can open it with Edit and upload the file again. '
+            . '(फाइल सर्भरमा छैन — पोस्ट गर्नेले Edit मा गई फाइल फेरि अपलोड गर्नुहोस्।)'
+        );
+    }
     if ($full === null) {
         http_response_code(404);
         exit('Not found.');
