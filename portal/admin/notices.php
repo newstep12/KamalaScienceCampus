@@ -261,6 +261,9 @@ layout_head(['title' => t('manage_notices'), 'active' => 'notices', 'wide' => tr
           <?= te('current_attachment') ?>:
           <a href="<?= e(portal_url('/download.php?notice=' . (int) $editing['id'] . '&view=1')) ?>"
              target="_blank" rel="noopener"><?= e($editing['file_name'] ?: basename((string) $editing['file_path'])) ?></a>
+          <?php if (resolve_upload($editing['file_path']) === null): ?>
+            <span class="p-tag bad"><?= te('attachment_missing') ?></span>
+          <?php endif; ?>
         </p>
         <label style="display:flex;align-items:center;gap:9px;font-weight:500;margin-top:8px;">
           <input type="checkbox" name="remove_file" value="1" style="width:auto;">
@@ -319,7 +322,11 @@ layout_head(['title' => t('manage_notices'), 'active' => 'notices', 'wide' => tr
                 <?php endif; ?>
               </td>
               <td class="nowrap">
-                <?php if ($n['file_path']): ?>
+                <?php if ($n['file_path'] && resolve_upload($n['file_path']) === null): ?>
+                  <?php // The row names a file the server no longer has; the
+                        // link would only lead to an error page. ?>
+                  <span class="p-tag bad"><?= te('attachment_missing') ?></span>
+                <?php elseif ($n['file_path']): ?>
                   <a href="<?= e(portal_url('/download.php?notice=' . (int) $n['id'] . '&view=1')) ?>"
                      target="_blank" rel="noopener"><?= te('open_attachment') ?> ↗</a>
                 <?php else: ?>
