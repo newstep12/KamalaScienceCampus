@@ -183,6 +183,18 @@ const ALLOWED_IMAGES = [
 
 const MAX_IMAGE_UPLOAD = 5 * 1024 * 1024;
 
+/**
+ * The largest photograph the server will take: our own cap, or the host's
+ * upload_max_filesize where that is lower. The browser shrinks a picture to
+ * fit under it before sending (data-shrink in layout.php).
+ */
+function image_upload_limit(): int
+{
+    $limit = MAX_IMAGE_UPLOAD;
+    $host  = ini_bytes((string) ini_get('upload_max_filesize'));
+    return $host > 0 ? min($limit, $host) : $limit;
+}
+
 /** The smallest photograph worth printing on a card. */
 const MIN_PHOTO_SIDE = 200;
 

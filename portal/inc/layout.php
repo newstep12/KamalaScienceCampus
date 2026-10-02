@@ -227,6 +227,108 @@ function layout_foot(): void
       btn.classList.toggle('on', input.type === 'text');
     });
   });
+  // A phone photograph is shrunk in the browser before it is sent: a camera
+  // picture is often over the upload limit — which turned the whole
+  // registration away — and several megabytes take a long time over mobile
+  // data, while the card needs only a few hundred pixels. Only where the
+  // browser draws a photo the right way up on its own (image-orientation),
+  // or a sideways phone picture would come out sideways; elsewhere the file
+  // goes as it was chosen, as it always did.
+  var canShrink = !!(window.Promise && window.DataTransfer && window.URL && URL.createObjectURL
+    && window.CSS && CSS.supports && CSS.supports('image-orientation', 'from-image')
+    && HTMLCanvasElement.prototype.toBlob);
+  document.querySelectorAll('input[type="file"][data-shrink]').forEach(function (input) {
+    if (!canShrink) return;
+    var limit = parseInt(input.getAttribute('data-shrink'), 10) || 0;
+    var maxSide = 2000;
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      // Small enough already: sent untouched.
+      if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)
+          || file.size <= Math.min(1536 * 1024, limit || Infinity)) return;
+      input._pending = new Promise(function (done) {
+        var url = URL.createObjectURL(file);
+        var img = new Image();
+        var finish = function () { URL.revokeObjectURL(url); input._pending = null; done(); };
+        img.onerror = finish;
+        img.onload = function () {
+          var scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+          var w = Math.max(1, Math.round(img.naturalWidth * scale));
+          var h = Math.max(1, Math.round(img.naturalHeight * scale));
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          if (!ctx) { finish(); return; }
+          ctx.fillStyle = '#fff';            // a transparent PNG would turn black
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function (blob) {
+            // Kept only if it is an improvement that the server will take.
+            if (blob && blob.size < file.size && (!limit || blob.size <= limit)) {
+              try {
+                var list = new DataTransfer();
+                list.items.add(new File([blob], file.name.replace(/\.[^.]*$/, '') + '.jpg',
+                  { type: 'image/jpeg', lastModified: Date.now() }));
+                input.files = list.files;
+              } catch (e) { /* the original goes instead */ }
+            }
+            finish();
+          }, 'image/jpeg', 0.88);
+        };
+        img.src = url;
+      });
+    });
+  });
+  // Sent once (data-once). On a slow connection a second tap posts the form
+  // again, and the page that comes back is the second one's: "an account
+  // with that email already exists", about the account the first tap just
+  // made. And on any form with a photograph still being shrunk, the shrink is
+  // waited for rather than the original sent.
+  var forms = [];
+  document.querySelectorAll('form[data-once], form input[type="file"][data-shrink]').forEach(function (el) {
+    var form = el.tagName === 'FORM' ? el : el.form;
+    if (form && forms.indexOf(form) < 0) forms.push(form);
+  });
+  forms.forEach(function (form) {
+    var once = form.hasAttribute('data-once');
+    var btn = form.querySelector('button[type="submit"], button:not([type])');
+    var label = btn ? btn.textContent : '';
+    var sent = false;
+    form.addEventListener('submit', function (e) {
+      if (sent) { e.preventDefault(); return; }
+      if (once) {
+        sent = true;
+        if (btn) {
+          btn.textContent = form.getAttribute('data-once') || label;
+          btn.setAttribute('aria-busy', 'true');
+        }
+      }
+      var pending = [];
+      form.querySelectorAll('input[type="file"]').forEach(function (i) { if (i._pending) pending.push(i._pending); });
+      if (pending.length) {
+        e.preventDefault();
+        sent = true;
+        // form.submit() leaves out the button that was pressed; carry its
+        // name and value across, for forms that tell their buttons apart.
+        var by = e.submitter;
+        if (by && by.name) {
+          var keep = document.createElement('input');
+          keep.type = 'hidden';
+          keep.name = by.name;
+          keep.value = by.value;
+          form.appendChild(keep);
+        }
+        Promise.all(pending).then(function () { form.submit(); });
+      }
+    });
+    // Back on this page from the browser's cache: it can be sent again.
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      sent = false;
+      if (btn && once) { btn.textContent = label; btn.removeAttribute('aria-busy'); }
+    });
+  });
 })();
 </script>
 </body>

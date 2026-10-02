@@ -200,7 +200,7 @@ function class_roman(?int $class): string
  */
 function assign_student_no(int $id): void
 {
-    for ($attempt = 0; $attempt < 3; $attempt++) {
+    for ($attempt = 0; $attempt < 5; $attempt++) {
         try {
             q(
                 // The derived table makes MySQL read MAX() before it writes,
@@ -212,9 +212,16 @@ function assign_student_no(int $id): void
             );
             return;
         } catch (PDOException $e) {
-            if ($e->getCode() !== '23000') {
+            // 23000: another approval took the same number first. 40001: two
+            // approvals at once deadlocked on reading MAX(); InnoDB rolled
+            // this one back, and running it again is the documented remedy.
+            // Either way the next attempt reads the new maximum.
+            if (!in_array($e->getCode(), ['23000', '40001'], true)) {
                 throw $e;
             }
+            // A moment's pause, different each time, so two approvals that
+            // collided do not collide again on the retry.
+            usleep(random_int(20000, 120000));
         }
     }
 }

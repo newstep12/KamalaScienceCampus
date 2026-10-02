@@ -84,6 +84,7 @@ return [
     'password_rule'    => 'At least 8 characters, including a letter and a number.',
     'reg_submit'       => 'Submit registration',
     'have_account'     => 'Already registered?',
+    'please_wait'      => 'Please wait…',
     'reg_done_title'   => 'Registration received',
     'reg_done_body'    => 'Thank you, %s. Your registration has been sent to the campus administrator for approval. You will be able to sign in as soon as it is approved.',
     'err_name_short'   => 'Please enter your full name.',
