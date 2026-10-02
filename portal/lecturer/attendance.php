@@ -6,8 +6,10 @@ $user     = require_role(ROLE_LECTURER, ROLE_ADMIN);
 $courseId = (int) ($_GET['course'] ?? 0);
 
 $course = one(
-    'SELECT * FROM courses WHERE id = ? AND (lecturer_id = ? OR ? = \'admin\') LIMIT 1',
-    [$courseId, $user['id'], $user['role']]
+    // Admin or not as a number, never the role as text against a literal:
+    // the live MariaDB gives the two different collations (error 1267).
+    'SELECT * FROM courses WHERE id = ? AND (lecturer_id = ? OR ? = 1) LIMIT 1',
+    [$courseId, $user['id'], $user['role'] === ROLE_ADMIN ? 1 : 0]
 );
 if (!$course) {
     http_response_code(404);

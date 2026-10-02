@@ -235,6 +235,19 @@ function db(): PDO
             error_log('DB connection failed: ' . $e->getMessage());
             throw new DatabaseUnavailable('Database connection failed', 0, $e);
         }
+        // The live MariaDB ignores the character set a client asks for
+        // (skip-character-set-client-handshake), and then hands a bound
+        // value one collation and a literal in the same statement another:
+        // "? <> 'student'" failed with error 1267, Illegal mix of
+        // collations. Naming the tables' own collation here puts both on
+        // it. A failure is logged and survived: the connection still works.
+        if (strtolower((string) ($c['charset'] ?? 'utf8mb4')) === 'utf8mb4') {
+            try {
+                $pdo->exec('SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci');
+            } catch (PDOException $e) {
+                error_log('Could not set the connection collation: ' . $e->getMessage());
+            }
+        }
     }
     return $pdo;
 }
