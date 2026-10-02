@@ -820,4 +820,17 @@ return [
     'bulk_howto_pairs' => "For a printer that cannot print on both sides: each card prints with its back beside it, the two sharing one edge.\nIn the print dialogue: paper size A4, scale 100% (actual size, never “Fit to page”), margins None or Default, background graphics on, one-sided.\nCut each pair out along the crop marks, fold it on the dashed line with the printing outside, and laminate it in a 125-micron pouch. The fold puts every back exactly behind its front.\nRound the corners with a 3 mm corner cutter.",
     'bulk_howto_card' => "For a PVC card printer (Evolis, Zebra, Fargo, Magicard and the like) loaded with CR80 blanks: 85.6 × 54 mm, 0.76 mm thick.\nIn the print dialogue choose the card printer, card size CR80, scale 100%, margins None, background graphics on.\nEach card comes as a front page followed by its back page. Turn on two-sided (duplex) printing in the printer’s own settings so the two become one card; with the front only, every page is a card.",
     'bulk_howto_pdf' => "For a print shop: choose “Save as PDF” as the printer in the same dialogue. The PDF keeps the exact card size and the crop marks — ask the shop to print it at 100%.",
+
+    // Admin → System: site version and errors
+    'diag_title' => 'Site version and errors',
+    'diag_intro' => 'Which version of the website this server is running, and what went wrong behind the reference on an error page. A change merged on GitHub appears here only once the host has deployed it.',
+    'diag_version' => 'Running version',
+    'diag_version_unknown' => 'Not known: this copy of the website was not deployed with git.',
+    'diag_updated' => 'updated %s',
+    'diag_ref_label' => 'Error reference',
+    'diag_ref_find' => 'Look up',
+    'diag_ref_none' => 'Nothing is logged under %s. It may be from the other portal, or older than the log keeps.',
+    'diag_recent' => 'Most recent errors',
+    'diag_recent_none' => 'No errors have been logged.',
+    'diag_no_log' => 'Errors are written only to the server’s own log on this copy of the website: there is no folder above it to keep a private log in.',
 ];

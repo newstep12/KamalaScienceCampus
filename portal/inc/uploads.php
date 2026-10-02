@@ -72,7 +72,9 @@ function store_upload(array $file, string $subdir): array
     @chmod($dir . '/' . $stored, 0644);
 
     $original = (string) ($file['name'] ?? $stored);
-    $original = preg_replace('/[^\p{L}\p{N}. \-_]+/u', '_', $original) ?? $stored;
+    // \p{M} as well as \p{L}: Devanagari vowel signs and the virama are marks,
+    // not letters, and without them "सूचना.pdf" was kept as "स_चन_.pdf".
+    $original = preg_replace('/[^\p{L}\p{M}\p{N}. \-_]+/u', '_', $original) ?? $stored;
 
     return [
         'ok'   => true,

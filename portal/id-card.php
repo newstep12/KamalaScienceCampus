@@ -39,7 +39,7 @@ $own     = (int) $holder['id'] === (int) $viewer['id'];
 $ctx     = id_card_context($holder, $viewer);
 $card    = $ctx['card'];
 $missing = id_card_missing($holder, $ctx['holder_names']);
-$sides   = id_card_sides($_GET['sides'] ?? $card['sides']);
+$sides   = id_card_sides(is_string($_GET['sides'] ?? null) ? $_GET['sides'] : $card['sides']);
 $target  = in_array($_GET['print'] ?? '', ['sheet', 'card'], true) ? $_GET['print'] : 'sheet';
 
 layout_head([

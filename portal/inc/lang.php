@@ -34,10 +34,12 @@ function current_lang(): string
         return $lang;
     }
 
-    if (isset($_SESSION['lang']) && isset(LANGUAGES[$_SESSION['lang']])) {
+    // is_string() first: a cookie sent as kscl[]=… arrives as an array, and an
+    // array used as a key is a TypeError — every page down for that visitor.
+    if (is_string($_SESSION['lang'] ?? null) && isset(LANGUAGES[$_SESSION['lang']])) {
         return $lang = $_SESSION['lang'];
     }
-    if (isset($_COOKIE['kscl']) && isset(LANGUAGES[$_COOKIE['kscl']])) {
+    if (is_string($_COOKIE['kscl'] ?? null) && isset(LANGUAGES[$_COOKIE['kscl']])) {
         return $lang = $_COOKIE['kscl'];
     }
     return $lang = 'en';
