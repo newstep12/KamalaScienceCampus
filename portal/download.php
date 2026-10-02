@@ -92,11 +92,15 @@ if ($id = (int) ($_GET['id'] ?? 0)) {
     $m = one(
         'SELECT m.file_path, m.file_name FROM materials m
           WHERE m.id = ? AND m.kind = \'file\'
-            AND (? IN (\'admin\')
+            AND (? = 1
                  OR EXISTS (SELECT 1 FROM enrolments e WHERE e.course_id = m.course_id AND e.user_id = ?)
                  OR EXISTS (SELECT 1 FROM courses c WHERE c.id = m.course_id AND c.lecturer_id = ?))
           LIMIT 1',
-        [$id, $user['role'], $user['id'], $user['id']]
+        // The role is decided here and sent as a number. Compared in SQL as
+        // text (? IN ('admin')), the live MariaDB rejected it outright: the
+        // bound value and the literal reach it in two different collations
+        // (error 1267), and every download failed.
+        [$id, $user['role'] === ROLE_ADMIN ? 1 : 0, $user['id'], $user['id']]
     );
     serve_upload($m['file_path'] ?? null, $m['file_name'] ?? null, $view);
 }
@@ -107,9 +111,10 @@ if ($noticeId = (int) ($_GET['notice'] ?? 0)) {
     $n = one(
         'SELECT file_path, file_name FROM notices
           WHERE id = ? AND is_published = 1
-            AND (year_level IS NULL OR ? <> \'student\' OR year_level = ?)
+            AND (year_level IS NULL OR ? = 1 OR year_level = ?)
           LIMIT 1',
-        [$noticeId, $user['role'], $user['year_level']]
+        // Staff or not, as a number: see the materials query above.
+        [$noticeId, $user['role'] !== ROLE_STUDENT ? 1 : 0, $user['year_level']]
     );
     serve_upload($n['file_path'] ?? null, $n['file_name'] ?? null, $view);
 }
