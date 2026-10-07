@@ -298,3 +298,39 @@ CREATE TABLE IF NOT EXISTS documents (
   CONSTRAINT fk_doc_sig     FOREIGN KEY (signature_id) REFERENCES signatures (id) ON DELETE SET NULL,
   CONSTRAINT fk_doc_issuer  FOREIGN KEY (issued_by)    REFERENCES users (id)      ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Records submitted from the Virtual Physics Lab (portal/virtual-lab/): one
+-- per student per experiment, replaced when the student submits again, and
+-- the marks a lecturer gives it out of 100 on the PHY202 scheme (record 20,
+-- experiment 50, error analysis 10, viva 20). portal/inc/virtual-lab.php
+-- creates the same table on first use; keep the two definitions in step.
+CREATE TABLE IF NOT EXISTS vlab_records (
+  id                 INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id            INT UNSIGNED NOT NULL,
+  exp_no             TINYINT UNSIGNED NOT NULL,      -- 1..25, portal/virtual-lab/inc/exps.php
+  title              VARCHAR(200) NOT NULL,
+  name               VARCHAR(80)  NOT NULL,          -- name and roll number as written on the record
+  roll               VARCHAR(30)  NULL,
+  exp_date           VARCHAR(20)  NULL,              -- the date the student gives the experiment
+  result             MEDIUMTEXT   NULL,              -- calculation and result from the bench
+  note               MEDIUMTEXT   NULL,              -- the student's error analysis and conclusion
+  body               MEDIUMTEXT   NULL,              -- the whole record as text
+  tables_json        MEDIUMTEXT   NULL,              -- observation tables: [{title, tsv}]
+  versions           SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  first_submitted_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  submitted_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  mark_record        DECIMAL(4,1) NULL,
+  mark_experiment    DECIMAL(4,1) NULL,
+  mark_error         DECIMAL(4,1) NULL,
+  mark_viva          DECIMAL(4,1) NULL,
+  mark_total         DECIMAL(4,1) NULL,
+  remark             VARCHAR(500) NULL,
+  marked_by          INT UNSIGNED NULL,
+  marked_at          DATETIME     NULL,              -- NULL: waiting to be marked
+  previous_total     DECIMAL(4,1) NULL,              -- the total given before the student resubmitted
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_vlab_record (user_id, exp_no),
+  KEY idx_vlab_submitted (submitted_at),
+  CONSTRAINT fk_vlab_user   FOREIGN KEY (user_id)   REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_vlab_marker FOREIGN KEY (marked_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

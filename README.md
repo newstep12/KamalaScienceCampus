@@ -47,7 +47,10 @@ Every page (campus and +2) has the same two-part navigation:
 - **The side menu** — every page of that half as a column of buttons down the
   left, the current page filled in, with **Student services** second on both
   halves. Below 960px wide it becomes a drawer, opened by the ☰ button at the
-  left of the top bar.
+  left of the top bar. The campus menu also has **Virtual Lab** third, which
+  is not a page but the way into the portal's virtual physics lab (see
+  *The Virtual Physics Lab* under the portal); a visitor who is not signed in
+  is taken to the B.Sc. sign-in and brought back to the lab.
 
 **Student services** (`students.html`, `ne/students.html`) is the one page for
 both groups of students: +2 Science (Shree Kamala Secondary School) and B.Sc.
@@ -244,9 +247,9 @@ it works both at that path and on a custom domain later.
 
 | Role | Can do |
 | --- | --- |
-| **Student** | Registers themselves, edits their portfolio, prints their identity card, opens their enrolled courses (materials, lecturer notes, own private notes), sees published results and attendance, reads notices for their year |
-| **Lecturer** | Adds materials to their courses, creates assessments and enters marks, takes attendance, sees who is enrolled, prints their own identity card |
-| **Admin** | Approves or rejects registrations, manages people, courses, enrolments and notices, prints anyone's identity card, holds the campus's **signatures** and issues **official documents** over them, plus database updates, identity-card and email settings under **System** |
+| **Student** | Registers themselves, edits their portfolio, prints their identity card, opens their enrolled courses (materials, lecturer notes, own private notes), sees published results and attendance, reads notices for their year; in 2nd and 3rd year, works in the **Virtual lab** and submits practical records |
+| **Lecturer** | Adds materials to their courses, creates assessments and enters marks, takes attendance, sees who is enrolled, prints their own identity card; if assigned to it, marks **Virtual lab** records |
+| **Admin** | Approves or rejects registrations, manages people, courses, enrolments and notices, prints anyone's identity card, holds the campus's **signatures** and issues **official documents** over them, assigns lecturers to the **Virtual lab** and marks its records, plus database updates, identity-card and email settings under **System** |
 
 ### How people get accounts
 
@@ -804,6 +807,53 @@ excused. Students see a percentage per course. `late` counts as attended;
 `excused` is removed from the denominator, so an approved absence does not
 count against a student.
 
+### The Virtual Physics Lab
+
+`/portal/virtual-lab/` holds all twenty-five B.Sc. second-year physics
+practicals (PHY202): for each one the theory and procedure, a virtual bench
+where the student sets up the instruments or wires the circuit and takes
+readings into observation tables, a **Record file** laid out like a practical
+copy, and a viva quiz. It was prepared by Mr. Manoj Devkota for the
+Department of Physics.
+
+**Who can open it** is decided in one place, `vlab_role()` in
+`portal/inc/virtual-lab.php`, which the menu, the lab and its records page
+all ask:
+
+| Account | What happens |
+| --- | --- |
+| Not signed in | Sent to the B.Sc. sign-in, then back to the lab |
+| Student, B.Sc. 2nd or 3rd year (`VLAB_YEARS`), approved | Opens the lab, takes readings, submits a record per experiment and later sees its mark and remark |
+| Lecturer ticked in **Admin → Virtual lab** | Opens the lab and **Student submissions**: reads each record, marks it out of 100 on the PHY202 scheme (record 20, experiment 50, error analysis 10, viva 20), downloads all marks as CSV |
+| Administrator | Same as an assigned lecturer |
+| Any other student or lecturer | A page saying plainly why the lab is not theirs |
+
+Only those accounts see **Virtual lab** in the portal's menu, and it sits
+after the courses. An administrator's goes to **Admin → Virtual lab**, which
+has the way into the lab and its records, counts of submitted and unmarked
+records, and the list of lecturers to tick.
+
+**Readings stay in the student's browser while they work**, kept apart per
+account so two students on one laboratory computer do not see each other's.
+Only a submitted record reaches the server, as a row of `vlab_records`: one
+per student per experiment. Submitting again replaces it and clears its marks,
+and the lecturer sees the total it had before. The records are in the
+database, not in a folder under `public_html`, because a deploy can delete
+files there (it is how the +2 portal lost its uploads).
+
+The lab arrived as a stand-alone package with its own settings file, login
+handling and data folder. Here the portal provides all three, so those parts
+were left out; what came from the package unchanged is the lab itself
+(`inc/lab.php`, one 500 KB page), the experiment list (`inc/exps.php`) and
+`assets/` (MathJax and the IBM Plex fonts, so it needs no CDN). One line of
+`inc/lab.php` was changed, so the left column can say *B.Sc. 3rd year* or
+*Administrator* instead of always *B.Sc. second year*. **To update the lab
+from a newer package**, replace `inc/lab.php`, `inc/exps.php` and `assets/`
+only; a newer `lab.php` without that line still works and just shows the old
+wording. The package's `offline/` copy is for laboratory computers without
+internet, has no login and no submission, and is deliberately not in this
+repository, which deploys straight to the public web.
+
 ### Database updates
 
 **Admin → System → Run database updates** applies `sql/schema.sql`. Every
@@ -816,7 +866,11 @@ EXISTS` cannot deliver to a table that already exists. Each is written to be
 safe to run again, and one that has already been applied is logged and stepped
 over rather than failing the run.
 
-This version adds six columns to `users` — `blood_group` and `signature_path`
+The Virtual Physics Lab adds the `vlab_records` table. It is also created by
+the lab itself the first time it is needed, so records are saved even before
+the update is run.
+
+An earlier version added six columns to `users` — `blood_group` and `signature_path`
 for the back of the identity card, `national_id` and `pan_no` for its front,
 and `avatar_source_path` and `avatar_focus` for the photograph's working copy
 and where the frame sits on it. Run the update once after deploying it, or
