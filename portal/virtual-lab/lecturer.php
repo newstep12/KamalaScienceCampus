@@ -38,9 +38,14 @@ function vpl_num($v) { return $v === null ? '' : rtrim(rtrim(number_format((floa
 /* --- save marks --- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
-    $s = (int)($_POST['s'] ?? 0); $x = (string)($_POST['e'] ?? '');
+    $s = (int)($_POST['s'] ?? 0); $x = (string)($_POST['e'] ?? ''); $ver = (int)($_POST['v'] ?? 0);
     if ($s <= 0 || !vpl_valid_exp($x)) vpl_message('Not saved', '<p>The form was not valid. Go back, reload the page and try again.</p>', 400, $home);
-    if (!one('SELECT id FROM vlab_records WHERE user_id = ? AND exp_no = ?', [$s, vpl_exp_no($x)])) vpl_message('Not found', '<p>That record no longer exists.</p>', 404, $home);
+    $cur = one('SELECT versions FROM vlab_records WHERE user_id = ? AND exp_no = ?', [$s, vpl_exp_no($x)]);
+    if (!$cur) vpl_message('Not found', '<p>That record no longer exists.</p>', 404, $home);
+    // Marks belong to the version that was read. A record resubmitted while it
+    // was open would otherwise carry them, and the student would be told it
+    // was checked when nobody had seen it.
+    if ((int)$cur['versions'] !== $ver) vpl_message('Not saved', '<p>The student submitted this record again while you had it open, so these marks were not saved.</p><p><a class="btn pri" href="lecturer.php?s=' . $s . '&amp;e=' . e($x) . '">Open the new version</a></p>', 409, $home);
     $m = [];
     foreach (VPL_MARKS as $k => [, $max]) {
         $v = trim((string)($_POST[$k] ?? ''));
@@ -50,9 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $total = $parts ? round(array_sum($parts), 1) : null;
     q('UPDATE vlab_records SET mark_record = ?, mark_experiment = ?, mark_error = ?, mark_viva = ?, mark_total = ?,
               remark = ?, marked_by = ?, marked_at = NOW()
-        WHERE user_id = ? AND exp_no = ?',
+        WHERE user_id = ? AND exp_no = ? AND versions = ?',
       [$m['record'], $m['experiment'], $m['error'], $m['viva'], $total,
-       mb_substr(trim((string)($_POST['remark'] ?? '')), 0, 500) ?: null, (int)$me['id'], $s, vpl_exp_no($x)]);
+       mb_substr(trim((string)($_POST['remark'] ?? '')), 0, 500) ?: null, (int)$me['id'], $s, vpl_exp_no($x), $ver]);
     header('Location: lecturer.php?s=' . $s . '&e=' . rawurlencode($x) . '&saved=1'); exit;
 }
 
@@ -64,14 +69,17 @@ if (isset($_GET['csv'])) {
     $o = fopen('php://output', 'w');
     fwrite($o, "\xEF\xBB\xBF");
     $cell = function ($v) { $v = (string)$v; return preg_match('/^[=+\-@\t\r]/', $v) ? "'" . $v : $v; }; // no spreadsheet formulas
-    fputcsv($o, ['Year', 'Roll no.', 'Name', 'Symbol no.', 'Experiment', 'Title', 'Submitted', 'Versions', 'Record /20', 'Experiment /50', 'Error analysis /10', 'Viva /20', 'Total /100', 'Remark']);
-    $rows = all('SELECT r.*, UNIX_TIMESTAMP(r.submitted_at) AS at, u.full_name, u.full_name_ne, u.symbol_no, u.year_level
+    fputcsv($o, ['Year', 'Roll no.', 'Name', 'Symbol no.', 'Experiment', 'Title', 'Submitted', 'Versions', 'Record /20', 'Experiment /50', 'Error analysis /10', 'Viva /20', 'Total /100', 'Remark'], ',', '"', '\\');
+    // Only the columns written below: each record's text and tables run to
+    // hundreds of kilobytes, and a year's worth of them would not fit in memory.
+    $rows = all('SELECT r.exp_no, r.title, r.name, r.roll, r.versions, r.mark_record, r.mark_experiment, r.mark_error, r.mark_viva,
+                        r.mark_total, r.remark, UNIX_TIMESTAMP(r.submitted_at) AS at, u.symbol_no, u.year_level
                    FROM vlab_records r JOIN users u ON u.id = r.user_id
                   ORDER BY u.year_level, u.full_name, r.exp_no');
     foreach ($rows as $r)
         fputcsv($o, array_map($cell, [$r['year_level'], $r['roll'], $r['name'], $r['symbol_no'], $r['exp_no'], $VPL_EXPS['exp' . (int)$r['exp_no']] ?? $r['title'],
             date('Y-m-d H:i', (int)$r['at']), $r['versions'], vpl_num($r['mark_record']), vpl_num($r['mark_experiment']), vpl_num($r['mark_error']),
-            vpl_num($r['mark_viva']), vpl_num($r['mark_total']), $r['remark']]));
+            vpl_num($r['mark_viva']), vpl_num($r['mark_total']), $r['remark']]), ',', '"', '\\');
     exit;
 }
 
@@ -95,7 +103,7 @@ if (isset($_GET['s'], $_GET['e'])) {
         ($account !== $r['name'] ? ' <span class="muted small">(portal account: ' . e($account) . ')</span>' : '') .
         ($r['symbol_no'] ? ' <span class="muted small">· TU symbol no. ' . e($r['symbol_no']) . '</span>' : '') .
         '<br><span class="muted small">Experiment date ' . e(preg_match('/^(\d{4})-(\d\d)-(\d\d)$/', (string)$r['exp_date'], $dm) ? "$dm[3]/$dm[2]/$dm[1]" : $r['exp_date']) . ' · submitted ' . e(date('d M Y, H:i', (int)$r['at'])) . ((int)$r['versions'] > 1 ? ' · version ' . (int)$r['versions'] : '') . '</span></p>';
-    echo '<form method="post" class="card noprint">' . csrf_field() . '<input type="hidden" name="s" value="' . $s . '"><input type="hidden" name="e" value="' . e($x) . '">';
+    echo '<form method="post" class="card noprint">' . csrf_field() . '<input type="hidden" name="s" value="' . $s . '"><input type="hidden" name="e" value="' . e($x) . '"><input type="hidden" name="v" value="' . (int)$r['versions'] . '">';
     echo '<h2 style="margin-top:0;font-size:18px">Marks (PHY202 scheme)</h2><div class="marks">';
     foreach (VPL_MARKS as $k => [$l, $mx])
         echo '<label>' . e($l) . ' /' . $mx . '<input type="number" name="' . $k . '" min="0" max="' . $mx . '" step="0.5" value="' . e(vpl_num($r['mark_' . $k])) . '"></label>';
