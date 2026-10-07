@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/idcard.php';
+require_once __DIR__ . '/virtual-lab.php';
 
 /**
  * On the sign-in and registration pages: whose portal this is not, and the way
@@ -358,16 +359,23 @@ function default_nav(?array $user): array
             ['key' => 'users',    'href' => portal_url('/admin/users.php'),    'label' => t('nav_users')],
             ['key' => 'idcards',  'href' => portal_url('/admin/id-cards.php'), 'label' => t('nav_id_cards')],
             ['key' => 'courses',  'href' => portal_url('/admin/courses.php'),  'label' => t('nav_manage_courses')],
+            ['key' => 'vlab',     'href' => vlab_nav_url($user),               'label' => t('nav_virtual_lab')],
             ['key' => 'notices',  'href' => portal_url('/admin/notices.php'),  'label' => t('nav_manage_notices')],
             ['key' => 'signatures','href' => portal_url('/admin/signatures.php'), 'label' => t('nav_signatures')],
             ['key' => 'documents','href' => portal_url('/admin/documents.php'), 'label' => t('nav_documents')],
             ['key' => 'system',   'href' => portal_url('/admin/system.php'),   'label' => t('nav_system')],
         ];
     }
+    // The virtual lab, after the courses, for whoever vlab_role() lets in:
+    // students of the lab's years and the lecturers assigned to it.
+    $lab = vlab_role($user) !== null
+        ? [['key' => 'vlab', 'href' => vlab_nav_url($user), 'label' => t('nav_virtual_lab')]]
+        : [];
     if ($user['role'] === ROLE_LECTURER) {
         return [
             ['key' => 'home',    'href' => portal_url('/lecturer/index.php'),  'label' => t('nav_dashboard')],
             ['key' => 'courses', 'href' => portal_url('/lecturer/index.php'),  'label' => t('nav_courses')],
+            ...$lab,
             ['key' => 'notices', 'href' => portal_url('/student/notices.php'), 'label' => t('nav_notices')],
             ['key' => 'profile', 'href' => portal_url('/student/portfolio.php'),'label' => t('nav_portfolio')],
             ['key' => 'idcard',  'href' => portal_url('/id-card.php'),          'label' => t('nav_id_card')],
@@ -376,6 +384,7 @@ function default_nav(?array $user): array
     return [
         ['key' => 'home',       'href' => portal_url('/student/index.php'),      'label' => t('nav_overview')],
         ['key' => 'courses',    'href' => portal_url('/student/courses.php'),    'label' => t('nav_courses')],
+        ...$lab,
         ['key' => 'results',    'href' => portal_url('/student/results.php'),    'label' => t('nav_results')],
         ['key' => 'attendance', 'href' => portal_url('/student/attendance.php'), 'label' => t('nav_attendance')],
         ['key' => 'notices',    'href' => portal_url('/student/notices.php'),    'label' => t('nav_notices')],

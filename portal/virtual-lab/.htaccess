@@ -1,0 +1,13 @@
+# Kamala Virtual Physics Lab. index.php checks the portal sign-in; inc/ is
+# denied outright. MathJax and the fonts never change between versions of the
+# lab, so browsers may keep them for a month.
+DirectoryIndex index.php
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|woff2)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+</IfModule>
+<IfModule mod_mime.c>
+  AddType font/woff2 .woff2
+</IfModule>
