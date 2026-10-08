@@ -1,13 +1,21 @@
 # Kamala Virtual Physics Lab. index.php checks the portal sign-in; inc/ is
 # denied outright. MathJax and the fonts never change between versions of the
-# lab, so browsers may keep them for a month.
+# lab, so browsers may keep them for a month. The tour video and its poster
+# are kept for a week: a class watching it should download it once per
+# device, not on every replay, but a re-recorded video under the same name
+# still reaches everyone within days.
 DirectoryIndex index.php
 
 <IfModule mod_headers.c>
   <FilesMatch "\.(js|css|woff2)$">
     Header set Cache-Control "public, max-age=2592000"
   </FilesMatch>
+  <FilesMatch "\.(mp4|webm|jpg)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
 </IfModule>
 <IfModule mod_mime.c>
   AddType font/woff2 .woff2
+  AddType video/mp4 .mp4
+  AddType video/webm .webm
 </IfModule>
