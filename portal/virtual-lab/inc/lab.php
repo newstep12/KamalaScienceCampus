@@ -171,7 +171,7 @@ details.viva[open] summary { color: var(--accent); }
 .cols2 { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 620px) { .cols2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .cols2.wide-l { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
 .cv { width: 100%; position: relative; }
-.cv canvas { display: block; width: 100%; border-radius: 8px; touch-action: none; }
+.cv canvas { display: block; width: 100%; border-radius: 8px; touch-action: auto; -webkit-user-select: none; user-select: none; }
 .cv-label { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; font-weight: 600; }
 .ctls { display: grid; gap: 10px 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
 .ctl { min-width: 0; }
@@ -281,12 +281,12 @@ footer.foot { margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--l
 .schem .s-dot { fill: var(--ink); }
 .schem .s-t { fill: var(--ink); font-family: var(--f-body); }
 .cb-tray { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; min-height: 30px; align-items: center; }
-.cb-tray-item { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 1px dashed var(--muted); background: var(--panel2); border-radius: 8px; padding: 6px 8px; cursor: grab; font-size: 11.5px; touch-action: none; max-width: 150px; }
+.cb-tray-item { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 1px dashed var(--muted); background: var(--panel2); border-radius: 8px; padding: 6px 8px; cursor: grab; font-size: 11.5px; touch-action: manipulation; max-width: 150px; -webkit-touch-callout: none; }
 .cb-tray-item:hover { border-color: var(--accent); border-style: solid; }
 .cb-tray-item span { text-align: center; line-height: 1.2; }
 .cb-ghost { position: fixed; pointer-events: none; z-index: 80; opacity: .9; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
 .cb-ws { border-radius: 10px; position: relative; }
-.cb-svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; border-radius: 10px; }
+.cb-svg { display: block; width: 100%; height: auto; touch-action: auto; user-select: none; -webkit-user-select: none; border-radius: 10px; }
 .cb-bench { fill: var(--bench); }
 .cb-gridline { stroke: var(--benchgrid); stroke-width: 1; }
 .eq-ink { fill: var(--ink); font-family: var(--f-body); }
@@ -369,6 +369,82 @@ footer.foot { margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--l
 .pager .next { text-align: right; }
 .cb-wire .plug { stroke: rgba(0,0,0,.5); stroke-width: 1; }
 .stack > *, .card > *, .bench > * { min-width: 0; }
+/* ---------- phones and touch screens ---------- */
+.prose table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: 70px; }
+button, .btn, a, select, label, summary, .seg button { touch-action: manipulation; -webkit-tap-highlight-color: rgba(0,0,0,0); }
+.fbtn { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.side { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+body.menu-open { overflow: hidden; }
+.tscroll, .calc-lines, .cb-ws { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.cb-part.lifted { filter: drop-shadow(0 8px 10px rgba(0,0,0,.35)); }
+.cb-phone-tip { display: none; margin: 0 0 8px; font-size: 12.5px; color: var(--muted); background: var(--panel2); border-radius: 8px; padding: 6px 10px; }
+@media (max-width: 760px), (pointer: coarse) { .cb-phone-tip { display: block; } .cb-main > .card-h .sub { display: none; } }
+@media (max-width: 760px) {
+  .cb-ws { overflow-x: auto; overflow-y: hidden; }
+  .cb-ws .cb-svg { min-width: 660px; }
+  .ctl input[type=range] { height: 32px; }
+  .fbtn { min-height: 34px; min-width: 42px; }
+  .tabs { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .tabs::-webkit-scrollbar { display: none; }
+}
+
+/* ---------- home: tour video ---------- */
+.tv { display: grid; gap: 18px; align-items: center; margin: 4px 0 30px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+@media (min-width: 980px) { .tv { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); gap: 26px; padding: 22px; } }
+.tv-text h2 { font-size: 26px; margin: 6px 0 8px; }
+.tv-text p { margin: 0 0 8px; color: var(--muted); }
+.tv-frame { border-radius: 10px; overflow: hidden; background: #0b151c; aspect-ratio: 16 / 9; box-shadow: var(--shadow); }
+.tv-frame video { display: block; width: 100%; height: 100%; object-fit: contain; background: #0b151c; }
+.tv-missing { display: grid; place-items: center; height: 100%; color: #b8c7cf; font-size: 14px; padding: 20px; text-align: center; }
+@media print { .tv { display: none; } }
+
+/* ---------- step-by-step calculations ---------- */
+.work-sec { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; }
+details.work { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); margin: 6px 0; }
+details.work > summary { cursor: pointer; padding: 7px 10px; font-weight: 600; font-size: 13.5px; }
+details.work[open] > summary { border-bottom: 1px solid var(--line); }
+.work-steps { margin: 0; padding: 8px 12px 10px 32px; font-size: 13.5px; line-height: 1.7; }
+.work-steps li { margin: 3px 0; }
+.work-steps li::marker { color: var(--muted); font-size: 12px; }
+.wk-eq { font-family: var(--f-mono); font-size: 12.6px; overflow-wrap: anywhere; }
+.wk-eq b { color: var(--accent); }
+.wk-note { font-family: var(--f-body); color: var(--muted); font-size: 11.5px; }
+.wk-why { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+@media print { details.work > ol { display: block !important; } }
+
+/* ---------- guided demo ---------- */
+.demo-bar { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 10px 12px; border: 1px dashed var(--accent); border-radius: 10px; background: var(--accent-soft); }
+.btn.demo-btn { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); display: inline-flex; align-items: center; gap: 7px; }
+.btn.demo-btn .demo-ic { font-size: 10px; }
+.tour { position: fixed; z-index: 60; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(640px, calc(100vw - 24px)); background: var(--panel); color: var(--ink); border: 1px solid var(--accent); border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.28); padding: 12px 16px 12px; }
+.tour-top { display: flex; justify-content: space-between; gap: 10px; font: 600 11.5px var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+.tour-n { color: var(--muted); }
+.tour-t { display: block; font-family: var(--f-display); font-size: 18px; margin: 4px 0 2px; }
+.tour-x { margin: 0; font-size: 14.5px; line-height: 1.5; max-height: 32vh; overflow-y: auto; }
+.tour-dots { display: flex; gap: 4px; margin: 10px 0 8px; }
+.tour-dots i { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+.tour-dots i.done { background: var(--ok); } .tour-dots i.cur { background: var(--accent); }
+.tour-btns { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.tour.paused .tour-dots i.cur { animation: none; opacity: .5; }
+.tour-hl { outline: 3px solid var(--sodium) !important; outline-offset: 3px; border-radius: 8px; transition: outline-color .2s; }
+.tour-press { transform: scale(.94); transition: transform .12s; }
+.tour-hand { position: fixed; left: 0; top: 0; z-index: 61; pointer-events: none; opacity: 0; transition: transform .5s cubic-bezier(.3,.7,.3,1), opacity .2s; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.tour-hand.on { opacity: 1; }
+body.touring main { padding-bottom: 240px; }
+@media (max-width: 600px) { .tour { padding: 10px 12px; } .tour-t { font-size: 16px; } .tour-x { font-size: 13.5px; max-height: 22vh; } }
+@media print { .tour, .tour-hand, .demo-bar { display: none !important; } }
+/* spectrometer adjustments */
+.adj { border: 1px solid var(--line); border-radius: 10px; background: var(--panel2); }
+.adj > summary { cursor: pointer; padding: 10px 12px; font-weight: 600; font-size: 14px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.adj > summary .sub { font-weight: 500; font-size: 12.5px; color: var(--muted); }
+.adj-body { padding: 0 12px 12px; display: grid; gap: 10px; }
+.adj-list { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; margin: 0; padding: 0; list-style: none; }
+.adj-list li { color: var(--muted); } .adj-list li.ok { color: var(--ok); font-weight: 600; }
+.adj-row { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 559px) { .adj-row.eyeg > :last-child, .adj-row.two > :last-child { order: -1; max-width: 240px; margin: 0 auto; width: 100%; } }
+@media (min-width: 560px) { .adj-row.two { grid-template-columns: minmax(0, 1fr) 150px; align-items: center; } .adj-row.eyeg { grid-template-columns: minmax(0, 1fr) 180px; align-items: center; } }
+
 /* ---------- record: student details, actions, print ---------- */
 .stu-form { display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 14px 0 4px; padding: 12px 14px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; }
 .stu-form label { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); font-weight: 600; flex: 1 1 160px; }
@@ -594,7 +670,7 @@ function canvasView(parent, o) {
   if (o.label) wrap.prepend(h('div', { class: 'cv-label' }, o.label));
   if (o.role) c.setAttribute('role', 'img');
   if (o.alt) c.setAttribute('aria-label', o.alt);
-  const ctx = c.getContext('2d'); let W = 0, H = 0, pending = false;
+  const ctx = c.getContext('2d'); let W = 0, H = 0, pending = false, onScreen = true, dirty = false;
   const view = { canvas: c, wrap, ctx, get w() { return W; }, get h() { return H; }, redraw, now };
   function size() {
     const r = c.getBoundingClientRect(); W = Math.max(160, Math.round(r.width || wrap.clientWidth || 300));
@@ -605,11 +681,13 @@ function canvasView(parent, o) {
     c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
-  function now() { if (!W) size(); o.draw(ctx, W, H, view); }
+  function now() { if (!W) size(); if (!onScreen) { dirty = true; return; } o.draw(ctx, W, H, view); } // canvases scrolled out of view are not redrawn (smoother scrolling on phones)
   function redraw() { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; now(); }); }
   const ro = new ResizeObserver(() => { const r = c.getBoundingClientRect(); if (Math.round(r.width) !== W) { size(); o.draw(ctx, W, H, view); } });
   ro.observe(wrap);
-  view.destroy = () => ro.disconnect();
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(en => { onScreen = en.isIntersecting; if (onScreen && dirty) { dirty = false; if (!W) size(); o.draw(ctx, W, H, view); } }), { rootMargin: '150px 0px' }) : null;
+  if (io) io.observe(wrap);
+  view.destroy = () => { ro.disconnect(); if (io) io.disconnect(); };
   view.resize = () => { size(); o.draw(ctx, W, H, view); };
   LIVE.canvases.add(view);
   requestAnimationFrame(() => { size(); o.draw(ctx, W, H, view); });
@@ -628,6 +706,8 @@ function loop(fn) { // animation loop with dt (s); returns stop fn
   const stop = () => { alive = false; cancelAnimationFrame(id); };
   onCleanup(stop); return stop;
 }
+const COARSE = (() => { try { return matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } })();
+function drawLoop(view, fps = COARSE ? 30 : 60) { let acc = 0; return loop(dt => { acc += dt; if (acc < 1 / fps - 0.002) return; acc = 0; view.now(); }); }
 const redrawAll = () => LIVE.canvases.forEach(v => v.redraw());
 try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawAll); } catch (e) { }
 new MutationObserver(redrawAll).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -635,9 +715,17 @@ new MutationObserver(redrawAll).observe(document.documentElement, { attributes: 
 /* ================= controls ================= */
 let ctlSeq = 0;
 function holdRepeat(btn, fn) {
-  let t1 = 0, t2 = 0;
+  // mouse: acts on press and repeats while held. Touch: a tap acts once, a long press repeats,
+  // and a swipe that starts on the button just scrolls the page without changing anything.
+  let t1 = 0, t2 = 0, touch = false, repeated = false;
   const stop = () => { clearTimeout(t1); clearInterval(t2); };
-  btn.addEventListener('pointerdown', e => { e.preventDefault(); fn(); t1 = setTimeout(() => { t2 = setInterval(fn, 70); }, 380); });
+  btn.addEventListener('pointerdown', e => {
+    touch = e.pointerType !== 'mouse'; repeated = false;
+    if (!touch) { e.preventDefault(); fn(); }
+    t1 = setTimeout(() => { repeated = true; if (touch) fn(); t2 = setInterval(fn, 70); }, touch ? 450 : 380);
+  });
+  btn.addEventListener('click', () => { if (touch && !repeated) fn(); touch = false; });
+  btn.addEventListener('contextmenu', e => { if (touch) e.preventDefault(); });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, stop));
   btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
 }
@@ -697,6 +785,151 @@ function readout(label) {
 function card(title, sub, ...kids) {
   return h('section', { class: 'card' }, h('div', { class: 'card-h' }, h('h3', { html: subHTML(title) }), sub ? h('span', { class: 'sub', html: subHTML(sub) }) : null), ...kids);
 }
+
+/* ================= guided demo ("Demo setup") =================
+   A demo is a list of steps {title, text, el?, run?(T)}. Each step highlights the part of the bench involved,
+   a ghost hand moves to the control, and the control is turned smoothly while the text explains why. */
+const Tour = { cur: null };
+function demoButton(label, start) {
+  const b = h('button', { type: 'button', class: 'btn demo-btn' }, h('span', { class: 'demo-ic', 'aria-hidden': 'true' }, '▶'), label || 'Demo setup');
+  b.addEventListener('click', () => start());
+  return b;
+}
+function demoBar(text, label, start) {
+  return h('div', { class: 'demo-bar' }, demoButton(label, start), h('span', { class: 'small muted' }, text));
+}
+function runTour(steps, opts = {}) {
+  if (Tour.cur) Tour.cur.stop();
+  const S = { stopped: false, paused: false, skip: false, i: 0 };
+  const STOP = new Error('tour-stop');
+  const num = h('span', { class: 'tour-n' }), ttl = h('b', { class: 'tour-t' }), txt = h('p', { class: 'tour-x' });
+  const dots = h('div', { class: 'tour-dots', 'aria-hidden': 'true' }, steps.map(() => h('i')));
+  const bPause = h('button', { type: 'button', class: 'btn sm' }, 'Pause');
+  const bNext = h('button', { type: 'button', class: 'btn sm pri' }, 'Next ›');
+  const bStop = h('button', { type: 'button', class: 'btn sm' }, 'Stop demo');
+  const panel = h('div', { class: 'tour', role: 'region', 'aria-label': opts.title || 'Demonstration' },
+    h('div', { class: 'tour-top' }, h('span', { class: 'tour-tag' }, opts.title || 'Demo'), num), ttl, h('div', { 'aria-live': 'polite' }, txt), dots,
+    h('div', { class: 'tour-btns' }, bPause, bNext, bStop));
+  const hand = h('div', { class: 'tour-hand', 'aria-hidden': 'true', html: '<svg viewBox="0 0 24 24" width="30" height="30"><path d="M5 2.5l13 9.2-5.6 1.1 3.3 6.4-2.7 1.4-3.3-6.5L5 18.2z" fill="#fff" stroke="#15212a" stroke-width="1.5" stroke-linejoin="round"/></svg>' });
+  document.body.append(panel, hand); document.body.classList.add('touring');
+  let hls = [];
+  const clearHl = () => { hls.forEach(e => e.classList.remove('tour-hl')); hls = []; };
+  bPause.addEventListener('click', () => { S.paused = !S.paused; bPause.textContent = S.paused ? 'Resume' : 'Pause'; panel.classList.toggle('paused', S.paused); });
+  bNext.addEventListener('click', () => { S.skip = true; if (S.paused) bPause.click(); });
+  bStop.addEventListener('click', () => api.stop());
+  const onKey = e => { if (e.key === 'Escape') api.stop(); };
+  document.addEventListener('keydown', onKey);
+  const check = () => { if (S.stopped) throw STOP; };
+  const frame = () => new Promise(r => requestAnimationFrame(() => r()));
+  const T = {
+    say(t) { txt.innerHTML = subHTML(t); },
+    get skipped() { return S.skip; },
+    async until(test, maxMs = 30000) { const t0 = performance.now(); while (!test()) { check(); if (S.skip || performance.now() - t0 > maxMs) return false; await new Promise(r => setTimeout(r, 20)); } return true; },
+    async wait(ms) { let t = 0, last = performance.now(); while (t < ms) { check(); if (S.skip) return; await new Promise(r => setTimeout(r, 40)); const n = performance.now(); if (!S.paused) t += n - last; last = n; } check(); },
+    async tween(from, to, ms, fn) {
+      let t = 0, last = performance.now();
+      while (true) {
+        check();
+        if (S.skip) { fn(to); return; }
+        await frame(); const n = performance.now(); if (!S.paused) t += n - last; last = n;
+        const u = Math.min(1, t / ms), e = u < 0.5 ? 2 * u * u : 1 - (-2 * u + 2) ** 2 / 2;
+        fn(from + (to - from) * e); if (u >= 1) return;
+      }
+    },
+    point(el, fx = 0.5, fy = 0.5) {
+      if (!el || !el.getBoundingClientRect) return; const r = el.getBoundingClientRect(); if (!r.width && !r.height) return;
+      hand.style.transform = `translate(${Math.round(r.left + r.width * fx - 4)}px, ${Math.round(r.top + r.height * fy - 3)}px)`; hand.classList.add('on');
+    },
+    pointSlider(ctl) { const i = ctl.input, lo = +i.min, hi = +i.max, f = hi > lo ? (+i.value - lo) / (hi - lo) : 0.5; const r = i.getBoundingClientRect(); hand.style.transition = 'none'; hand.style.transform = `translate(${Math.round(r.left + 8 + f * (r.width - 16) - 4)}px, ${Math.round(r.top + r.height / 2 - 3)}px)`; hand.classList.add('on'); },
+    async reach(el, fx, fy) { if (!el) return; await T.show(el); hand.style.transition = ''; T.point(el, fx, fy); await T.wait(520); },
+    async show(el) { const r = el.getBoundingClientRect(); const vh = window.innerHeight, ph = panel.offsetHeight + 16; if (r.top < 70 || r.bottom > vh - ph) { el.scrollIntoView({ block: 'center', behavior: S.skip ? 'auto' : 'smooth' }); await T.wait(450); } },
+    async slide(ctl, to, ms = 1400) {
+      const from = ctl.get(); await T.reach(ctl.input, (+ctl.input.value - +ctl.input.min) / Math.max(1e-9, +ctl.input.max - +ctl.input.min), 0.5);
+      ctl.el.classList.add('tour-hl'); hls.push(ctl.el);
+      await T.tween(from, to, ms, v => { ctl.set(v, 'demo'); T.pointSlider(ctl); });
+      hand.style.transition = '';
+    },
+    async press(el, fn) { await T.reach(el); el.classList.add('tour-press'); setTimeout(() => el.classList.remove('tour-press'), 380); await T.wait(260); fn ? fn() : el.click(); await T.wait(380); },
+    hl(...els) { els.flat().filter(Boolean).forEach(e => { e.classList.add('tour-hl'); hls.push(e); }); }
+  };
+  const api = {
+    stop() { if (S.stopped) return; S.stopped = true; finish(false); },
+  };
+  function finish(done) {
+    clearHl(); panel.remove(); hand.remove(); document.body.classList.remove('touring'); document.removeEventListener('keydown', onKey);
+    if (Tour.cur === api) Tour.cur = null; opts.onEnd && opts.onEnd(done);
+  }
+  Tour.cur = api; onCleanup(() => api.stop());
+  (async () => {
+    try {
+      for (let i = 0; i < steps.length; i++) {
+        const st = steps[i]; S.skip = false; S.i = i; clearHl(); hand.classList.remove('on');
+        num.textContent = `Step ${i + 1} of ${steps.length}`; ttl.innerHTML = subHTML(st.title); T.say(st.text);
+        [...dots.children].forEach((d, k) => d.className = k < i ? 'done' : k === i ? 'cur' : '');
+        const els = st.el ? [].concat(st.el()).filter(Boolean) : [];
+        if (els.length) { await T.show(els[0]); T.hl(els); }
+        if (st.run) await st.run(T);
+        hand.classList.remove('on');
+        if (!S.skip) await T.wait(st.read || clamp(String(st.text).replace(/<[^>]+>/g, '').length * 34, 2400, 7000));
+      }
+      num.textContent = 'Done'; ttl.textContent = opts.doneTitle || 'Now it is your turn'; T.say(opts.doneText || 'Now take your readings yourself.');
+      [...dots.children].forEach(d => d.className = 'done'); bNext.remove(); bPause.remove(); bStop.textContent = 'Close';
+      clearHl(); hand.classList.remove('on');
+      S.skip = false; await T.wait(opts.doneMs || 9000);
+      if (!S.stopped) { S.stopped = true; finish(true); }
+    } catch (e) { if (e !== STOP) { console.error(e); if (!S.stopped) { S.stopped = true; finish(false); } } }
+  })();
+  return api;
+}
+/* a "Preliminary adjustments" panel: items are [label, isDone()] */
+function adjustPanel(items, ...body) {
+  const list = h('ul', { class: 'adj-list' }, items.map(([t]) => h('li', null, t)));
+  const sum = h('span', { class: 'sub' });
+  const el = h('details', { class: 'adj' }, h('summary', null, 'Preliminary adjustments', sum), h('div', { class: 'adj-body' }, list, ...body));
+  function update() {
+    let n = 0;
+    items.forEach(([t, ok], i) => { const g = !!ok(); if (g) n++; const li = list.children[i]; li.className = g ? 'ok' : ''; li.textContent = (g ? '✓ ' : '○ ') + t; });
+    sum.textContent = n === items.length ? '· all done ✓' : `· ${n} of ${items.length} done`;
+    return n === items.length;
+  }
+  el.open = !update();
+  return {
+    el, update,
+    ready(say) {
+      if (update()) return true;
+      const left = items.filter(([, ok]) => !ok()).map(([t]) => t.charAt(0).toLowerCase() + t.slice(1));
+      say(`Finish the preliminary adjustments first (${left.join('; ')}). Press <b>Demo setup</b> to see how they are done.`, 'warn'); el.open = true; return false;
+    }
+  };
+}
+/* canvas blur helpers for the focusing adjustments */
+const CANVAS_FILTER = (() => { try { const c = document.createElement('canvas').getContext('2d'); return !!c && typeof c.filter === 'string'; } catch (e) { return false; } })();
+function blurInto(ctx, src, x, y, w, hgt, px) { // draw an offscreen canvas blurred by about px
+  if (px < 0.4) { ctx.drawImage(src, x, y, w, hgt); return; }
+  if (CANVAS_FILTER) { ctx.save(); ctx.filter = `blur(${px.toFixed(1)}px)`; ctx.drawImage(src, x, y, w, hgt); ctx.restore(); return; }
+  const k = Math.max(1, Math.round(px / 1.6)); const t = document.createElement('canvas'); t.width = Math.max(2, Math.round(src.width / k)); t.height = Math.max(2, Math.round(src.height / k));
+  const c = t.getContext('2d'); c.imageSmoothingEnabled = true; c.drawImage(src, 0, 0, t.width, t.height); ctx.save(); ctx.imageSmoothingEnabled = true; ctx.drawImage(t, x, y, w, hgt); ctx.restore();
+}
+function crossWires(ctx, cx, cy, Rr, blurPx, color) { // cross-wires that look out of focus when the eyepiece is not adjusted
+  const b = Math.max(0, blurPx || 0);
+  const line = () => { ctx.beginPath(); ctx.moveTo(cx + .5, cy - Rr); ctx.lineTo(cx + .5, cy + Rr); ctx.moveTo(cx - Rr, cy + .5); ctx.lineTo(cx + Rr, cy + .5); ctx.stroke(); };
+  ctx.save(); ctx.strokeStyle = color;
+  if (b < 0.4) { ctx.lineWidth = 1; line(); }
+  else if (CANVAS_FILTER) { ctx.filter = `blur(${b.toFixed(1)}px)`; ctx.lineWidth = 1 + b * 0.5; line(); }
+  else { ctx.globalAlpha = 1 / (1 + b * 0.6); ctx.lineWidth = 1 + b * 1.6; line(); }
+  ctx.restore();
+}
+function gaussBlur1D(a, sigma) { // three box passes ~ Gaussian; in place
+  if (!(sigma > 0.6)) return a; const n = a.length, r = Math.max(1, Math.round(Math.sqrt(12 * sigma * sigma / 3 + 1) / 2)); const tmp = new Float32Array(n);
+  for (let pass = 0; pass < 3; pass++) {
+    let acc = 0; const w = 2 * r + 1;
+    for (let i = -r; i <= r; i++) acc += a[clamp(i, 0, n - 1)];
+    for (let i = 0; i < n; i++) { tmp[i] = acc / w; acc += a[Math.min(n - 1, i + r + 1)] - a[Math.max(0, i - r)]; }
+    a.set(tmp);
+  }
+  return a;
+}
+function randAdj(k = 1) { const r = () => (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.55) * k; return r(); }
 
 /* ================= practice mode & reading sheet ================= */
 const Practice = {
@@ -910,6 +1143,51 @@ function resultBox() {
   const el = h('div', { class: 'result' }); const exp = typeof CUR_EXP !== 'undefined' ? CUR_EXP : null;
   return { el, set(html) { el.innerHTML = html; if (exp && !/Record |record |Complete steps|Take at least|need at least/.test(html.slice(0, 400)) ) LS.set('snapres.' + exp, htmlToText(html)); } };
 }
+/* ================= worked (step-by-step) calculations =================
+   Every result box ends with a "Step-by-step calculation": the formula, the numbers put into it and the answer,
+   in the order a student writes them in the practical copy. */
+const WK = {
+  block(title, steps, open) { const st = steps.filter(Boolean); return st.length ? `<details class="work"${open ? ' open' : ''}><summary>${title}</summary><ol class="work-steps">${st.map(x => `<li>${x}</li>`).join('')}</ol></details>` : ''; },
+  sec(blocks, intro) { const b = blocks.filter(Boolean); return b.length ? `<div class="work-sec"><h4>Step-by-step calculation</h4>${intro ? `<p class="small muted">${intro}</p>` : ''}${b.join('')}</div>` : ''; },
+  eq(lhs, ...parts) { const p = parts.filter(x => x != null && x !== ''); return `<span class="wk-eq">${lhs} = ${p.map((x, i) => i === p.length - 1 ? `<b>${x}</b>` : x).join(' = ')}</span>`; },
+  why(t) { return `<span class="wk-why">${t}</span>`; },
+  why0(t) { return ` <span class="wk-note">(${t})</span>`; },
+  n(v, d = 3) { if (v == null || !isFinite(v)) return '—'; const t = (+v).toFixed(d); return t.startsWith('-') ? '−' + t.slice(1) : t; },
+  sig(v, s = 4) { if (v == null || !isFinite(v)) return '—'; if (v === 0) return '0'; const e = Math.floor(Math.log10(Math.abs(v))); if (e >= -3 && e < 5) return WK.n(v, Math.max(0, s - 1 - e)); const m = v / 10 ** e; return `${WK.n(m, s - 1)} × 10<sup>${e < 0 ? '−' + (-e) : e}</sup>`; },
+  /* angles: readings are whole minutes; results may carry half minutes */
+  mins(m) { return Number.isInteger(m) ? String(m).padStart(2, '0') : m.toFixed(2).replace(/0$/, '').padStart(4, '0'); },
+  dmv(v) { const neg = v < 0; v = Math.abs(v); let d = Math.floor(v + 1e-9), m = Math.round((v - d) * 6000) / 100; if (m >= 60) { d++; m -= 60; } return `${neg ? '−' : ''}${d}° ${WK.mins(m)}′`; },
+  dmPart(x) { x = norm360(x); let d = Math.floor(x), m = Math.round((x - d) * 60); if (m === 60) { d = (d + 1) % 360; m = 0; } return [d, m]; },
+  sub(A, B) { // [d,m] − [d,m] with borrowing shown; A ≥ B
+    let [d1, m1] = A; const [d2, m2] = B; const f = (d, m) => `${d}° ${String(m).padStart(2, '0')}′`;
+    let html = `${f(d1, m1)} − ${f(d2, m2)}`, borrowed = false;
+    let bhtml = '';
+    if (m1 < m2) { d1 -= 1; m1 += 60; bhtml = `${f(d1, m1)} − ${f(d2, m2)}`; html += ` = ${bhtml}`; borrowed = true; }
+    return { html, bhtml, borrowed, v: (d1 - d2) + (m1 - m2) / 60, txt: f(d1 - d2, m1 - m2) };
+  },
+  /* the angle between two vernier readings, as worked by hand (crossing 0°/360° handled) */
+  angle(lhs, a, b) {
+    const A = WK.dmPart(a), B = WK.dmPart(b); const va = A[0] + A[1] / 60, vb = B[0] + B[1] / 60;
+    const [hi, lo] = va >= vb ? [A, B] : [B, A]; const raw = Math.abs(va - vb); const f = x => dm(x[0] + x[1] / 60);
+    if (raw <= 180) { const s = WK.sub(hi, lo); return { v: s.v, html: WK.eq(lhs, `|${dm(a)} − ${dm(b)}|`, s.borrowed ? s.bhtml + WK.why0('borrow 1° = 60′') : null, s.txt) }; }
+    const s = WK.sub([lo[0] + 360, lo[1]], hi);
+    return { v: s.v, html: WK.eq(lhs, `(${f(lo)} + 360°) − ${f(hi)}`, s.html, s.txt) + WK.why('The vernier passed the 0°/360° mark between the two settings, so 360° is added to the smaller reading.') };
+  },
+  half(lhs, v, of) { return WK.eq(lhs, `${of} / 2`, `${WK.dmv(v)} / 2`, WK.dmv(v / 2)); },
+  mean2(lhs, a, b, names) { const m = (a + b) / 2; return WK.eq(lhs, `(${names[0]} + ${names[1]}) / 2`, `(${WK.dmv(a)} + ${WK.dmv(b)}) / 2`, WK.dmv(m)); },
+  todeg(v) { let d = Math.floor(v + 1e-9), m = Math.round((v - d) * 6000) / 100; if (m >= 60) { d++; m -= 60; } return `${WK.dmv(v)} = ${d} + ${WK.mins(m).replace(/^0(?=\d)/, '')}/60 = ${v.toFixed(4)}°`; },
+  /* least-squares straight line, worked out with sums */
+  fit(pts, xs, ys, xu = '', yu = '') {
+    const n = pts.length; if (n < 2) return null; const mx = mean(pts.map(p => p[0])), my = mean(pts.map(p => p[1]));
+    let sxy = 0, sxx = 0; pts.forEach(([x, y]) => { sxy += (x - mx) * (y - my); sxx += (x - mx) ** 2; });
+    const m = sxy / sxx, c = my - m * mx; const bar = v => v.length === 1 ? v + '\u0304' : `⟨${v}⟩`;
+    return { m, c, steps: [
+      `Number of points n = ${n}. Mean of ${xs}: ${bar(xs)} = ${WK.sig(mx, 5)}${xu}; mean of ${ys}: ${bar(ys)} = ${WK.sig(my, 5)}${yu}.`,
+      WK.eq('Slope', `Σ(${xs} − ${bar(xs)})(${ys} − ${bar(ys)}) / Σ(${xs} − ${bar(xs)})²`, `${WK.sig(sxy, 5)} / ${WK.sig(sxx, 5)}`, WK.sig(m, 5)) + WK.why('This is the least-squares (best-fit) straight line; drawing the best line by eye on the graph gives nearly the same slope.'),
+      WK.eq('Intercept', `${bar(ys)} − slope × ${bar(xs)}`, `${WK.sig(my, 5)} − (${WK.sig(m, 5)}) × ${WK.sig(mx, 5)}`, WK.sig(c, 5))] };
+  },
+  pct(v, std, d = 1, unit = '') { return WK.eq('Percentage error', '|measured − standard| / standard × 100', `|${WK.n(v, d)} − ${WK.n(std, d)}| / ${WK.n(std, d)} × 100`, `${pctErr(v, std).toFixed(2)}%`); }
+};
 function pctErr(exp, std) { return Math.abs(exp - std) / Math.abs(std) * 100; }
 
 /* ================= spectrometer engine (experiments 2–6) ================= */
@@ -941,10 +1219,19 @@ function spectrometer(cfg) {
   const def = {
     tel: R.range(-30, 30), inc: cfg.kind === 'prism' ? R.range(30, 45) : R.range(9, 24) * (R.u() < 0.5 ? -1 : 1),
     tilt: R.range(-5, 5), pmode: 'refract', removed: false, source: cfg.sources[0], zoom: 1, slit: 0.10,
-    ap: cfg.aperture ? cfg.aperture.init : null, trace: !!cfg.trace
+    ap: cfg.aperture ? cfg.aperture.init : null, trace: !!cfg.trace, look: 'slit', adj: null
   };
   const st = Object.assign(def, LS.get('spec.' + cfg.id, {}));
   if (!cfg.sources.includes(st.source)) st.source = cfg.sources[0];
+  const freshAdj = () => ({ eye: randAdj(), tf: randAdj(), cf: randAdj(), lv1: randAdj(0.8), lv2: randAdj(0.8) });
+  if (!st.adj || typeof st.adj !== 'object') st.adj = freshAdj();
+  if (!['slit', 'wall', 'far'].includes(st.look)) st.look = 'slit';
+  /* preliminary adjustments: each value is 0 when the adjustment is right */
+  const TOL = 0.03;
+  const adjState = () => { const a = st.adj; return { eye: Math.abs(a.eye) <= TOL, tel: Math.abs(a.tf) <= TOL, col: Math.abs(a.cf) <= TOL, lev: Math.abs(a.lv1) <= TOL && Math.abs(a.lv2) <= TOL }; };
+  const slitDefocus = () => Math.hypot(st.adj.eye * 0.6, st.adj.cf - st.adj.tf);
+  const blurAng = () => slitDefocus() * 0.1; // degrees of angular blur of the slit image
+  const lvShift = () => st.removed ? 0 : (st.adj.lv1 * Math.cos(st.inc * DEG) + st.adj.lv2 * Math.sin(st.inc * DEG)) * 0.55;
   let saveT = 0;
   const save = () => { clearTimeout(saveT); saveT = setTimeout(() => LS.set('spec.' + cfg.id, st), 250); };
   const Wbeam = () => cfg.aperture ? st.ap : 20;
@@ -989,7 +1276,7 @@ function spectrometer(cfg) {
     }
     return out;
   }
-  const inView = tol => rays().map(r => ({ ...r, off: angDiff(st.tel, r.dir) })).filter(r => Math.abs(r.off) <= tol).sort((a, b) => Math.abs(a.off) - Math.abs(b.off));
+  const inView = tol => (st.look !== 'slit' ? [] : rays()).map(r => ({ ...r, off: angDiff(st.tel, r.dir) })).filter(r => Math.abs(r.off) <= tol).sort((a, b) => Math.abs(a.off) - Math.abs(b.off));
   function verniers() {
     const ecc = eps * Math.sin((st.tel + phiE) * DEG);
     return { v1: norm360(C0 + st.tel + ecc), v2: norm360(C0 + st.tel + 180 - ecc) };
@@ -999,10 +1286,44 @@ function spectrometer(cfg) {
   /* ---------- UI ---------- */
   const el = h('div', { class: 'stack' });
   const opts = h('div', { class: 'opts' });
-  if (cfg.sources.length > 1) opts.append(selectBox({ label: 'Lamp', options: cfg.sources.map(s => [s, SOURCES[s].name]), value: st.source, onChange: v => { st.source = v; changed(); cfg.onSource && cfg.onSource(v); } }).el);
+  const C = {}; // controls, also driven by the demo
+  const setSrc = v => { st.source = v; if (C.src) C.src.set(v); changed(); cfg.onSource && cfg.onSource(v); };
+  if (cfg.sources.length > 1) { C.src = selectBox({ label: 'Lamp', options: cfg.sources.map(s => [s, SOURCES[s].name]), value: st.source, onChange: v => setSrc(v) }); opts.append(C.src.el); }
   else opts.append(h('span', { class: 'pill' }, SOURCES[st.source].name));
-  if (cfg.kind === 'prism' && cfg.angleMode) opts.append(seg({ label: 'Prism position', value: st.pmode, options: [['angle', 'Apex to collimator (angle A)'], ['refract', 'For refraction']], onChange: v => { st.pmode = v; syncTbl(); changed(); } }).el);
-  opts.append(check({ label: cfg.kind === 'prism' ? 'Remove prism (direct reading)' : 'Remove grating (direct reading)', value: st.removed, onChange: v => { st.removed = v; changed(); } }).el);
+  if (cfg.kind === 'prism' && cfg.angleMode) { C.pmode = seg({ label: 'Prism position', value: st.pmode, options: [['angle', 'Apex to collimator (angle A)'], ['refract', 'For refraction']], onChange: v => { st.pmode = v; syncTbl(); changed(); } }); opts.append(C.pmode.el); }
+  C.removed = check({ label: cfg.kind === 'prism' ? 'Remove prism (direct reading)' : 'Remove grating (direct reading)', value: st.removed, onChange: v => { st.removed = v; changed(); } });
+  opts.append(C.removed.el);
+
+  /* preliminary adjustments panel */
+  const adjBox = h('details', { class: 'adj' });
+  const adjSum = h('span', { class: 'sub' });
+  const items = [['eye', 'Cross-wires sharp'], ['tel', 'Telescope focused for parallel light'], ['col', 'Collimator gives parallel light'], ['lev', 'Prism table level']];
+  const list = h('ul', { class: 'adj-list' }, items.map(([k, t]) => h('li', { 'data-k': k }, t)));
+  C.look = seg({ label: 'Telescope pointed at', value: st.look, options: [['slit', 'Collimator slit'], ['wall', 'White wall'], ['far', 'Distant object (window)']], onChange: v => { st.look = v; changed(); } });
+  const adjFine = [['«', -0.05], ['‹', -0.005], ['›', 0.005], ['»', 0.05]];
+  const adjSl = (label, k) => slider({ label, min: -1, max: 1, step: 0.002, value: st.adj[k], fmt: () => '', fine: adjFine, onInput: v => { st.adj[k] = v; changed(); } });
+  C.eye = adjSl('Eyepiece (slide in or out)', 'eye');
+  C.tf = adjSl('Telescope focus (rack-and-pinion screw)', 'tf');
+  C.cf = adjSl('Collimator focus (slit tube in or out)', 'cf');
+  C.lv1 = adjSl('Levelling screws 1 and 2 (turn in opposite directions)', 'lv1');
+  C.lv2 = adjSl('Levelling screw 3', 'lv2');
+  const levBox = h('div'), miniBox = h('div');
+  const eyeMini = canvasView(miniBox, { label: 'Through the telescope', height: w => Math.min(w, 190), draw: (c, w, hh) => drawEye(c, w, hh, null, true), alt: 'Telescope field of view' });
+  const lev = canvasView(levBox, { label: 'Spirit level on the prism table', aspect: 0.8, maxH: 150, minH: 120, draw: drawLevel, alt: 'Circular spirit level on the prism table' });
+  const disturb = h('button', { type: 'button', class: 'btn sm' }, 'Disturb all adjustments (practise yourself)');
+  disturb.addEventListener('click', () => { st.adj = freshAdj(); ['eye', 'tf', 'cf', 'lv1', 'lv2'].forEach(k => C[k].set(st.adj[k], 'sync')); adjBox.open = true; changed(); });
+  adjBox.append(h('summary', null, 'Preliminary adjustments', adjSum),
+    h('div', { class: 'adj-body' }, list, C.look.el, h('div', { class: 'adj-row eyeg' }, h('div', { class: 'stack' }, C.eye.el, C.tf.el, C.cf.el), miniBox),
+      h('div', { class: 'adj-row two' }, h('div', { class: 'stack' }, C.lv1.el, C.lv2.el), levBox),
+      h('div', null, disturb)));
+  if (cfg.tour) el.append(demoBar('Watch how the spectrometer is adjusted and set up for this experiment, one step at a time. Then do it yourself.', 'Demo setup', () => { adjBox.open = true; runTour(cfg.tour(api), { title: 'Demo setup' + (cfg.tourTitle ? ' · ' + cfg.tourTitle : ''), doneText: cfg.tourDone || 'Now take the readings yourself: choose the row in “Record as” and press Record reading.' }); }));
+  el.append(adjBox);
+  function updAdj() {
+    const a = adjState(); const left = items.filter(([k]) => !a[k]).map(([, t]) => t.toLowerCase());
+    [...list.children].forEach(li => { const ok = a[li.dataset.k]; li.className = ok ? 'ok' : ''; li.textContent = (ok ? '✓ ' : '○ ') + items.find(i => i[0] === li.dataset.k)[1]; });
+    adjSum.textContent = left.length ? `· ${4 - left.length} of 4 done` : '· all done ✓';
+  }
+  adjBox.open = !Object.values(adjState()).every(Boolean);
   el.append(opts);
 
   const top = canvasView(el, { label: 'Spectrometer, top view — drag the telescope arm or the table', aspect: 0.62, maxH: 430, draw: drawTop, alt: 'Top view of spectrometer' });
@@ -1011,8 +1332,8 @@ function spectrometer(cfg) {
   const eyeBox = h('div');
   const eye = canvasView(eyeBox, { label: 'Through the telescope', height: w => Math.min(w, 300) + (st.trace ? 70 : 0), draw: drawEye, alt: 'Telescope field of view' });
   const eyeOpts = h('div', { class: 'opts', style: 'margin-top:8px' });
-  if (cfg.zooms) eyeOpts.append(seg({ label: 'Eyepiece', value: st.zoom, options: cfg.zooms, onChange: v => { st.zoom = v; changed(); } }).el);
-  if (cfg.trace) eyeOpts.append(check({ label: 'Intensity trace', value: st.trace, onChange: v => { st.trace = v; eye.resize(); changed(); } }).el);
+  if (cfg.zooms) { C.zoom = seg({ label: 'Eyepiece', value: st.zoom, options: cfg.zooms, onChange: v => { st.zoom = v; changed(); } }); eyeOpts.append(C.zoom.el); }
+  if (cfg.trace) { C.trace = check({ label: 'Intensity trace', value: st.trace, onChange: v => { st.trace = v; eye.resize(); changed(); } }); eyeOpts.append(C.trace.el); }
   eyeBox.append(eyeOpts);
   const eyeView = eye;
   const vBox = h('div', { class: 'stack' });
@@ -1044,9 +1365,23 @@ function spectrometer(cfg) {
     ro1.set(dm(roundMin(v.v1)), Practice.on); ro2.set(dm(roundMin(v.v2)), Practice.on);
     roT.set(dm(roundMin(tableReading())), false);
   }
-  function changed() { save(); top.redraw(); eyeView.redraw(); vern1.redraw(); vern2.redraw(); updateReadouts(); cfg.onChange && cfg.onChange(); }
+  function changed() { save(); top.redraw(); eyeView.redraw(); vern1.redraw(); vern2.redraw(); lev.redraw(); eyeMini.redraw(); updateReadouts(); updAdj(); cfg.onChange && cfg.onChange(); }
   Practice.subs.add(changed); onCleanup(() => Practice.subs.delete(changed));
-  updateReadouts();
+  updateReadouts(); updAdj();
+  Object.assign(C, { tel: telS, tbl: tblS, slit: slitS, ap: apS });
+
+  /* ---------- drawing: spirit level ---------- */
+  function drawLevel(ctx, W, H) {
+    const T = theme(); ctx.clearRect(0, 0, W, H); ctx.fillStyle = T.panel; ctx.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H / 2 + 4, R = Math.min(W, H) / 2 - 10;
+    ctx.strokeStyle = T.muted; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+    ctx.fillStyle = T.ink; ctx.font = `600 10px ${T.sans}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    [[210, '1'], [330, '2'], [90, '3']].forEach(([a, n]) => { const x = cx + R * Math.cos(a * DEG), y = cy - R * Math.sin(a * DEG); ctx.fillStyle = T.panel2; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); ctx.stroke(); ctx.fillStyle = T.ink; ctx.fillText(n, x, y + .5); });
+    const r = R * 0.55; const g = ctx.createRadialGradient(cx, cy, 2, cx, cy, r); g.addColorStop(0, '#d9f2c4'); g.addColorStop(1, '#a9d98c'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(40,70,30,.6)'; ctx.beginPath(); ctx.arc(cx, cy, r * 0.32, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
+    const bx = cx + clamp(st.adj.lv1, -1, 1) * r * 0.72, by = cy - clamp(st.adj.lv2, -1, 1) * r * 0.72;
+    ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.strokeStyle = 'rgba(40,70,30,.7)'; ctx.beginPath(); ctx.arc(bx, by, r * 0.24, 0, 7); ctx.fill(); ctx.stroke();
+  }
 
   /* ---------- drawing: top view ---------- */
   function drawTop(ctx, W, H) {
@@ -1095,6 +1430,7 @@ function spectrometer(cfg) {
     }
     ctx.fillStyle = T.muted; ctx.font = `10px ${T.sans}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     { const [lx1, ly1] = P(22, Rs * 1.08); if (ly1 > 8) ctx.fillText('left side', lx1, ly1); const [lx2, ly2] = P(-22, Rs * 1.08); if (ly2 < H - 8) ctx.fillText('right side', lx2, ly2); }
+    if (st.look !== 'slit') { ctx.fillStyle = T.warn || T.ink; ctx.font = `600 11px ${T.sans}`; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(st.look === 'wall' ? 'Telescope turned towards a white wall' : 'Telescope turned towards a distant object', 8, 8); }
     // telescope
     const vis = inView(F());
     const tcol = vis.length ? T.sodium : T.ink;
@@ -1111,13 +1447,34 @@ function spectrometer(cfg) {
     }
   }
   /* ---------- drawing: eyepiece ---------- */
-  function drawEye(ctx, W, H) {
+  let scene = null;
+  function sceneCanvas() { // a distant tree, house and pole seen through the window
+    if (scene) return scene; scene = document.createElement('canvas'); scene.width = scene.height = 300; const c = scene.getContext('2d');
+    const sky = c.createLinearGradient(0, 0, 0, 300); sky.addColorStop(0, '#9cc6ea'); sky.addColorStop(0.62, '#e4eef5'); sky.addColorStop(0.62, '#8aa37a'); sky.addColorStop(1, '#5d7a50'); c.fillStyle = sky; c.fillRect(0, 0, 300, 300);
+    c.fillStyle = '#7f9a8c'; c.beginPath(); c.moveTo(0, 190); c.quadraticCurveTo(70, 150, 140, 178); c.quadraticCurveTo(220, 140, 300, 172); c.lineTo(300, 190); c.closePath(); c.fill();
+    c.fillStyle = '#5b3b22'; c.fillRect(64, 130, 9, 62); c.fillStyle = '#2f6a35'; [[68, 118, 30], [50, 132, 20], [88, 134, 20], [68, 98, 20]].forEach(([x, y, r]) => { c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); });
+    c.fillStyle = '#efe6d2'; c.fillRect(185, 140, 70, 48); c.fillStyle = '#a3402e'; c.beginPath(); c.moveTo(178, 142); c.lineTo(220, 112); c.lineTo(262, 142); c.closePath(); c.fill();
+    c.fillStyle = '#3a4a5a'; c.fillRect(196, 154, 14, 14); c.fillRect(232, 154, 14, 14); c.fillStyle = '#6b4a2e'; c.fillRect(214, 164, 12, 24);
+    c.strokeStyle = '#3b3b3b'; c.lineWidth = 3; c.beginPath(); c.moveTo(152, 70); c.lineTo(152, 190); c.stroke(); c.lineWidth = 1.5; c.beginPath(); c.moveTo(138, 80); c.lineTo(166, 80); c.moveTo(0, 86); c.quadraticCurveTo(76, 96, 152, 82); c.quadraticCurveTo(230, 96, 300, 88); c.stroke();
+    return scene;
+  }
+  function drawEye(ctx, W, H, _v, mini) {
     const T = theme(); ctx.clearRect(0, 0, W, H); ctx.fillStyle = T.panel; ctx.fillRect(0, 0, W, H);
-    const fh = st.trace ? H - 70 : H; const cx = W / 2, cy = fh / 2, Rr = Math.min(W, fh) / 2 - 3;
+    const tr = st.trace && !mini; const fh = tr ? H - 70 : H; const cx = W / 2, cy = fh / 2, Rr = Math.min(W, fh) / 2 - 3;
+    const xwBlur = Math.abs(st.adj.eye) * 7;
+    if (st.look !== 'slit') {
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, Rr, 0, 7); ctx.clip();
+      if (st.look === 'wall') { const g = ctx.createRadialGradient(cx, cy, 4, cx, cy, Rr); g.addColorStop(0, '#f4f5f1'); g.addColorStop(1, '#c9ccc6'); ctx.fillStyle = g; ctx.fillRect(cx - Rr, cy - Rr, 2 * Rr, 2 * Rr); }
+      else { ctx.fillStyle = '#9cc6ea'; ctx.fillRect(cx - Rr, cy - Rr, 2 * Rr, 2 * Rr); blurInto(ctx, sceneCanvas(), cx - Rr * 1.15, cy - Rr * 1.15, Rr * 2.3, Rr * 2.3, Math.hypot(st.adj.eye, st.adj.tf) * Rr * 0.07); }
+      crossWires(ctx, cx, cy, Rr, xwBlur, 'rgba(18,20,22,.9)');
+      ctx.restore(); ctx.strokeStyle = T.muted; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, Rr, 0, 7); ctx.stroke(); ctx.lineWidth = 1;
+      ctx.fillStyle = T.muted; ctx.font = `10.5px ${T.mono}`; ctx.textAlign = 'left'; ctx.textBaseline = 'top'; ctx.fillText(st.look === 'wall' ? 'white wall' : 'distant object', 4, 4);
+      return;
+    }
     const Fd = F(), pixDeg = Fd / Rr, pixRad = pixDeg * DEG;
     const list = inView(Fd * 1.25 + 0.02);
     const ws = st.slit / F_COLL; const bright = 0.45 + 0.55 * Math.min(1, st.slit / 0.08);
-    const cols = Math.ceil(2 * Rr); const prof = new Float32Array(cols * 3); const lum = new Float32Array(cols);
+    const cols = Math.ceil(2 * Rr); const pR = new Float32Array(cols), pG = new Float32Array(cols), pB = new Float32Array(cols); const lum = new Float32Array(cols);
     list.forEach(r => {
       const wd = r.l * 1e-6 / Math.max(0.01, r.Wout), wde = Math.max(wd, 1.15 * pixRad);
       const nS = clamp(Math.ceil(ws / (0.45 * wde)) + 1, 1, 80); const gain = Math.max(1, ws / wde) / nS;
@@ -1128,13 +1485,14 @@ function spectrometer(cfg) {
         const dx = ((i - Rr) * pixDeg - r.off) * DEG;
         if (Math.abs(dx) > ws + 40 * wde) continue;
         let s = 0; for (let j = 0; j < nS; j++) { const o = nS === 1 ? 0 : (j / (nS - 1) - 0.5) * ws; const u = Math.PI * (dx - o) / wde; const sc = sinc(u); s += sc * sc; }
-        const v = s * gain * w8; prof[i * 3] += v * rgb[0]; prof[i * 3 + 1] += v * rgb[1]; prof[i * 3 + 2] += v * rgb[2]; lum[i] += v;
+        const v = s * gain * w8; pR[i] += v * rgb[0]; pG[i] += v * rgb[1]; pB[i] += v * rgb[2]; lum[i] += v;
       }
     });
+    const sig = blurAng() / pixDeg; if (sig > 0.6) [pR, pG, pB, lum].forEach(a => gaussBlur1D(a, Math.min(sig, cols)));
     ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, Rr, 0, 7); ctx.fillStyle = '#020304'; ctx.fill(); ctx.clip();
-    const top = cy - Rr * 0.72, hh = Rr * 1.44;
+    const top = cy - Rr * 0.72 + lvShift() * Rr, hh = Rr * 1.44;
     for (let i = 0; i < cols; i++) {
-      const r = prof[i * 3], g = prof[i * 3 + 1], b = prof[i * 3 + 2]; if (r + g + b < 0.004) continue;
+      const r = pR[i], g = pG[i], b = pB[i]; if (r + g + b < 0.004) continue;
       const tm = v => Math.round(255 * (1 - Math.exp(-2.4 * v)));
       ctx.fillStyle = `rgb(${tm(r)},${tm(g)},${tm(b)})`; ctx.fillRect(cx - Rr + i, top, 1.2, hh);
     }
@@ -1142,14 +1500,13 @@ function spectrometer(cfg) {
     const gtop = ctx.createLinearGradient(0, top, 0, top + 18); gtop.addColorStop(0, 'rgba(2,3,4,1)'); gtop.addColorStop(1, 'rgba(2,3,4,0)'); ctx.fillStyle = gtop; ctx.fillRect(cx - Rr, top, 2 * Rr, 18);
     const gb = ctx.createLinearGradient(0, top + hh - 18, 0, top + hh); gb.addColorStop(0, 'rgba(2,3,4,0)'); gb.addColorStop(1, 'rgba(2,3,4,1)'); ctx.fillStyle = gb; ctx.fillRect(cx - Rr, top + hh - 18, 2 * Rr, 18);
     // crosswire
-    ctx.strokeStyle = 'rgba(235,235,235,.75)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(cx + .5, cy - Rr); ctx.lineTo(cx + .5, cy + Rr); ctx.moveTo(cx - Rr, cy + .5); ctx.lineTo(cx + Rr, cy + .5); ctx.stroke();
+    crossWires(ctx, cx, cy, Rr, xwBlur, 'rgba(235,235,235,.8)');
     ctx.restore();
     ctx.strokeStyle = T.muted; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, Rr, 0, 7); ctx.stroke(); ctx.lineWidth = 1;
     ctx.fillStyle = T.muted; ctx.font = `10.5px ${T.mono}`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
     ctx.fillText(`field ±${Fd >= 0.1 ? (Fd).toFixed(2) + '°' : (Fd * 3600).toFixed(0) + '″'}`, 4, 4);
     if (!list.length) { ctx.fillStyle = '#7d8a91'; ctx.textAlign = 'center'; ctx.font = `12px ${T.sans}`; ctx.fillText('no light in the field', cx, cy + Rr * 0.82); }
-    if (st.trace) {
+    if (tr) {
       const ty = fh + 8, th = 56; ctx.fillStyle = T.panel2; ctx.fillRect(cx - Rr, ty, 2 * Rr, th);
       let mx = 0; for (const v of lum) mx = Math.max(mx, v);
       if (mx > 0) { ctx.strokeStyle = T.sodium; ctx.lineWidth = 1.5; ctx.beginPath(); for (let i = 0; i < cols; i++) { const y = ty + th - 4 - (lum[i] / mx) * (th - 10); i ? ctx.lineTo(cx - Rr + i, y) : ctx.moveTo(cx - Rr + i, y); } ctx.stroke(); ctx.lineWidth = 1; }
@@ -1161,16 +1518,28 @@ function spectrometer(cfg) {
   top.canvas.addEventListener('pointerdown', e => {
     const r = top.canvas.getBoundingClientRect(); const W = top.w, H = top.h; const cx = W * 0.55, cy = H / 2, Rs = Math.min(W * 0.42, H * 0.47);
     const x = e.clientX - r.left - cx, y = cy - (e.clientY - r.top); const rad = Math.hypot(x, y), a = Math.atan2(y, x) / DEG;
+    if (e.pointerType === 'touch') {
+      // on a phone a finger elsewhere on the drawing scrolls the page; only the telescope arm or the table is picked up
+      const onArm = rad > Rs * 0.25 && rad < Rs * 1.1 && Math.abs(angDiff(a, st.tel)) < 16, onTable = rad <= Rs * 0.3;
+      if (onArm) { drag = { kind: 'tel', off: angDiff(a, st.tel) }; try { top.canvas.setPointerCapture(e.pointerId); } catch (er) { } return; }
+      drag = null;
+      if (onTable) { const id = e.pointerId; hold = { x: e.clientX, y: e.clientY, t: setTimeout(() => { hold = null; drag = { kind: 'tbl', a0: a }; try { top.canvas.setPointerCapture(id); } catch (er) { } try { navigator.vibrate && navigator.vibrate(12); } catch (er) { } }, 260) }; } // touch and hold the table to turn it
+      return;
+    }
     if (rad > Rs * 0.28) drag = { kind: 'tel' }; else drag = { kind: 'tbl', a0: a };
     top.canvas.setPointerCapture(e.pointerId); move(e);
   });
-  top.canvas.addEventListener('pointermove', move);
-  top.canvas.addEventListener('pointerup', () => drag = null);
-  top.canvas.addEventListener('pointercancel', () => drag = null);
+  top.canvas.addEventListener('touchstart', e => { if (drag) e.preventDefault(); }, { passive: false });
+  top.canvas.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, { passive: false });
+  let hold = null;
+  const unhold = () => { if (hold) { clearTimeout(hold.t); hold = null; } };
+  top.canvas.addEventListener('pointermove', e => { if (hold && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > 10) unhold(); move(e); });
+  top.canvas.addEventListener('pointerup', () => { unhold(); drag = null; });
+  top.canvas.addEventListener('pointercancel', () => { unhold(); drag = null; });
   function move(e) {
     if (!drag) return; const r = top.canvas.getBoundingClientRect(); const W = top.w, H = top.h; const cx = W * 0.55, cy = H / 2;
     const x = e.clientX - r.left - cx, y = cy - (e.clientY - r.top); const a = Math.atan2(y, x) / DEG;
-    if (drag.kind === 'tel') { if (Math.abs(a) <= 160) telS.set(a, 'drag'); }
+    if (drag.kind === 'tel') { const t = a - (drag.off || 0); if (Math.abs(t) <= 160) telS.set(t, 'drag'); }
     else {
       const da = angDiff(drag.a0, a); drag.a0 = a;
       if (cfg.kind === 'prism' && st.pmode === 'angle') { st.tilt = clamp(st.tilt + da, -15, 15); tblS.set(45 + st.tilt, 'sync'); changed(); }
@@ -1187,7 +1556,99 @@ function spectrometer(cfg) {
     if (b == null) return null;
     return { v1: t1, v2: t2 };
   }
-  return { el, st, rays, inView, verniers, readTel, minDev, muOf, gEff, F, changed, redraw: changed, setSource: v => { st.source = v; changed(); } };
+  function ready(say) {
+    const a = adjState(); const left = items.filter(([k]) => !a[k]).map(([, t]) => t.toLowerCase());
+    if (left.length) { say(`Finish the preliminary adjustments first (${left.join('; ')}). Press <b>Demo setup</b> to see how they are done.`, 'warn'); adjBox.open = true; return false; }
+    if (st.look !== 'slit') { say('Turn the telescope back to the collimator (Telescope pointed at → Collimator slit).', 'warn'); return false; }
+    return true;
+  }
+  function devAt(i1, lineId) { const L = lineOf(st.source, lineId) || SOURCES[st.source].lines[0]; const A = cfg.prism.A, mu = muOf(L.l); const r1 = Math.asin(Math.sin(i1 * DEG) / mu) / DEG, se = mu * Math.sin((A - r1) * DEG); if (Math.abs(se) >= 1) return null; return i1 + Math.asin(se) / DEG - A; }
+  const api = { A: cfg.prism ? cfg.prism.A : null, el, st, C, rays, inView, verniers, readTel, minDev, muOf, gEff, F, changed, redraw: changed, setSource: setSrc, ready, blurAng, devAt, adjState, top, eye: eyeView, eyeMini, lev, adjBox };
+  return api;
+}
+
+/* ---------- demo helpers shared by the benches ---------- */
+async function pickSeg(T, ctl, label, value) {
+  const b = [...ctl.el.querySelectorAll('button')].find(x => x.textContent.trim() === label);
+  if (ctl.get() === value) { if (b) await T.reach(b); return; }
+  await T.press(b || ctl.el, () => ctl.set(value, true));
+}
+async function setCheck(T, chk, want) {
+  const i = chk.el.querySelector('input');
+  if (chk.get() === want) { await T.reach(chk.el); return; }
+  await T.press(chk.el, () => i.click());
+}
+async function fineTo(T, ctl, to, ms = 1500) { // a coarse turn that overshoots a little, then the fine screw
+  const from = ctl.get(); const over = to + (to - from) * 0.08;
+  await T.slide(ctl, over, ms); await T.wait(250); await T.slide(ctl, to, 900);
+}
+
+/* ---------- demo: preliminary adjustments of the spectrometer (experiments 2–6) ---------- */
+function specSetupSteps(sp, o) {
+  const C = sp.C, isPrism = o.kind === 'prism', thing = isPrism ? 'prism' : 'grating';
+  return [
+    { title: 'Lamp in front of the slit', el: () => sp.top.wrap,
+      text: `The ${o.lamp} is switched on and placed close to the slit of the collimator, so that the slit is brightly lit. A discharge lamp needs about five minutes to reach full brightness.` },
+    { title: 'Focus the eyepiece on the cross-wires', el: () => [sp.eyeMini.wrap],
+      text: 'Turn the telescope towards a white wall (or hold a sheet of white paper in front of it). Slide the eyepiece in or out until the cross-wires look sharp and black. Each observer does this for his or her own eyes.',
+      run: async T => { await pickSeg(T, C.look, 'White wall', 'wall'); await T.wait(500); await fineTo(T, C.eye, 0, 1700); } },
+    { title: 'Focus the telescope for parallel light', el: () => [sp.eyeMini.wrap],
+      text: 'Now look through an open window at a distant object such as a tree or a pole. Turn the rack-and-pinion screw until its image is sharp and does not shift against the cross-wires when you move your eye sideways (no parallax). The telescope is now set for parallel light: do not change its focus again.',
+      run: async T => { await pickSeg(T, C.look, 'Distant object (window)', 'far'); await T.wait(500); await fineTo(T, C.tf, 0, 2000); } },
+    { title: `Telescope in line with the collimator`, el: () => [sp.top.wrap],
+      text: `Remove the ${thing} from the table. Turn the telescope back so that it faces the collimator; the image of the slit appears in the field of view.`,
+      run: async T => { await pickSeg(T, C.look, 'Collimator slit', 'slit'); await setCheck(T, C.removed, true); await T.slide(C.slit, 0.12, 700); await T.slide(C.tel, 0.6, 1800); } },
+    { title: 'Focus the collimator', el: () => [sp.eyeMini.wrap],
+      text: 'Move the slit tube of the collimator in or out until the slit image is sharp. Because the telescope is focused for parallel light, the collimator now sends out a parallel beam. Then make the slit narrow and vertical.',
+      run: async T => { await fineTo(T, C.cf, 0, 1800); await T.slide(C.slit, o.slit || 0.05, 1100); } },
+    { title: 'Level the prism table', el: () => [sp.lev.wrap],
+      text: 'Put the spirit level on the prism table. Turn levelling screws 1 and 2 in opposite directions until the bubble is central along that line, then use screw 3 alone for the other direction. A level table keeps the spectrum lines in the middle of the field.',
+      run: async T => { await fineTo(T, C.lv1, 0, 1500); await fineTo(T, C.lv2, 0, 1500); } },
+    { title: 'Cross-wire on the direct image', el: () => [sp.eye.wrap],
+      text: o.direct,
+      run: async T => { await T.slide(C.tel, 0, 1500); } }
+  ];
+}
+function gratingNormalSteps(sp) {
+  const C = sp.C;
+  return [
+    { title: 'Turn the telescope through 90°', el: () => [sp.top.wrap],
+      text: 'Turn the telescope through exactly 90° from the direct reading (add 90° to the vernier readings) and clamp it. It now looks at right angles to the collimator.',
+      run: async T => { await T.slide(C.tel, 90, 2200); } },
+    { title: 'Grating at 45°: catch the reflected image', el: () => [sp.top.wrap, sp.eye.wrap],
+      text: 'Put the grating on the table with its ruled surface facing the telescope and its lines vertical. Rotate the table until the white image of the slit reflected from the grating surface falls on the vertical cross-wire. The grating is now at 45° to the incident beam.',
+      run: async T => { await setCheck(T, C.removed, false); const g0 = sp.st.inc; await T.slide(C.tbl, g0 + (45 - g0) * 0.85, 1800); await T.slide(C.tbl, 45, 1200); } },
+    { title: 'Rotate the table 45°: normal incidence', el: () => [sp.top.wrap],
+      text: 'Note the prism-table vernier, release the table and rotate it through exactly 45° (watch the Prism-table readout change by 45°) so that the grating faces the collimator squarely. Light now falls normally on the grating. Clamp the table and do not touch it again.',
+      run: async T => { await T.slide(C.tbl, 0, 2400); } }
+  ];
+}
+function prismAngleSteps(sp) {
+  const C = sp.C, A = () => sp.rays().find(r => r.kind === 'reflL');
+  return [
+    { title: 'Prism with its apex towards the collimator', el: () => [sp.top.wrap],
+      text: 'Place the prism near the centre of the table with its refracting edge (apex) facing the collimator, so that the parallel beam falls on both faces at once.',
+      run: async T => { await setCheck(T, C.removed, false); await pickSeg(T, C.pmode, 'Apex to collimator (angle A)', 'angle'); await T.slide(C.tbl, 45, 900); } },
+    { title: 'Image reflected from the first face', el: () => [sp.top.wrap, sp.eye.wrap],
+      text: 'Turn the telescope to one side (here the left) to receive the slit image reflected from one face. Set the cross-wire on it with the tangent screw and record it as “Image reflected from face 1”.',
+      run: async T => { const d = A() ? A().dir : 60; await fineTo(T, C.tel, d, 2200); } },
+    { title: 'Image reflected from the second face', el: () => [sp.top.wrap, sp.eye.wrap],
+      text: 'Turn the telescope to the other side for the image reflected from the second face and record it as face 2. The angle turned between the two positions is 2A.',
+      run: async T => { const r = sp.rays().find(x => x.kind === 'reflR'); await fineTo(T, C.tel, r ? r.dir : -60, 2600); } }
+  ];
+}
+function prismMinDevSteps(sp, lineId, name) {
+  const C = sp.C;
+  const iMin = () => { const L = lineOf(sp.st.source, lineId); return Math.asin(clamp(sp.muOf(L.l) * Math.sin(sp.A / 2 * DEG), -1, 1)) / DEG; };
+  const follow = i => { C.tbl.set(i, 'demo'); const d = sp.devAt(i, lineId); if (d != null) C.tel.set(-d, 'demo'); };
+  return [
+    { title: 'Prism turned for refraction', el: () => [sp.top.wrap],
+      text: `Turn the prism so that light enters one face and leaves through the other. Find the refracted spectrum first with the naked eye, then bring the telescope to the ${name} line.`,
+      run: async T => { await pickSeg(T, C.pmode, 'For refraction', 'refract'); const i0 = Math.min(88, iMin() + 13); await T.slide(C.tbl, i0, 1200); const d = sp.devAt(i0, lineId); await T.slide(C.tel, -d, 2000); } },
+    { title: 'Find the minimum deviation', el: () => [sp.top.wrap, sp.eye.wrap],
+      text: `Rotate the table slowly while following the ${name} line with the telescope. The line moves towards the direct position, stops, and then turns back even though the table is turned the same way. Set the table at the turning point: this is minimum deviation. Put the cross-wire on the line with the tangent screw and record it.`,
+      run: async T => { const im = iMin(), a = C.tbl.get(); await T.reach(C.tbl.input, 0.5, 0.5); await T.tween(a, im - 7, 4200, v => { follow(v); T.pointSlider(C.tbl); }); await T.wait(500); await T.tween(im - 7, im, 2000, v => { follow(v); T.pointSlider(C.tbl); }); } }
+  ];
 }
 
 /* ================= experiments 2–6: spectrometer based ================= */
@@ -1242,6 +1703,52 @@ function devTable(key, lineIds, getA, onChange, title) {
       { label: 'δ<sub>m</sub> mean', v: (r, i, rows) => devMean(r, rows), fmt: dmS, calc: 1 },
       { label: 'μ', v: (r, i, rows) => muFrom(getA(), devMean(r, rows)), fmt: v => v.toFixed(4), calc: 1 }]
   });
+}
+/* ---------- step-by-step working for the prism experiments ---------- */
+function prismAngleWork(r) {
+  if (!r) return { A: null, block: '' };
+  const st = [], halves = [];
+  [['L1', 'R1', 'I', '₁'], ['L2', 'R2', 'II', '₂']].forEach(([a, b, vn, sub]) => {
+    if (r[a] == null || r[b] == null) return;
+    st.push(`Vernier ${vn}: image from face 1 = ${dm(r[a])}, image from face 2 = ${dm(r[b])}.`);
+    const g = WK.angle(`2A${sub}`, r[a], r[b]); st.push(g.html + (vn === 'I' ? WK.why('The telescope turns through twice the angle of the prism between the two images reflected from its faces.') : ''));
+    st.push(WK.half(`A${sub}`, g.v, `2A${sub}`)); halves.push(g.v / 2);
+  });
+  if (!halves.length) return { A: null, block: '' };
+  const A = mean(halves);
+  if (halves.length === 2) st.push(WK.mean2('A', halves[0], halves[1], ['A₁', 'A₂']));
+  st.push(`Convert to degrees: ${WK.todeg(A)}`);
+  return { A, block: WK.block('Angle of the prism A', st, true) };
+}
+function prismLineWork(A, rows, id, open) {
+  const d = rows.find(x => x.id === 'direct'), r = rows.find(x => x.id === id); if (!d || !r) return null;
+  const st = [], ds = [];
+  [['v1', 'I', '₁'], ['v2', 'II', '₂']].forEach(([k, vn, sub]) => {
+    if (d[k] == null || r[k] == null) return;
+    st.push(`Vernier ${vn}: direct reading = ${dm(d[k])}, minimum-deviation reading = ${dm(r[k])}.`);
+    const g = WK.angle(`δm${sub}`, d[k], r[k]); st.push(g.html); ds.push(g.v);
+  });
+  if (!ds.length) return null;
+  const dmn = mean(ds);
+  if (ds.length === 2) st.push(WK.mean2('δm', ds[0], ds[1], ['δm₁', 'δm₂']));
+  st.push(`Convert to degrees: ${WK.todeg(dmn)}`);
+  if (A == null) return { block: WK.block(`${lineOf('hg', id).name} line: δm`, st, open), dmn, mu: null };
+  const s1 = Math.sin((A + dmn) / 2 * DEG), s2 = Math.sin(A / 2 * DEG), mu = s1 / s2;
+  st.push(WK.eq('μ', 'sin[(A + δm)/2] / sin(A/2)', `sin[(${A.toFixed(4)}° + ${dmn.toFixed(4)}°)/2] / sin(${A.toFixed(4)}°/2)`, `sin ${((A + dmn) / 2).toFixed(4)}° / sin ${(A / 2).toFixed(4)}°`, `${s1.toFixed(5)} / ${s2.toFixed(5)}`, mu.toFixed(4)));
+  return { id, block: WK.block(`${lineOf('hg', id).name} line (λ = ${lineOf('hg', id).l.toFixed(2)} nm): δm and μ`, st, open), dmn, mu, l: lineOf('hg', id).l };
+}
+function prismWork(tA, tB, ids) {
+  const aw = prismAngleWork(tA.rows[0]); const blocks = [aw.block]; const pts = []; let first = true;
+  ids.forEach(id => { const w = prismLineWork(aw.A, tB.rows, id, first && !aw.block); if (!w) return; blocks.push(w.block); first = false; if (w.mu != null) pts.push(w); });
+  return { A: aw.A, blocks, pts };
+}
+function cauchyWork(pts) { // straight line μ = A + B/λ², with x = 1/λ² in µm⁻²
+  const P = pts.map(p => [1e6 / p.l ** 2, p.mu]);
+  const f = WK.fit(P, 'x', 'μ', ' µm⁻²', ''); if (!f) return null;
+  const st = [`For each line x = 1/λ² with λ in µm: ` + pts.map(p => `${lineOf('hg', p.id).name} ${(p.l / 1000).toFixed(5)} µm → x = ${(1e6 / p.l ** 2).toFixed(4)}`).join('; ') + ' µm⁻².'].concat(f.steps);
+  st.push(WK.eq('Cauchy’s A', 'intercept', f.c.toFixed(4)));
+  st.push(WK.eq('Cauchy’s B', 'slope', `${f.m.toFixed(5)} µm²`, `${f.m.toFixed(5)} × 10<sup>−8</sup> cm²`, `${WK.sig(f.m * 1e-8, 3)} cm²`));
+  return { A: f.c, B: f.m, steps: st };
 }
 function devOf(r, rows, k) { if (r.id === 'direct') return null; const d = rows.find(x => x.id === 'direct'); if (!d || d[k] == null || r[k] == null) return null; return Math.abs(angDiff(d[k], r[k])); }
 function devMean(r, rows) { const a = [devOf(r, rows, 'v1'), devOf(r, rows, 'v2')].filter(x => x != null); return a.length ? mean(a) : null; }
@@ -1337,7 +1844,7 @@ EXPS.push({
 <li>Repeat steps 1–2 for the second-order spectrum.</li>
 <li>For each line, \(2\theta\) = difference between the left and right readings of the same vernier. Take the mean of both verniers, find \(\theta\) and calculate \(\lambda = (a+b)\sin\theta/n\).</li>
 </ol>
-<div class="vnote"><b>On the virtual bench:</b> drag the telescope arm in the top view (or use the coarse slider) to find a line, then centre it on the cross-wire with the tangent-screw buttons (±1′, ±0.2′). Tick “Remove grating” for the direct reading. The <i>Prism-table</i> readout plays the role of the table vernier for the 45° rotation. Choose the row in “Record as” and press Record. Switch on <i>Read scales myself</i> (top bar) to practise reading the verniers.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> drag the telescope arm in the top view (or use the coarse slider) to find a line, then centre it on the cross-wire with the tangent-screw buttons (±1′, ±0.2′). Tick “Remove grating” for the direct reading. The <i>Prism-table</i> readout plays the role of the table vernier for the 45° rotation. Choose the row in “Record as” and press Record. Switch on <i>Read scales myself</i> (top bar) to practise reading the verniers. First complete the <i>Preliminary adjustments</i> (eyepiece, focus, levelling): they must be right before any reading can be recorded. Press <b>Demo setup</b> to watch every adjustment being made.</div>`,
   precautions: SPEC_COMMON_PRECAUTIONS + String.raw`<li>The grating must be exactly normal to the incident beam; check that the left and right diffraction angles of the same line are equal.</li><li>Hold the grating by its edges; the ruled surface should face the telescope.</li>`,
   errors: String.raw`<li>Error in setting the grating normal to the beam.</li><li>Error in setting the cross-wire on the centre of a broad line (too wide a slit).</li><li>Eccentricity of the circular scale (removed by reading both verniers).</li>`,
   viva: [
@@ -1354,12 +1861,18 @@ EXPS.push({
     const R = apparatus('exp2'); const lpi = 15000; const d = 2.54e7 / lpi;
     const { instr, notes } = benchCols(root);
     let src = LS.get('exp2.src', 'hg');
-    const spec = spectrometer({ id: 'exp2', rng: R, kind: 'grating', grating: { lpi }, sources: ['hg', 'na'], zooms: [[1, '×1'], [4, '×4']], onSource: v => { src = v; LS.set('exp2.src', v); buildTable(); rec.sel.sel.replaceWith(newSel()); } });
+    const spec = spectrometer({ id: 'exp2', rng: R, kind: 'grating', grating: { lpi }, sources: ['hg', 'na'], zooms: [[1, '×1'], [4, '×4']], onSource: v => { src = v; LS.set('exp2.src', v); buildTable(); rec.sel.sel.replaceWith(newSel()); },
+      tourTitle: 'plane grating',
+      tour: sp => [...specSetupSteps(sp, { kind: 'grating', lamp: SOURCES[sp.st.source].name.toLowerCase(), direct: 'Clamp the telescope and use its tangent screw to set the vertical cross-wire exactly on the slit image. Note this direct reading: the telescope is turned through 90° from here in the next step.' }), ...gratingNormalSteps(sp),
+        { title: 'Find the first-order spectrum', el: () => [sp.top.wrap, sp.eye.wrap],
+          text: src === 'hg' ? 'Release the telescope and turn it to the left. The first-order lines come into view one after another: violet, blue, green, yellow. Set the cross-wire on the green line with the tangent screw; “Record as” is set to “Green, order 1, left”, so press Record reading. Repeat for every line on the left and on the right, then in the second order.' : 'Release the telescope and turn it to the left until the first-order yellow line is on the cross-wire. Record it, then the same line on the right side, and then in the second order.',
+          run: async T => { const id = src === 'hg' ? 'green' : 'd2'; const th = Math.asin(lineOf(sp.st.source, id).l / d) / DEG; await fineTo(T, sp.C.tel, th, 2600); const v = (src === 'hg' ? 'green' : 'na') + '|1|L'; await T.reach(rec.sel.sel); rec.sel.set(v); } }] });
     spec.st.source = src; spec.changed();
     const lineSet = () => src === 'hg' ? HG_MAIN.map(id => ({ id, name: lineOf('hg', id).name, l: lineOf('hg', id).l })) : [{ id: 'na', name: 'Sodium yellow (D)', l: NA_L }];
     const slotOpts = () => [1, 2].flatMap(n => ['L', 'R'].map(s => ({ group: `Order ${n} — ${s === 'L' ? 'left' : 'right'} side`, items: lineSet().map(L => [`${L.id}|${n}|${s}`, `${L.name}, order ${n}, ${s === 'L' ? 'left' : 'right'}`]) })));
     function newSel() { const s = selectBox({ options: slotOpts() }); rec.sel = s; s.sel.setAttribute('aria-label', 'Record this reading as'); return s.sel; }
     const rec = recorder(slotOpts(), async (slot, say) => {
+      if (!spec.ready(say)) return;
       const [id, n, side] = slot.split('|'); const N = +n;
       if (spec.st.removed) return say('Put the grating back on the table.', 'warn');
       const vis = spec.inView(1 / 60).filter(r => r.kind === 'diff' && r.m !== 0);
@@ -1400,7 +1913,36 @@ EXPS.push({
       const rows = ids.map(id => { const L = lineSet().find(x => x.id === id); const v = mean(by[id]); return `<tr><td class="lbl">${L.name}</td><td>${v.toFixed(1)}</td><td>${L.l.toFixed(1)}</td><td>${pctErr(v, L.l).toFixed(2)}%</td></tr>`; }).join('');
       res.set(`<h4>Calculation &amp; result</h4><p class="small">(a + b) = 2.54/N = 2.54/${lpi} cm = <b>${(2.54 / lpi * 1e4).toFixed(3)} µm</b>; &nbsp; λ = (a + b) sin θ / n</p>
       <div class="tscroll" style="margin-top:8px"><table class="obs"><thead><tr><th>Line</th><th>λ measured (nm)</th><th>Standard (nm)</th><th>Error</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <p class="small muted" style="margin-top:8px">Result: the wavelengths of the ${src === 'hg' ? 'mercury lines' : 'sodium light'} are as shown (mean of the orders measured).</p>`);
+      <p class="small muted" style="margin-top:8px">Result: the wavelengths of the ${src === 'hg' ? 'mercury lines' : 'sodium light'} are as shown (mean of the orders measured).</p>` + gratingWork());
+    }
+    function gratingWork() {
+      const blocks = [WK.block('Grating element (a + b)', [
+        `The grating has N = ${lpi} lines per inch, and 1 inch = 2.54 cm.`,
+        WK.eq('(a + b)', '2.54 / N cm', `2.54 / ${lpi} cm`, `${WK.sig(2.54 / lpi, 5)} cm`, `${d.toFixed(1)} nm`)])];
+      let first = true; const byLine = {};
+      tbl.rows.forEach(r => {
+        const st = []; const th = [];
+        [['L1', 'R1', 'I', '₁'], ['L2', 'R2', 'II', '₂']].forEach(([L, Rr, vn, sub]) => {
+          if (r[L] == null || r[Rr] == null) return;
+          st.push(`Vernier ${vn}: reading on the left = ${dm(r[L])}, reading on the right = ${dm(r[Rr])}.`);
+          const a = WK.angle(`2θ${sub}`, r[L], r[Rr]); st.push(a.html + (first && vn === 'I' ? WK.why('The angle turned between the same line on the left and on the right of the direct position is twice the angle of diffraction, so the direct reading is not needed.') : ''));
+          st.push(WK.half(`θ${sub}`, a.v, `2θ${sub}`)); th.push(a.v / 2);
+        });
+        if (!th.length) return;
+        const t = mean(th);
+        if (th.length === 2) st.push(WK.mean2('θ', th[0], th[1], ['θ₁', 'θ₂']) + WK.why('Taking the mean of the two verniers removes the error due to eccentricity of the circular scale.'));
+        st.push(`Convert to degrees: ${WK.todeg(t)}`);
+        const sn = Math.sin(t * DEG); st.push(WK.eq('sin θ', `sin ${t.toFixed(4)}°`, sn.toFixed(5)));
+        const lam = d * sn / r.n; st.push(WK.eq('λ', '(a + b) sin θ / n', `${d.toFixed(1)} nm × ${sn.toFixed(5)} / ${r.n}`, `${lam.toFixed(1)} nm`));
+        (byLine[r.id] = byLine[r.id] || []).push([r.n, lam]);
+        blocks.push(WK.block(`${r.name}, order ${r.n}`, st, first)); first = false;
+      });
+      const fin = Object.entries(byLine).map(([id, v]) => {
+        const L = lineSet().find(x => x.id === id); const m = mean(v.map(q => q[1]));
+        return (v.length > 1 ? WK.eq(`λ (${L.name})`, `(${v.map(q => `λ<sub>n=${q[0]}</sub>`).join(' + ')}) / ${v.length}`, `(${v.map(q => q[1].toFixed(1)).join(' + ')}) / ${v.length}`, `${m.toFixed(1)} nm`) : WK.eq(`λ (${L.name})`, `${m.toFixed(1)} nm`)) + ' &nbsp; ' + WK.pct(m, L.l, 1);
+      });
+      if (fin.length) blocks.push(WK.block('Mean wavelength and percentage error', fin, false));
+      return WK.sec(blocks, 'Open each line to see how θ and λ are worked out from your own readings.');
     }
     buildTable();
     notes.append(card('Lab notebook', 'readings are saved in this browser', tblHost), card('Result', '', res.el));
@@ -1451,7 +1993,7 @@ EXPS.push({
 <li>Place the adjustable rectangular slit on the table in the path of the incident beam with its length parallel to the refracting edge.</li>
 <li>Starting with a wide aperture (D lines clearly separate), reduce the width slowly until the two lines just merge into one. Note the width \(a\) when they are <b>just resolved</b>. Repeat three times.</li>
 <li>Calculate \(t\), \(d\mu/d\lambda\) and the resolving power.</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> choose <i>Apex to collimator</i> for part B and <i>For refraction</i> for parts C and D. Drag inside the table circle to rotate the prism. For part D choose the sodium lamp, select the ×40 eyepiece, narrow the collimator slit (0.005–0.01 mm) and use the aperture micrometer. Switch on the <i>Intensity trace</i> to see the dip between the lines.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> choose <i>Apex to collimator</i> for part B and <i>For refraction</i> for parts C and D. Drag inside the table circle to rotate the prism. For part D choose the sodium lamp, select the ×40 eyepiece, narrow the collimator slit (0.005–0.01 mm) and use the aperture micrometer. Switch on the <i>Intensity trace</i> to see the dip between the lines. First complete the <i>Preliminary adjustments</i> (eyepiece, focus, levelling): they must be right before any reading can be recorded. Press <b>Demo setup</b> to watch every adjustment being made.</div>`,
   precautions: SPEC_COMMON_PRECAUTIONS + String.raw`<li>The prism must be exactly at minimum deviation for the light being studied.</li><li>The collimator slit should be very narrow in part D; otherwise the D lines cannot be resolved even with a wide aperture.</li><li>Reduce the aperture slowly; the judgement of “just resolved” should be repeated and averaged.</li>`,
   errors: String.raw`<li>Judgement of the just-resolved position is subjective.</li><li>A small error in A or δ<sub>m</sub> gives a larger relative error in dμ/dλ, which is found from a small difference in μ.</li>`,
   viva: [
@@ -1466,13 +2008,26 @@ EXPS.push({
   bench(root) {
     const R = apparatus('exp3'); const P = prismParams(R); const base = 50; // mm
     const { instr, notes } = benchCols(root);
-    const spec = spectrometer({ id: 'exp3', rng: R, kind: 'prism', prism: P, sources: ['hg', 'na'], angleMode: true, zooms: [[1, '×1'], [10, '×10'], [40, '×40']], aperture: { min: 0.5, max: 20, init: 20 }, trace: true });
+    const aJust = (() => { const dmu = 2 * P.B / NA_L ** 3, mu = P.Ac + P.B / NA_L ** 2, i = Math.asin(mu * Math.sin(P.A / 2 * DEG)); const t = (NA_L / NA_DL) / (1e6 * dmu); return t * Math.cos(i) / (2 * Math.sin(P.A / 2 * DEG)); })();
+    const spec = spectrometer({ id: 'exp3', rng: R, kind: 'prism', prism: P, sources: ['hg', 'na'], angleMode: true, zooms: [[1, '×1'], [10, '×10'], [40, '×40']], aperture: { min: 0.5, max: 20, init: 20 }, trace: true,
+      tourTitle: 'resolving power of a prism',
+      tour: sp => [
+        { title: 'Mercury lamp first', el: () => [sp.C.src.el], text: 'Parts A to C use the mercury lamp. The sodium lamp is needed only for part D.', run: async T => { if (sp.st.source !== 'hg') { await T.reach(sp.C.src.sel); sp.setSource('hg'); } } },
+        ...specSetupSteps(sp, { kind: 'prism', lamp: 'mercury vapour lamp', direct: 'Clamp the telescope and set the vertical cross-wire exactly on the slit image with the tangent screw. This is the direct reading (Record as → Direct reading, prism removed); the angles of deviation are measured from it.' }), ...prismAngleSteps(sp), ...prismMinDevSteps(sp, 'green', 'green'),
+        { title: 'Part D: sodium D lines', el: () => [sp.top.wrap, sp.eye.wrap],
+          text: 'Change to the sodium lamp. Set the prism at minimum deviation for the yellow light in the same way. Make the collimator slit very narrow, change to the ×40 eyepiece and switch on the intensity trace: the yellow line is really two lines, D₂ and D₁.',
+          run: async T => { await T.reach(sp.C.src.sel); sp.setSource('na'); await T.wait(400); const L = lineOf('na', 'd2'); const im = Math.asin(clamp(sp.muOf(L.l) * Math.sin(P.A / 2 * DEG), -1, 1)) / DEG; const a = sp.C.tbl.get(); await T.reach(sp.C.tbl.input); await T.tween(a, im, 1800, v => { sp.C.tbl.set(v, 'demo'); const dv = sp.devAt(v, 'd2'); if (dv != null) sp.C.tel.set(-dv, 'demo'); T.pointSlider(sp.C.tbl); }); await T.slide(sp.C.slit, 0.008, 1000); await pickSeg(T, sp.C.zoom, '×40', 40); await setCheck(T, sp.C.trace, true); } },
+        { title: 'Reduce the aperture', el: () => [sp.C.ap.el, sp.eye.wrap],
+          text: 'Now close the aperture slit in front of the prism slowly with its micrometer, watching the dip between the two peaks of the trace. Note the width at which the dip just disappears (about 80% of the peak height): the D lines are just resolved. Record it as “Aperture width when D lines are just resolved” and repeat three times.',
+          run: async T => { await T.slide(sp.C.ap, Math.min(20, +(aJust * 2.2).toFixed(2)), 2600); await T.reach(rec.sel.sel); rec.sel.set('ap'); } }],
+      tourDone: 'The prism is set. Record the readings of parts B, C and D yourself, following the procedure.' });
     const lines = ['blue', 'green', 'y1', 'y2'];
     const rec = recorder([
       { group: 'Part B — angle of prism', items: [['A|1', 'Image reflected from face 1'], ['A|2', 'Image reflected from face 2']] },
       { group: 'Part C — mercury lines', items: [['direct', 'Direct reading (prism removed)']].concat(lines.map(id => ['md|' + id, `${lineOf('hg', id).name} — minimum deviation`])) },
       { group: 'Part D — sodium D lines', items: [['ap', 'Aperture width when D lines are just resolved']] }],
       async (slot, say) => {
+        if (!spec.ready(say)) return;
         if (slot !== 'ap') return prismRecord(spec, slot, tA, tB, say);
         const st = spec.st;
         if (st.source !== 'na' || st.pmode !== 'refract' || st.removed) return say('Use the sodium lamp with the prism in the refraction position.', 'warn');
@@ -1480,7 +2035,7 @@ EXPS.push({
         if (vis.length < 2) return say('The D lines are not in the field of view. Find the yellow line, set the prism at minimum deviation and use the ×40 eyepiece.', 'warn');
         if (vis[0].dev - spec.minDev(vis[0].l) > 0.25) return say('Set the prism at minimum deviation for the sodium light first.', 'warn');
         const [a, b] = vis; const sep = Math.abs(a.dir - b.dir) * DEG, wd = a.l * 1e-6 / a.Wout, ws = st.slit / F_COLL;
-        const ratio = sep / Math.hypot(wd, ws * 0.9);
+        const ratio = sep / Math.hypot(wd, ws * 0.9, spec.blurAng() * DEG);
         tC.add({ a: st.ap });
         say(`Recorded aperture width a = ${st.ap.toFixed(2)} mm.` + (ratio > 1.35 ? ' The lines still look clearly separated at this width; the just-resolved width is smaller.' : ratio < 0.8 ? ' At this width the lines are not resolved; the just-resolved width is larger.' : ''), ratio > 1.35 || ratio < 0.8 ? 'warn' : 'ok');
       });
@@ -1489,7 +2044,29 @@ EXPS.push({
     const tB = devTable('exp3.B', lines, () => angleOf(tA.rows[0]), analyse, 'Table 2. Refractive index for mercury lines');
     const tC = new ObsTable({ key: 'exp3.C', title: 'Table 3. Aperture width at just resolution (sodium D lines)', onChange: analyse, deletable: true, columns: [{ label: 'Trial', v: (r, i) => i + 1 }, { label: 'Aperture width a (mm)', k: 'a', fmt: v => v.toFixed(2) }] });
     const res = resultBox();
-    function analyse() {
+    function analyse() { analyse0({ set: x => res.set(x + exp3Work()) }); }
+    function exp3Work() {
+      const pw = prismWork(tA, tB, lines); const blocks = pw.blocks.slice();
+      if (pw.pts.length >= 2) {
+        const c = cauchyWork(pw.pts); const L = NA_L / 1000; const dmu = 2 * c.B / L ** 3; // per µm
+        blocks.push(WK.block('Dispersion dμ/dλ at the sodium D lines', c.steps.concat([
+          WK.eq('|dμ/dλ|', '2B / λ³', `2 × ${c.B.toFixed(5)} µm² / (${L.toFixed(5)} µm)³`, `${dmu.toFixed(5)} µm⁻¹`, `${(dmu * 1e4).toFixed(1)} cm⁻¹`) + WK.why('Differentiating μ = A + B/λ² gives dμ/dλ = −2B/λ³; only its size matters here.'),
+          WK.eq('Theoretical R.P. (full base)', 'b |dμ/dλ|', `5.0 cm × ${(dmu * 1e4).toFixed(1)} cm⁻¹`, (5 * dmu * 1e4).toFixed(0))]), false));
+        if (tC.rows.length && pw.A != null) {
+          const A = pw.A, a = mean(tC.rows.map(r => r.a)); const muNa = c.A + c.B / L ** 2; const sA = Math.sin(A / 2 * DEG); const i = Math.asin(clamp(muNa * sA, -1, 1)) / DEG; const t = 2 * a * sA / Math.cos(i * DEG); const rp = t / 10 * dmu * 1e4; const need = NA_L / NA_DL;
+          blocks.push(WK.block('Resolving power at just resolution (part D)', [
+            tC.rows.length > 1 ? WK.eq('Mean aperture a', `(${tC.rows.map(r => r.a.toFixed(2)).join(' + ')}) / ${tC.rows.length}`, `${a.toFixed(2)} mm`) : WK.eq('Aperture a', `${a.toFixed(2)} mm`),
+            WK.eq('μ for sodium light', 'A + B/λ²', `${c.A.toFixed(4)} + ${c.B.toFixed(5)} / ${L.toFixed(5)}²`, muNa.toFixed(4)),
+            WK.eq('Angle of incidence i', 'sin⁻¹[μ sin(A/2)]', `sin⁻¹[${muNa.toFixed(4)} × ${sA.toFixed(5)}]`, `sin⁻¹(${(muNa * sA).toFixed(5)})`, `${i.toFixed(3)}°`),
+            WK.eq('Effective base t', '2a sin(A/2) / cos i', `2 × ${a.toFixed(2)} mm × ${sA.toFixed(5)} / ${Math.cos(i * DEG).toFixed(5)}`, `${t.toFixed(2)} mm`) + WK.why('Only the part of the prism actually filled with light (thickness t) takes part in forming the spectrum.'),
+            WK.eq('R.P.', 't |dμ/dλ|', `${(t / 10).toFixed(3)} cm × ${(dmu * 1e4).toFixed(1)} cm⁻¹`, rp.toFixed(0)),
+            WK.eq('λ/dλ for the D lines', '589.29 nm / 0.597 nm', need.toFixed(0)),
+            WK.eq('Difference', '|R.P. − λ/dλ| / (λ/dλ) × 100', `|${rp.toFixed(0)} − ${need.toFixed(0)}| / ${need.toFixed(0)} × 100`, `${pctErr(rp, need).toFixed(1)}%`)], false));
+        }
+      }
+      return WK.sec(blocks, 'Open a step to see how each quantity comes from your own readings.');
+    }
+    function analyse0(res) {
       const A = angleOf(tA.rows[0]);
       const pts = tB.rows.filter(r => r.id !== 'direct').map(r => { const mu = muFrom(A, devMean(r, tB.rows)); return mu == null ? null : [1 / (lineOf('hg', r.id).l ** 2), mu, r]; }).filter(Boolean);
       let html = '<h4>Calculation</h4><div class="calc-lines">';
@@ -1541,7 +2118,7 @@ EXPS.push({
 <li>Reduce its width slowly until the two D lines just merge (just resolved). Note the width \(w\) from the micrometer. Repeat three times, approaching from wider widths.</li>
 <li>Repeat for the second order.</li>
 <li>Calculate \(N = w N_0/2.54\) and the resolving power \(nN\). Compare with \(\lambda/d\lambda\).</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> first set normal incidence (telescope at direct reading + 90°, rotate the grating table until the reflected image is on the cross-wire, then turn the table back 45° using the Prism-table readout). Then find the first-order yellow line, choose the ×40 eyepiece, narrow the collimator slit and turn on the intensity trace. Reduce the aperture micrometer until the dip between the two lines disappears.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> first set normal incidence (telescope at direct reading + 90°, rotate the grating table until the reflected image is on the cross-wire, then turn the table back 45° using the Prism-table readout). Then find the first-order yellow line, choose the ×40 eyepiece, narrow the collimator slit and turn on the intensity trace. Reduce the aperture micrometer until the dip between the two lines disappears. First complete the <i>Preliminary adjustments</i> (eyepiece, focus, levelling): they must be right before any reading can be recorded. Press <b>Demo setup</b> to watch every adjustment being made.</div>`,
   precautions: SPEC_COMMON_PRECAUTIONS + String.raw`<li>The rectangular slit must be parallel to the grating lines and centred on the beam.</li><li>Use a very narrow collimator slit; a wide slit blurs the lines and the result is too large.</li>`,
   errors: String.raw`<li>Subjective judgement of the just-resolved position.</li><li>Error in reading the small slit width.</li>`,
   viva: [
@@ -1554,14 +2131,23 @@ EXPS.push({
   bench(root) {
     const R = apparatus('exp4'); const lpi = 15000; const perMM = lpi / 25.4;
     const { instr, notes } = benchCols(root);
-    const spec = spectrometer({ id: 'exp4', rng: R, kind: 'grating', grating: { lpi }, sources: ['na'], zooms: [[1, '×1'], [10, '×10'], [40, '×40']], aperture: { min: 0.2, max: 20, init: 20 }, trace: true });
+    const spec = spectrometer({ id: 'exp4', rng: R, kind: 'grating', grating: { lpi }, sources: ['na'], zooms: [[1, '×1'], [10, '×10'], [40, '×40']], aperture: { min: 0.2, max: 20, init: 20 }, trace: true,
+      tourTitle: 'resolving power of a grating',
+      tour: sp => [...specSetupSteps(sp, { kind: 'grating', lamp: 'sodium vapour lamp', slit: 0.008, direct: 'Clamp the telescope and use its tangent screw to set the vertical cross-wire exactly on the slit image. Note this direct reading: the telescope is turned through 90° from here in the next step.' }), ...gratingNormalSteps(sp),
+        { title: 'Find the first-order D lines', el: () => [sp.top.wrap, sp.eye.wrap],
+          text: 'Release the telescope and turn it to the first-order yellow line. Change to the ×40 eyepiece and switch on the intensity trace: the yellow line is really two lines, D₂ and D₁, with a dip between them.',
+          run: async T => { const th = Math.asin(NA_L / (2.54e7 / lpi)) / DEG; await fineTo(T, sp.C.tel, th, 2600); await pickSeg(T, sp.C.zoom, '×40', 40); await setCheck(T, sp.C.trace, true); } },
+        { title: 'Narrow the beam with the aperture', el: () => [sp.C.ap.el, sp.eye.wrap],
+          text: 'Put the adjustable rectangular slit in front of the grating. Close it slowly with the micrometer, watching the dip between the two peaks. Note the width at which the dip just disappears: the lines are just resolved. Record the width for order 1, repeat three times, then do the same in the second order.',
+          run: async T => { await T.slide(sp.C.ap, 4.2, 2600); await T.reach(rec.sel.sel); rec.sel.set('1'); } }] });
     const rec = recorder([{ group: 'Just-resolved aperture width', items: [['1', 'First order'], ['2', 'Second order']] }], async (slot, say) => {
+      if (!spec.ready(say)) return;
       const n = +slot; const st = spec.st;
       if (st.removed) return say('Put the grating back.', 'warn');
       const vis = spec.inView(spec.F()).filter(r => r.kind === 'diff' && Math.abs(r.m) === n);
       if (vis.length < 2) return say(`The order-${n} yellow lines are not in the field of view. Find them and use a high-power eyepiece.`, 'warn');
       const [a, b] = vis; const sep = Math.abs(a.dir - b.dir) * DEG, wd = a.l * 1e-6 / a.Wout, ws = st.slit / F_COLL;
-      const ratio = sep / Math.hypot(wd, ws * 0.9);
+      const ratio = sep / Math.hypot(wd, ws * 0.9, spec.blurAng() * DEG);
       tbl.add({ n, w: st.ap });
       say(`Recorded w = ${st.ap.toFixed(2)} mm for order ${n}.` + (ratio > 1.35 ? ' The lines still look clearly separated; the just-resolved width is smaller.' : ratio < 0.8 ? ' At this width they are not resolved; the just-resolved width is larger.' : '') + (Math.abs(spec.gEff()) > 1 ? ' (The grating is not normal to the beam.)' : ''), ratio > 1.35 || ratio < 0.8 ? 'warn' : 'ok');
     });
@@ -1583,7 +2169,19 @@ EXPS.push({
       const all = tbl.rows.map(r => r.n * r.w * perMM);
       if (all.length) html += `<p class="big" style="margin-top:10px">Experimental resolving power = <b>${mean(all).toFixed(0)}</b> (theoretical ${need.toFixed(0)})</p>`;
       else html += `<p class="muted small" style="margin-top:8px">Record the just-resolved aperture width to complete the result.</p>`;
-      res.set(html);
+      const blocks = [WK.block('Lines per millimetre', [`N₀ = ${lpi} lines per inch and 1 inch = 25.4 mm.`, WK.eq('Lines per mm', `${lpi} / 25.4`, `${perMM.toFixed(1)} mm⁻¹`)], !tbl.rows.length),
+        WK.block('λ/dλ for the sodium D lines', [WK.eq('λ (mean of D₁ and D₂)', '(588.995 + 589.592) / 2', '589.29 nm'), WK.eq('dλ', '589.592 − 588.995', '0.597 nm'), WK.eq('λ/dλ', '589.29 / 0.597', need.toFixed(0))], false)];
+      [1, 2].forEach(n => {
+        const rows = tbl.rows.filter(r => r.n === n); if (!rows.length) return;
+        const st = rows.map((r, k) => WK.eq(`Trial ${k + 1}: N`, 'w × lines per mm', `${r.w.toFixed(2)} mm × ${perMM.toFixed(1)} mm⁻¹`, (r.w * perMM).toFixed(0)) + ' → ' + WK.eq('R.P.', 'nN', `${n} × ${(r.w * perMM).toFixed(0)}`, (n * r.w * perMM).toFixed(0)));
+        st[0] += WK.why('N is the number of lines of the grating exposed through the aperture of width w when the D lines are just resolved.');
+        const m = mean(rows.map(r => n * r.w * perMM));
+        if (rows.length > 1) st.push(WK.eq('Mean R.P.', `(${rows.map(r => (n * r.w * perMM).toFixed(0)).join(' + ')}) / ${rows.length}`, m.toFixed(0)));
+        st.push(WK.eq('Difference from λ/dλ', '|R.P. − λ/dλ| / (λ/dλ) × 100', `|${m.toFixed(0)} − ${need.toFixed(0)}| / ${need.toFixed(0)} × 100`, `${pctErr(m, need).toFixed(1)}%`));
+        st.push(WK.eq('R.P. of the whole grating (W = 20.0 mm)', 'n × W × lines per mm', `${n} × 20.0 × ${perMM.toFixed(1)}`, (n * 20 * perMM).toFixed(0)));
+        blocks.push(WK.block(`Order ${n}`, st, true));
+      });
+      res.set(html + WK.sec(blocks));
     }
     notes.append(card('Lab notebook', '', tbl.el), card('Result', '', res.el)); analyse();
   }
@@ -1593,12 +2191,18 @@ EXPS.push({
 function prismMuBench(root, id, mode) {
   const R = apparatus(id); const P = prismParams(R);
   const { instr, notes } = benchCols(root);
-  const spec = spectrometer({ id, rng: R, kind: 'prism', prism: P, sources: ['hg'], angleMode: true, zooms: [[1, '×1'], [4, '×4']] });
+  const spec = spectrometer({ id, rng: R, kind: 'prism', prism: P, sources: ['hg'], angleMode: true, zooms: [[1, '×1'], [4, '×4']],
+    tourTitle: mode === 'mu' ? 'refractive index' : 'Cauchy’s constants',
+    tour: sp => [...specSetupSteps(sp, { kind: 'prism', lamp: 'mercury vapour lamp', direct: 'Clamp the telescope and set the vertical cross-wire exactly on the slit image with the tangent screw. This is the direct reading (Record as → Direct reading, prism removed); the angles of deviation are measured from it.' }), ...prismAngleSteps(sp), ...prismMinDevSteps(sp, 'green', 'green'),
+      { title: 'Record and repeat for each line', el: () => [rec.sel.sel],
+        text: '“Record as” is set to “Green — minimum deviation”: press Record reading. Then follow each of the other lines (violet, blue, bluish-green, yellow, red) in the same way, finding the turning point again for each line before recording it.',
+        run: async T => { await T.reach(rec.sel.sel); rec.sel.set('md|green'); } }],
+    tourDone: 'Now record the readings yourself: the two reflected images, the direct reading and the minimum deviation of each line.' });
   const lines = HG_MAIN;
   const rec = recorder([
     { group: 'Angle of the prism', items: [['A|1', 'Image reflected from face 1'], ['A|2', 'Image reflected from face 2']] },
     { group: 'Minimum deviation', items: [['direct', 'Direct reading (prism removed)']].concat(lines.map(i => ['md|' + i, `${lineOf('hg', i).name} — minimum deviation`])) }],
-    (slot, say) => prismRecord(spec, slot, tA, tB, say));
+    (slot, say) => spec.ready(say) ? prismRecord(spec, slot, tA, tB, say) : null);
   instr.append(card('Spectrometer', 'equilateral prism, mercury lamp', spec.el), card('Record', '', rec.el));
   const tA = angleTable(id + '.A', () => { tB.render(); analyse(); });
   const tB = devTable(id + '.B', lines, () => angleOf(tA.rows[0]), analyse);
@@ -1607,7 +2211,20 @@ function prismMuBench(root, id, mode) {
   const plot = mode === 'mu'
     ? plotCard('Graph: μ against λ (dispersion curve)', { get: () => ({ xLabel: 'Wavelength λ (nm)', yLabel: 'Refractive index μ', series: [{ pts: pts().map(p => [p.l, p.mu]), join: true }], yDec: 3 }) })
     : plotCard('Graph: μ against 1/λ²', { get: () => { const p = pts().map(q => [1e6 / q.l ** 2, q.mu]); const f = p.length >= 2 ? linreg(p) : null; return { xLabel: '1/λ² (µm⁻²)', yLabel: 'Refractive index μ', series: [{ pts: p, fit: f }], yDec: 3, xDec: 2 }; } });
-  function analyse() {
+  function analyse() { analyse0({ set: x => res.set(x + prismMuWork()) }); }
+  function prismMuWork() {
+    const pw = prismWork(tA, tB, lines); const blocks = pw.blocks.slice();
+    if (mode === 'mu') {
+      const g = id => pw.pts.find(q => q.id === id);
+      const v = g('violet'), r = g('red') || g('y2'), y = g('y1') || g('green');
+      if (v && r && y) blocks.push(WK.block('Dispersive power', [WK.eq('ω', '(μ<sub>v</sub> − μ<sub>r</sub>) / (μ<sub>y</sub> − 1)', `(${v.mu.toFixed(4)} − ${r.mu.toFixed(4)}) / (${y.mu.toFixed(4)} − 1)`, `${(v.mu - r.mu).toFixed(4)} / ${(y.mu - 1).toFixed(4)}`, ((v.mu - r.mu) / (y.mu - 1)).toFixed(4))], false));
+    } else if (pw.pts.length >= 2) {
+      const c = cauchyWork(pw.pts);
+      blocks.push(WK.block('Cauchy’s constants from the straight line μ = A + B/λ²', c.steps.concat([WK.eq('μ for sodium light (589.3 nm)', 'A + B/λ²', `${c.A.toFixed(4)} + ${c.B.toFixed(5)} / 0.58929²`, (c.A + c.B / 0.58929 ** 2).toFixed(4))]), false));
+    }
+    return WK.sec(blocks, 'Open a step to see how A, δm and μ come from your own readings.');
+  }
+  function analyse0(res) {
     plot.view.redraw();
     const A = angleOf(tA.rows[0]); const p = pts();
     let html = '<h4>Calculation</h4><div class="calc-lines">';
@@ -1651,7 +2268,7 @@ const PRISM_PROC = String.raw`
 <li>Rotate the prism table slowly towards the direct position while following a line with the telescope. The line moves, stops and then turns back. Set the table where the line turns back (<b>minimum deviation</b>) and put the cross-wire on the line with the tangent screw. Read both verniers.</li>
 <li>Repeat for each line of the mercury spectrum (violet, blue, bluish-green, green, yellow-1, yellow-2, red).</li>
 <li>δ<sub>m</sub> = difference between the minimum deviation reading and the direct reading. Calculate μ for each line.</li></ol>`;
-const PRISM_VNOTE = String.raw`<div class="vnote"><b>On the virtual bench:</b> choose <i>Apex to collimator</i> for the angle of the prism and <i>For refraction</i> for minimum deviation. Drag inside the table circle (or use the table slider) to rotate the prism, and drag the telescope arm to follow the line. If the line is not at minimum deviation, the Record button tells you so.</div>`;
+const PRISM_VNOTE = String.raw`<div class="vnote"><b>On the virtual bench:</b> choose <i>Apex to collimator</i> for the angle of the prism and <i>For refraction</i> for minimum deviation. Drag inside the table circle (or use the table slider) to rotate the prism, and drag the telescope arm to follow the line. If the line is not at minimum deviation, the Record button tells you so. First complete the <i>Preliminary adjustments</i> (eyepiece, focus, levelling): they must be right before any reading can be recorded. Press <b>Demo setup</b> to watch every adjustment being made.</div>`;
 EXPS.push({
   no: 5, id: 'exp5', group: 'Optics', short: 'Refractive index for different wavelengths',
   title: 'Refractive index of a prism for different wavelengths',
@@ -1751,7 +2368,7 @@ EXPS.push({
 <li>Keep moving in the same direction across the centre. Note the readings for rings 2, 4, … , 20 on the right side.</li>
 <li>For each ring, diameter \(D\) = difference between the right and left readings. Calculate \(D^2\).</li>
 <li>Plot \(D^2\) (y-axis) against ring number \(n\) (x-axis). Find the slope and calculate \(\lambda = \text{slope}/4R\). Also calculate \(\lambda\) from pairs of rings using \(\lambda = (D^2_{n+p}-D^2_n)/4pR\).</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> move the microscope with the slider (coarse) and the buttons (fine, 0.001 cm). Put the vertical cross-wire on the centre of a dark ring and press <i>Record</i>. In a real lab you count the rings as you move; here the bench tells you the ring number when you record. The virtual microscope has a little backlash, just like a real one: keep turning the screw in one direction while taking readings.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> move the microscope with the slider (coarse) and the buttons (fine, 0.001 cm). Put the vertical cross-wire on the centre of a dark ring and press <i>Record</i>. In a real lab you count the rings as you move; here the bench tells you the ring number when you record. The virtual microscope has a little backlash, just like a real one: keep turning the screw in one direction while taking readings. First complete the <i>Preliminary adjustments</i> (glass plate at 45° and microscope focus): they must be right before any reading can be recorded. Press <b>Demo setup</b> to watch every adjustment being made.</div>`,
   precautions: String.raw`<li>Clean the lens and the plate; dust at the point of contact makes the centre bright or grey.</li><li>The light falling on the film should be parallel and normal (glass plate exactly at 45°).</li><li>Move the microscope screw in one direction only during a set of readings to avoid backlash error.</li><li>Set the cross-wire tangentially or on the middle of the dark ring, the same way for every ring.</li><li>Count the rings carefully; do not use rings very close to the centre, which are broad.</li>`,
   errors: String.raw`<li>Error in counting the rings or in setting the cross-wire.</li><li>Backlash of the microscope screw.</li><li>Error in the measurement of R by the spherometer.</li>`,
   viva: [
@@ -1771,6 +2388,9 @@ EXPS.push({
     const Rmm = P.R * 10;
     const st = Object.assign({ s: +(P.xc + R.range(-0.08, 0.08)).toFixed(3), c: null, lastRecDir: 0, dir: 1 }, LS.get('exp1.st', {}));
     if (st.c == null) st.c = st.s;
+    if (st.plate == null) st.plate = +(randAdj() * 12).toFixed(2); // tilt of the glass plate away from 45°, degrees
+    if (st.focus == null) st.focus = randAdj();                   // microscope focus error
+    const bright = () => Math.exp(-((st.plate / 7) ** 2));
     const { instr, notes } = benchCols(root);
     const setup = canvasView(h('div'), { aspect: 0.5, maxH: 220, draw: drawSetup, alt: 'Newton’s rings arrangement' });
     const row = h('div', { class: 'cols2' });
@@ -1784,7 +2404,31 @@ EXPS.push({
     const mic = slider({ label: 'Microscope screw', min: +(P.xc - 0.55).toFixed(3), max: +(P.xc + 0.55).toFixed(3), step: 0.001, snap: 0.0005, value: st.s, fmt: () => '', fine: [['−0.1', -0.1], ['−0.01', -0.01], ['−0.001', -0.001], ['+0.001', 0.001], ['+0.01', 0.01], ['+0.1', 0.1]], onInput: v => move(v) });
     const sb = statusBox(); sb.say('Move the cross-wire on to the centre of a dark ring, then press Record.');
     const btn = h('button', { type: 'button', class: 'btn pri' }, 'Record reading');
-    instr.append(card('Newton’s rings apparatus', 'sodium light, λ unknown', setup.wrap, row, mic.el, h('div', { class: 'recrow' }, btn, h('span', { class: 'small muted' }, 'The ring number and side are detected automatically.')), sb.el));
+    const plateS = slider({ label: 'Glass plate G (tilt it)', min: -15, max: 15, step: 0.05, value: st.plate, fmt: () => '', fine: [['«', -1], ['‹', -0.1], ['›', 0.1], ['»', 1]], onInput: v => { st.plate = v; LS.set('exp1.st', st); eye.redraw(); setup.redraw(); adj.update(); } });
+    const focS = slider({ label: 'Microscope focus (rack and pinion)', min: -1, max: 1, step: 0.002, value: st.focus, fmt: () => '', fine: [['«', -0.05], ['‹', -0.005], ['›', 0.005], ['»', 0.05]], onInput: v => { st.focus = v; LS.set('exp1.st', st); eye.redraw(); adj.update(); } });
+    const adj = adjustPanel([['Glass plate at 45° (field evenly bright)', () => Math.abs(st.plate) <= 0.6], ['Rings in sharp focus', () => Math.abs(st.focus) <= 0.03]], plateS.el, focS.el);
+    const rd = m => { const q = m * P.lam * Rmm - 2 * P.d0 * Rmm - P.y0 * P.y0; return q > 0 ? Math.sqrt(q) : 0; }; // mm, where ring m meets the horizontal cross-wire
+    const leftPos = m => +(P.xc - rd(m) / 10).toFixed(4);
+    instr.append(demoBar('Watch how the Newton’s rings apparatus is set up and the microscope brought to the 20th ring.', 'Demo setup', () => { adj.el.open = true; runTour([
+      { title: 'Parallel beam of sodium light', el: () => setup.wrap,
+        text: 'The sodium lamp is placed at the focus of a convex lens, so that a parallel beam of yellow light falls on the glass plate G held above the lens-and-plate arrangement.' },
+      { title: 'Glass plate at 45°', el: () => [eye.wrap],
+        text: 'Turn the glass plate G until it makes 45° with the horizontal beam. It then reflects the light vertically down on to the lens, and the field of view of the microscope becomes evenly and brightly lit.',
+        run: async T => { await fineTo(T, plateS, 0, 1800); } },
+      { title: 'Focus the microscope on the rings', el: () => [eye.wrap],
+        text: 'Watching from the side, bring the microscope down close to the lens. Then, looking through it, raise it slowly with the rack and pinion until the rings formed in the thin air film are sharp: a dark centre surrounded by bright and dark rings. Focusing upwards means the objective can never strike the glass.',
+        run: async T => { await fineTo(T, focS, 0, 2000); } },
+      { title: 'Cross-wire at the centre', el: () => [eye.wrap],
+        text: 'Turn the microscope screw until the vertical cross-wire passes through the centre of the dark central spot. The horizontal cross-wire should run along a diameter.',
+        run: async T => { await T.slide(mic, P.xc, 1800); } },
+      { title: 'Count out to the 21st ring', el: () => [eye.wrap],
+        text: 'Turn the screw in one direction and count the dark rings as they pass the cross-wire, going a little beyond the 20th ring (to the 21st) on the left side.',
+        run: async T => { await T.slide(mic, leftPos(21.3) - P.back, 5200); } },
+      { title: 'Come back to the 20th ring', el: () => [eye.wrap, mic.el],
+        text: 'Now turn the screw the other way and set the vertical cross-wire on the middle of the 20th dark ring. From here on keep turning the screw in this same direction for every reading (20, 18, 16 … across the centre to the right side, 2, 4 … 20). This avoids backlash error.',
+        run: async T => { await T.slide(mic, leftPos(20), 2600); } }
+    ], { title: 'Demo setup · Newton’s rings', doneText: 'Press Record reading for the 20th ring, then continue ring by ring without reversing the screw.' }); }));
+    instr.append(card('Newton’s rings apparatus', 'sodium light, λ unknown', setup.wrap, row, adj.el, mic.el, h('div', { class: 'recrow' }, btn, h('span', { class: 'small muted' }, 'The ring number and side are detected automatically.')), sb.el));
     function move(v) {
       const ds = v - st.s; if (ds > 0) st.dir = 1; else if (ds < 0) st.dir = -1;
       st.s = v; st.c = clamp(st.c, st.s, st.s + P.back); // carriage lags by up to the backlash
@@ -1799,12 +2443,13 @@ EXPS.push({
       ctx.strokeStyle = T.muted; ctx.lineWidth = 1.2;
       ctx.fillStyle = T.grid; ctx.fillRect(cx - 90, by, 180, 10); ctx.strokeRect(cx - 90, by, 180, 10);
       ctx.beginPath(); ctx.moveTo(cx - 70, by); ctx.quadraticCurveTo(cx, by - 26, cx + 70, by); ctx.lineTo(cx + 70, by - 18); ctx.lineTo(cx - 70, by - 18); ctx.closePath(); ctx.fillStyle = T.accent; ctx.globalAlpha = .18; ctx.fill(); ctx.globalAlpha = 1; ctx.stroke();
-      const py = H * 0.42; ctx.strokeStyle = T.accent; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - 34, py + 34); ctx.lineTo(cx + 34, py - 34); ctx.stroke(); ctx.lineWidth = 1;
+      const py = H * 0.42, pa = (45 + st.plate) * DEG; ctx.strokeStyle = T.accent; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - 48 * Math.cos(pa), py + 48 * Math.sin(pa)); ctx.lineTo(cx + 48 * Math.cos(pa), py - 48 * Math.sin(pa)); ctx.stroke(); ctx.lineWidth = 1;
       ctx.fillStyle = T.ink; ctx.globalAlpha = .12; ctx.fillRect(cx - 14, 6, 28, py - 46); ctx.globalAlpha = 1; ctx.strokeStyle = T.ink; ctx.strokeRect(cx - 14, 6, 28, py - 46);
       const lx = W * 0.1; const g = ctx.createRadialGradient(lx, py, 2, lx, py, 24); g.addColorStop(0, '#ffd257'); g.addColorStop(1, 'rgba(255,210,87,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(lx, py, 24, 0, 7); ctx.fill();
       const llx = W * 0.27; ctx.strokeStyle = T.muted; ctx.beginPath(); ctx.ellipse(llx, py, 5, 26, 0, 0, 7); ctx.stroke();
       ctx.strokeStyle = T.sodium; ctx.globalAlpha = .8; ctx.lineWidth = 1.5;
-      [-10, 10].forEach(d => { ctx.beginPath(); ctx.moveTo(llx, py + d); ctx.lineTo(cx + d, py + d); ctx.lineTo(cx + d, by - 14); ctx.stroke(); });
+      const tilt = Math.tan(2 * st.plate * DEG);
+      [-10, 10].forEach(d => { ctx.beginPath(); ctx.moveTo(llx, py + d); ctx.lineTo(cx + d, py + d); ctx.lineTo(cx + d + tilt * (by - 14 - py - d), by - 14); ctx.stroke(); });
       ctx.globalAlpha = 1; ctx.lineWidth = 1;
       labelText(ctx, T, 'sodium lamp', lx, py + 36); labelText(ctx, T, 'convex lens', llx, py + 38); labelText(ctx, T, 'glass plate 45°', cx + 42, py - 30, 'left');
       labelText(ctx, T, 'travelling microscope', cx + 22, 20, 'left'); labelText(ctx, T, 'plano-convex lens on glass plate', cx, by + 22);
@@ -1813,14 +2458,15 @@ EXPS.push({
     function drawEye(ctx, W, H) {
       const T = theme(); ctx.clearRect(0, 0, W, H); ctx.fillStyle = T.panel; ctx.fillRect(0, 0, W, H);
       const cx = W / 2, cy = H / 2, Rr = Math.min(W, H) / 2 - 3, F = 0.62; // mm half-field
-      const x0 = off(); const d = img.data;
+      const x0 = off(); const d = img.data; const blr = Math.abs(st.focus) * 0.12, br = bright();
       for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
         const u = (i - N / 2) / (N / 2), v = (j - N / 2) / (N / 2); const k = (j * N + i) * 4;
         const rr = u * u + v * v; if (rr > 1.02) { d[k + 3] = 0; continue; }
         const x = x0 + u * F, y = v * F - P.y0; const r2 = x * x + y * y;
         const t = r2 / (2 * Rmm) + P.d0;
         const I = Math.sin(2 * Math.PI * t / P.lam) ** 2; const vig = 1 - 0.35 * rr;
-        const b = (0.07 + 0.88 * I) * vig;
+        const rmm = Math.sqrt(r2) + 0.02, dr = P.lam * Rmm / (2 * rmm), q = Math.PI * blr / dr, Vis = Math.exp(-0.5 * q * q);
+        const b = (0.07 + 0.88 * (0.5 + (I - 0.5) * Vis)) * vig * (0.12 + 0.88 * br);
         d[k] = 255 * b; d[k + 1] = 196 * b; d[k + 2] = 52 * b; d[k + 3] = 255;
       }
       octx.putImageData(img, 0, 0);
@@ -1829,6 +2475,7 @@ EXPS.push({
       ctx.strokeStyle = T.muted; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, Rr, 0, 7); ctx.stroke(); ctx.lineWidth = 1;
     }
     btn.addEventListener('click', async () => {
+      if (!adj.ready(sb.say)) return;
       const x = off(); const r2 = x * x + P.y0 * P.y0; const mf = (r2 / Rmm + 2 * P.d0) / P.lam; const m = Math.round(mf);
       if (m < 1) return sb.say('The cross-wire is at the central dark spot. Move outwards to the rings.', 'warn');
       if (Math.abs(mf - m) > 0.2) return sb.say('The cross-wire is not on the middle of a dark ring. Use the fine buttons to set it on the dark ring.', 'warn');
@@ -1864,7 +2511,23 @@ EXPS.push({
       html += `<div class="calc-lines"><div>Slope of D² vs n = ${f.m.toFixed(5)} cm² &nbsp;(${pts.length} rings)</div><div>λ = slope / 4R = ${f.m.toFixed(5)} / (4 × ${P.R.toFixed(1)}) = ${(f.m / (4 * P.R)).toExponential(4)} cm = <b>${lamG.toFixed(1)} nm</b></div>`;
       if (pairs.length) { html += `<div>Pairs with p = ${p}: ` + pairs.slice(0, 8).map(([n, pp, l]) => `n=${n}: ${l.toFixed(1)}`).join('; ') + (pairs.length > 8 ? '; …' : '') + ` nm</div><div>Mean λ (pairs) = <b>${mean(pairs.map(q => q[2])).toFixed(1)} nm</b></div>`; }
       html += `</div><p class="big" style="margin-top:10px">Wavelength of sodium light λ = <b>${lamG.toFixed(1)} nm</b> (${(lamG * 10).toFixed(0)} Å)</p><p class="small muted">Standard value 589.3 nm; percentage error ${pctErr(lamG, 589.3).toFixed(2)}%.</p>`;
-      res.set(html);
+      res.set(html + ringsWork(pts, f, pairs, p));
+    }
+    function ringsWork(pts, f, pairs, p) {
+      const rows = tbl.rows.filter(r => D(r) != null).sort((a, b) => b.m - a.m);
+      const d = rows.map(r => WK.eq(`D<sub>${r.m}</sub>`, `|${r.R.toFixed(3)} − ${r.L.toFixed(3)}|`, `${D(r).toFixed(3)} cm`) + ' &nbsp; ' + WK.eq(`D<sub>${r.m}</sub>²`, `${D(r).toFixed(3)}²`, `${(D(r) ** 2).toFixed(4)} cm²`));
+      d[0] += WK.why('The diameter is the difference between the right and left readings of the same ring.');
+      const fw = WK.fit(pts, 'n', 'D²', '', ' cm²');
+      const lam = f.m / (4 * P.R);
+      const blocks = [WK.block('Diameter of each ring', d, true),
+        WK.block('Slope of the D² – n graph', fw.steps.concat([WK.why('D² increases in a straight line with the ring number n: D² = 4nλR (plus a constant if the contact is not perfect). The slope is 4λR.')]), false),
+        WK.block('Wavelength λ', [WK.eq('λ', 'slope / 4R', `${f.m.toFixed(5)} cm² / (4 × ${P.R.toFixed(1)} cm)`, `${WK.sig(lam, 5)} cm`, `${(lam * 1e7).toFixed(1)} nm`), WK.pct(lam * 1e7, 589.3, 1)], false)];
+      if (pairs && pairs.length) {
+        const [n, pp, l] = pairs[0]; const a = rows.find(r => r.m === n + pp), b = rows.find(r => r.m === n);
+        if (a && b) blocks.push(WK.block('Check: pairs of rings', [WK.eq('λ', '(D<sub>n+p</sub>² − D<sub>n</sub>²) / 4pR', `(D<sub>${n + pp}</sub>² − D<sub>${n}</sub>²) / (4 × ${pp} × R)`, `(${(D(a) ** 2).toFixed(4)} − ${(D(b) ** 2).toFixed(4)}) / (4 × ${pp} × ${P.R.toFixed(1)})`, `${((D(a) ** 2 - D(b) ** 2) / (4 * pp * P.R) * 1e7).toFixed(1)} nm`) + WK.why('Taking the difference of two rings removes the error due to dust or imperfect contact at the centre.'),
+          pairs.length > 1 ? WK.eq('Mean of all pairs', `(${pairs.slice(0, 6).map(q => q[2].toFixed(1)).join(' + ')}${pairs.length > 6 ? ' + …' : ''}) / ${pairs.length}`, `${mean(pairs.map(q => q[2])).toFixed(1)} nm`) : null], false));
+      }
+      return WK.sec(blocks);
     }
     notes.append(card('Lab notebook', 'readings are saved in this browser', tbl.el), plot.el, card('Result', '', res.el));
     analyse();
@@ -1906,7 +2569,7 @@ EXPS.push({
 <li>Repeat for each concentration. Rinse the tube with the next solution before filling.</li>
 <li>Calculate \(\theta = \theta_2 - \theta_1\) and \(S = \theta/(lc)\) for each. Plot \(\theta\) against \(c\).</li>
 <li>Fill the tube with the unknown solution, find its rotation and read its concentration from the graph.</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> choose what is in the tube, then rotate the analyser with the slider and the fine buttons (±1°, ±0.1°). The left half of the field is seen through the quartz plate. Press <i>Record</i> when both halves look equally dark. Three readings per solution are kept.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> choose what is in the tube, then rotate the analyser with the slider and the fine buttons (±1°, ±0.1°). The left half of the field is seen through the quartz plate. Press <i>Record</i> when both halves look equally dark. Three readings per solution are kept. First complete the <i>Preliminary adjustments</i> (eyepiece focused on the dividing line): they must be right before any reading can be recorded. Press <b>Demo setup</b> to watch every adjustment being made.</div>`,
   precautions: String.raw`<li>There should be no air bubble in the tube; it disturbs the field.</li><li>Use the equal-darkness position, not the equal-brightness position.</li><li>Clean and rinse the tube with the solution to be used next.</li><li>Use monochromatic (sodium) light; specific rotation depends on wavelength.</li><li>The temperature should remain constant; S changes slightly with temperature.</li>`,
   errors: String.raw`<li>Error in judging equal darkness.</li><li>Error in preparing the concentration (weighing, volume).</li><li>Temperature variations.</li>`,
   viva: [
@@ -1925,6 +2588,7 @@ EXPS.push({
     const samples = [{ id: 'w', name: 'Distilled water', c: 0 }].concat([5, 10, 15, 20, 25].map((g, k) => ({ id: 's' + g, name: `Solution ${k + 1} (${g} g / 100 cc)`, c: g / 100, ca: g / 100 * (1 + R.range(-0.008, 0.008)) })), [{ id: 'x', name: 'Unknown solution X', c: null, ca: +R.range(0.07, 0.22).toFixed(3) }]);
     samples[0].ca = 0;
     const st = Object.assign({ a: +R.range(0, 360).toFixed(1), sample: 'w' }, LS.get('exp7.st', {}));
+    if (st.ef == null) st.ef = randAdj(); // eyepiece focus error
     const theta = () => { const s = samples.find(x => x.id === st.sample); return P.S * P.l * s.ca; };
     const { instr, notes } = benchCols(root);
     const scheme = canvasView(h('div'), { aspect: 0.22, minH: 96, maxH: 130, draw: drawScheme, alt: 'Polarimeter arrangement' });
@@ -1938,7 +2602,30 @@ EXPS.push({
     const an = slider({ label: 'Analyser (rotate)', min: 0, max: 360, step: 0.05, value: st.a, fmt: () => '', fine: [['−10°', -10], ['−1°', -1], ['−0.1°', -0.1], ['+0.1°', 0.1], ['+1°', 1], ['+10°', 10]], onInput: v => { st.a = norm360(v); save(); eye.redraw(); vern.redraw(); upd(); } });
     const sb = statusBox(); sb.say('Rotate the analyser until both halves are equally dark, then press Record.');
     const btn = h('button', { type: 'button', class: 'btn pri' }, 'Record reading');
-    instr.append(card('Laurent’s half-shade polarimeter', 'sodium light', scheme.wrap, row, an.el, h('div', { class: 'recrow' }, btn), sb.el));
+    const efS = slider({ label: 'Eyepiece (focus on the dividing line)', min: -1, max: 1, step: 0.002, value: st.ef, fmt: () => '', fine: [['«', -0.05], ['‹', -0.005], ['›', 0.005], ['»', 0.05]], onInput: v => { st.ef = v; save(); eye.redraw(); adj.update(); } });
+    const adj = adjustPanel([['Dividing line of the half-shade in sharp focus', () => Math.abs(st.ef) <= 0.03]], efS.el);
+    const pickSample = async (T, id) => { await T.reach(sampleSel.sel); sampleSel.set(id); sampleSel.sel.dispatchEvent(new Event('change')); await T.wait(500); };
+    const darkNear = () => { const d0 = norm360(P.pol + theta()); const c = [d0 - 180, d0, d0 + 180].filter(x => x >= 0 && x <= 360); return c.sort((x, y) => Math.abs(x - st.a) - Math.abs(y - st.a))[0]; };
+    instr.append(demoBar('Watch how the polarimeter is set up and the zero reading taken.', 'Demo setup', () => { adj.el.open = true; runTour([
+      { title: 'Sodium lamp', el: () => scheme.wrap,
+        text: 'The sodium lamp is switched on in front of the polariser and allowed to warm up for about ten minutes, until its yellow light is steady.' },
+      { title: 'Focus the eyepiece', el: () => [eye.wrap],
+        text: 'Look through the eyepiece and slide it in or out until the vertical line that divides the field into two halves (the edge of the half-shade plate) looks sharp.',
+        run: async T => { await fineTo(T, efS, 0, 1800); } },
+      { title: 'Tube filled with distilled water', el: () => [sampleSel.el],
+        text: 'Fill the polarimeter tube with distilled water so that no air bubble is left in the light path, close it, dry the glass ends and place it between the polariser and the analyser.',
+        run: async T => { await pickSample(T, 'w'); } },
+      { title: 'Zero reading: equal darkness', el: () => [eye.wrap],
+        text: 'Rotate the analyser until the two halves of the field are equally <b>dark</b>. (Equally bright halves are not used: the eye cannot judge them well.) Note this analyser reading: it is the zero reading.',
+        run: async T => { await fineTo(T, an, darkNear(), 2600); } },
+      { title: 'Fill the sugar solution', el: () => [sampleSel.el, eye.wrap],
+        text: 'Empty and rinse the tube, then fill it with the first sugar solution. The two halves are no longer equally dark: the solution has rotated the plane of polarisation.',
+        run: async T => { await pickSample(T, samples[1].id); } },
+      { title: 'Find equal darkness again', el: () => [eye.wrap],
+        text: 'Rotate the analyser again until the halves are equally dark. The difference between this reading and the zero reading is the angle of rotation θ. Take three readings for each solution and find their mean.',
+        run: async T => { await fineTo(T, an, darkNear(), 2200); } }
+    ], { title: 'Demo setup · polarimeter', doneText: 'Press Record reading. Then do the same for each solution and for the unknown one.' }); }));
+    instr.append(card('Laurent’s half-shade polarimeter', 'sodium light', scheme.wrap, row, adj.el, an.el, h('div', { class: 'recrow' }, btn), sb.el));
     function save() { LS.set('exp7.st', st); }
     function upd() { ro.set(norm360(st.a).toFixed(1) + '°', Practice.on); }
     upd(); Practice.subs.add(upd); onCleanup(() => Practice.subs.delete(upd));
@@ -1948,13 +2635,16 @@ EXPS.push({
       const cx = W / 2, cy = H / 2, Rr = Math.min(W, H) / 2 - 3; const G = 0.7 / Math.sin(P.eps * DEG) ** 2;
       const [I1, I2] = halves(); const map = I => 1 - Math.exp(-I * G);
       const col = b => `rgb(${Math.round(255 * b)},${Math.round(205 * b)},${Math.round(70 * b)})`;
-      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, Rr, 0, 7); ctx.clip();
-      ctx.fillStyle = col(map(I1)); ctx.fillRect(cx - Rr, cy - Rr, Rr, 2 * Rr);
-      ctx.fillStyle = col(map(I2)); ctx.fillRect(cx, cy - Rr, Rr, 2 * Rr);
+      const o = halfCv, oc = o.getContext('2d'), n = o.width;
+      oc.fillStyle = col(map(I1)); oc.fillRect(0, 0, n / 2, n); oc.fillStyle = col(map(I2)); oc.fillRect(n / 2, 0, n / 2, n);
+      oc.strokeStyle = 'rgba(0,0,0,.6)'; oc.lineWidth = 2; oc.beginPath(); oc.moveTo(n / 2, 0); oc.lineTo(n / 2, n); oc.stroke();
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, Rr, 0, 7); ctx.fillStyle = '#000'; ctx.fill(); ctx.clip();
+      blurInto(ctx, o, cx - Rr, cy - Rr, 2 * Rr, 2 * Rr, Math.abs(st.ef) * Rr * 0.1);
       const vg = ctx.createRadialGradient(cx, cy, Rr * 0.5, cx, cy, Rr); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.45)'); ctx.fillStyle = vg; ctx.fillRect(cx - Rr, cy - Rr, 2 * Rr, 2 * Rr);
-      ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(cx, cy - Rr); ctx.lineTo(cx, cy + Rr); ctx.stroke(); ctx.restore();
+      ctx.restore();
       ctx.strokeStyle = T.muted; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, Rr, 0, 7); ctx.stroke(); ctx.lineWidth = 1;
     }
+    const halfCv = document.createElement('canvas'); halfCv.width = halfCv.height = 240;
     function drawScheme(ctx, W, H) {
       const T = theme(); ctx.clearRect(0, 0, W, H); ctx.fillStyle = T.panel2; ctx.fillRect(0, 0, W, H);
       const y = H * 0.45; const parts = [['lamp', 0.06], ['polariser', 0.2], ['half-shade', 0.32], ['tube (2 dm)', 0.56], ['analyser', 0.8], ['eye', 0.93]];
@@ -1966,6 +2656,7 @@ EXPS.push({
       parts.forEach(([t, f]) => labelText(ctx, T, t, W * f, y + 32));
     }
     btn.addEventListener('click', async () => {
+      if (!adj.ready(sb.say)) return;
       const th = theta(); const dark = P.pol + th; const dd = Math.abs(((st.a - dark) % 180 + 270) % 180 - 90); // distance to equal darkness (mod 180)
       const bright = Math.abs(((st.a - dark - 90) % 180 + 270) % 180 - 90);
       if (bright < 6) return sb.say('Both halves are equally <b>bright</b>. This position is not sensitive. Turn the analyser about 90° to the equal-darkness position.', 'warn');
@@ -2001,7 +2692,26 @@ EXPS.push({
       const x = tbl.rows.find(r => r.id === 'x'); const tx = x ? rot(x, tbl.rows) : null;
       if (tx != null) html += `<div>Unknown X: θ = ${tx.toFixed(2)}° → c = θ/(S l) = <b>${(tx / (S * P.l)).toFixed(3)} g/cc</b></div>`;
       html += `</div><p class="big" style="margin-top:10px">Specific rotation of cane sugar S = <b>${S.toFixed(1)}°</b> dm⁻¹ (g/cc)⁻¹</p><p class="small muted">Standard value at 20 °C for sodium light: 66.5; error ${pctErr(S, 66.5).toFixed(1)}%.</p>`;
-      res.set(html);
+      res.set(html + polarWork(p, f, S, tx));
+    }
+    function polarWork(p, f, S, tx) {
+      const w = tbl.rows[0], zw = meanR(w); const blocks = [];
+      const meanSteps = r => { const v = meanR(r); return r.r.length > 1 ? WK.eq(`Mean reading (${r.name})`, `(${r.r.map(x => x.toFixed(1) + '°').join(' + ')}) / ${r.r.length}`, `${norm360(v).toFixed(2)}°`) : WK.eq(`Reading (${r.name})`, `${norm360(v).toFixed(2)}°`); };
+      blocks.push(WK.block('Zero reading with distilled water', [meanSteps(w) + WK.why('Water does not rotate the plane of polarisation, so this reading is the zero of the analyser for the tube.')], true));
+      tbl.rows.filter(r => r.id !== 'w' && rot(r, tbl.rows) != null).forEach(r => {
+        const th = rot(r, tbl.rows); const a = norm360(meanR(r)), z = norm360(zw), raw = a - z, k = Math.round((th - raw) / 180);
+        const st = [meanSteps(r), WK.eq('Rotation θ', 'mean reading − zero reading', `${a.toFixed(2)}° − ${z.toFixed(2)}°`, k ? `${WK.n(raw, 2)}° ${k > 0 ? '+' : '−'} ${Math.abs(k) * 180}°` : null, `${WK.n(th, 2)}°`) + (k ? WK.why('Equal-darkness positions repeat every 180° of the analyser, so 180° is added or subtracted to give the small rotation actually produced by the solution.') : '')];
+        if (r.c) st.push(WK.eq('S', 'θ / (l c)', `${th.toFixed(2)}° / (${P.l.toFixed(1)} dm × ${r.c.toFixed(2)} g/cc)`, `${(th / (P.l * r.c)).toFixed(1)}° dm⁻¹ (g/cc)⁻¹`));
+        blocks.push(WK.block(r.c ? `${r.name} (c = ${r.c.toFixed(2)} g/cc)` : r.name, st, false));
+      });
+      if (p.length) {
+        let sxy = 0, sxx = 0; p.forEach(([c, t]) => { sxy += c * t; sxx += c * c; });
+        const st = [WK.eq('Slope of θ – c graph (line through the origin)', 'Σ(c θ) / Σ(c²)', `${sxy.toFixed(4)} / ${sxx.toFixed(4)}`, `${f.m.toFixed(2)}° per g/cc`) + WK.why('θ = S l c, so θ is proportional to c and the graph is a straight line through the origin with slope S l.'),
+          WK.eq('S', 'slope / l', `${f.m.toFixed(2)} / ${P.l.toFixed(1)}`, `${S.toFixed(1)}° dm⁻¹ (g/cc)⁻¹`), WK.pct(S, 66.5, 1)];
+        if (tx != null) st.push(WK.eq('Concentration of the unknown solution', 'θ / (S l)', `${tx.toFixed(2)} / (${S.toFixed(1)} × ${P.l.toFixed(1)})`, `${(tx / (S * P.l)).toFixed(3)} g/cc`));
+        blocks.push(WK.block('Specific rotation from the graph', st, false));
+      }
+      return WK.sec(blocks);
     }
     notes.append(card('Lab notebook', 'l = 2.0 dm', tbl.el), plot.el, card('Result', '', res.el)); analyse();
   }
@@ -2045,7 +2755,7 @@ EXPS.push({
 <li>Bring the drop above the upper timing line with the field. Switch the field off and start the stopwatch as the drop crosses the upper line; stop it as it crosses the lower line (s = 1.00 mm). Repeat the timing 3–5 times, lifting the drop back each time with the field.</li>
 <li>Repeat for several drops (at least 5). The charge on a drop can also be changed by ionising the air (X-ray), giving a new balancing voltage for the same drop.</li>
 <li>Calculate \(v\), \(a\) (with Cunningham’s correction), \(q\) and \(n = q/e\) rounded to the nearest integer, and finally \(e = q/n\).</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> the microscope image is shown erect for convenience (a real microscope shows the drop moving upward while it falls). Press the space bar or the Start/Stop button to use the stopwatch. Use the speed setting (×2, ×4) to save time; the stopwatch shows the true (simulated) time. The drop jitters slightly: this is Brownian motion, a real source of error.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> the microscope image is shown erect for convenience (a real microscope shows the drop moving upward while it falls). Press the space bar or the Start/Stop button to use the stopwatch. Use the speed setting (×2, ×4) to save time; the stopwatch shows the true (simulated) time. The drop jitters slightly: this is Brownian motion, a real source of error. Press <b>Demo</b> on the bench to watch a complete run before you start.</div>`,
   precautions: String.raw`<li>The plates must be horizontal and the field uniform.</li><li>Choose small, slowly moving drops; fast drops give large timing errors.</li><li>Time each drop several times and take the mean.</li><li>Do not touch the plates; high voltage. Switch off the supply when not in use.</li><li>Avoid air currents (close the chamber) and keep the temperature constant.</li>`,
   errors: String.raw`<li>Brownian motion makes individual fall times scatter.</li><li>Reaction time in starting/stopping the watch.</li><li>Uncertainty in the viscosity of air and the correction to Stokes’ law.</li>`,
   viva: [
@@ -2085,6 +2795,25 @@ EXPS.push({
     const recT = h('button', { type: 'button', class: 'btn pri' }, 'Record fall time');
     const recV = h('button', { type: 'button', class: 'btn pri' }, 'Record balancing voltage');
     const sb = statusBox(); sb.say('Spray a drop, balance it with the field, then time its free fall between lines A and B.');
+    const vBal = () => drop ? Math.round(mgOf(drop.a) * K.d / (drop.n * E_CH)) : 300;
+    instr.append(demoBar('Watch a complete run: spraying, balancing a drop, and timing its free fall.', 'Demo', () => runTour([
+      { title: 'The apparatus is prepared', el: () => view.wrap,
+        text: 'The condenser plates are levelled with the levelling screws, the lamp lights the space between the plates, and the microscope is focused on a fine wire pushed through the hole in the upper plate (the wire is then removed). The graticule lines A and B are 1.00 mm apart.' },
+      { title: 'Spray a drop', el: () => [view.wrap],
+        text: 'Squeeze the atomiser once. Tiny drops drift in through the hole; friction has charged many of them. Choose one drop that falls slowly and keep your eye on it.',
+        run: async T => { await pickSeg(T, spd, '×1', 1); await T.press(sprayBtn); } },
+      { title: 'Balance the drop', el: () => [view.wrap, vs.el],
+        text: 'Switch on the field with the upper plate positive and adjust the voltage until the chosen drop stands still. The upward electric force on its charge now balances its weight: this is the balancing voltage.',
+        run: async T => { if (st.up !== true) await pickSeg(T, pol, '+', '+'); await T.slide(vs, Math.round(vBal() * 0.9), 500); await setCheck(T, plates, true); await fineTo(T, vs, vBal(), 1600); await T.wait(1200); } },
+      { title: 'Raise the drop above line A', el: () => [view.wrap, vs.el],
+        text: 'To time its fall, the drop must start above line A. Increase the voltage a little so that the drop rises above the upper line, then set it back near the balancing value.',
+        run: async T => { if (drop && !drop.lost && drop.y < -0.65) { T.say('The drop is already above line A, so it is simply held there by the field. (If it were below A, you would raise the voltage a little until it rose above the line.)'); await T.wait(800); return; } await pickSeg(T, spd, '×4', 4); await T.slide(vs, Math.min(600, Math.round(vBal() * 1.6)), 900); await T.until(() => !drop || drop.lost || drop.y < -0.8, 45000); await T.slide(vs, vBal(), 700); } },
+      { title: 'Field off: time the fall from A to B', el: () => [view.wrap, swBtn],
+        text: 'Switch off the field. The drop falls freely and soon reaches a constant (terminal) speed. Start the stopwatch exactly as it crosses line A and stop it as it crosses line B. (The speed is set to ×4 to save time; the watch still shows the true fall time.)',
+        run: async T => { if (watch.run) watch.run = false; watch.t = 0; await pickSeg(T, spd, '×4', 4); await setCheck(T, plates, false); await T.reach(swBtn); await T.until(() => !drop || drop.lost || drop.y >= -0.5, 60000); if (T.skipped || !drop || drop.lost) return; watch.run = true; swBtn.classList.add('tour-press'); setTimeout(() => swBtn.classList.remove('tour-press'), 300); await T.until(() => !drop || drop.lost || drop.y >= 0.5, 90000); watch.run = false; swBtn.classList.add('tour-press'); setTimeout(() => swBtn.classList.remove('tour-press'), 300); await T.wait(600); T.say('Stopped as the drop crossed line B. Now switch the field on again at once, so the drop is held and not lost on the lower plate.'); await setCheck(T, plates, true); await pickSeg(T, spd, '×1', 1); } },
+      { title: 'Record, then repeat', el: () => [recT, recV],
+        text: 'Press <b>Record fall time</b> for this reading. Balance the same drop again and press <b>Record balancing voltage</b>. Time the fall at least three times. Then use <i>Ionise</i> to change the charge on the drop, or spray a new drop, and repeat.' }
+    ], { title: 'Demo · Millikan’s oil drop', doneText: 'The stopwatch shows the fall time just measured: press Record fall time now.' })));
     instr.append(card('Millikan oil-drop apparatus', 'd = 5.00 mm, s = 1.00 mm', view.wrap,
       h('div', { class: 'readouts' }, swRo.el, vRo.el),
       h('div', { class: 'opts' }, plates.el, pol.el, spd.el), vs.el,
@@ -2178,7 +2907,30 @@ EXPS.push({
       if (!c.length) { res.set('<h4>Calculation</h4><p class="small muted">For each drop record at least one balancing voltage and fall times (3 or more). The charge is then calculated from q = (4/3)πa³(ρ − σ)g d / V.</p>'); return; }
       const e = mean(c.map(x => x.e));
       res.set(`<h4>Calculation</h4><div class="calc-lines"><div>a = √(9ηv / 2(ρ−σ)g) ${st.corr ? 'with η′ = η/(1 + b/pa)' : '(uncorrected η)'}</div><div>q = (4/3)πa³(ρ−σ) g d / V</div><div>Charges (10⁻¹⁹ C): ${c.map(x => x.q * 1e19).map(x => x.toFixed(2)).join(', ')}</div><div>n (nearest integer of q/1.6×10⁻¹⁹): ${c.map(x => x.n).join(', ')}</div></div>
-      <p class="big" style="margin-top:10px">Charge of electron e = <b>${(e * 1e19).toFixed(3)} × 10⁻¹⁹ C</b></p><p class="small muted">Standard value 1.602 × 10⁻¹⁹ C; error ${pctErr(e, E_CH).toFixed(1)}%. All charges are close to whole multiples of e, showing that charge is quantised.</p>`);
+      <p class="big" style="margin-top:10px">Charge of electron e = <b>${(e * 1e19).toFixed(3)} × 10⁻¹⁹ C</b></p><p class="small muted">Standard value 1.602 × 10⁻¹⁹ C; error ${pctErr(e, E_CH).toFixed(1)}%. All charges are close to whole multiples of e, showing that charge is quantised.</p>` + millikanWork());
+    }
+    function millikanWork() {
+      const S = WK.sig, rs = K.rho - K.sig;
+      const blocks = [WK.block('Constants used', [`Viscosity of air η = ${S(K.eta, 4)} Pa s; density of oil ρ = ${K.rho} kg m⁻³; density of air σ = ${K.sig} kg m⁻³; g = ${K.g} m s⁻²`,
+        `Plate separation d = ${S(K.d, 3)} m; distance between lines A and B, s = ${S(K.s, 3)} m` + (st.corr ? `; Cunningham constant b = ${S(K.b, 2)} Pa m, atmospheric pressure p = ${S(K.p, 4)} Pa` : '')], false)];
+      let first = true, es = [];
+      tbl.rows.forEach(r => {
+        const c = calc(r); if (!c) return; const t = tm(r), V = Vm(r); const st_ = [];
+        st_.push(r.t.length > 1 ? WK.eq('Mean fall time t̄', `(${r.t.map(x => x.toFixed(2)).join(' + ')}) / ${r.t.length}`, `${t.toFixed(2)} s`) : WK.eq('Fall time t', `${t.toFixed(2)} s`));
+        st_.push(WK.eq('Terminal velocity v', 's / t̄', `${S(K.s, 3)} m / ${t.toFixed(2)} s`, `${S(c.v, 4)} m s⁻¹`));
+        const a0 = Math.sqrt(9 * K.eta * c.v / (2 * rs * K.g));
+        st_.push(WK.eq('Radius a', '√[9ηv / 2(ρ − σ)g]', `√[9 × ${S(K.eta, 4)} × ${S(c.v, 4)} / (2 × ${rs.toFixed(1)} × ${K.g})]`, `${S(a0, 4)} m`) + WK.why('At terminal velocity the weight (less buoyancy) equals Stokes’ drag 6πηav.'));
+        if (st.corr) { const etc = etaC(a0); st_.push(WK.eq('Corrected viscosity η′', 'η / (1 + b/pa)', `${S(K.eta, 4)} / (1 + ${S(K.b, 2)} / (${S(K.p, 4)} × ${S(a0, 4)}))`, `${S(etc, 4)} Pa s`) + WK.why('For drops this small, air is not a continuous fluid; Cunningham’s correction lowers the effective viscosity.')); st_.push(WK.eq('Corrected radius a', '√[9η′v / 2(ρ − σ)g]', `${S(c.a, 4)} m`) + WK.why('Repeating the last two steps a few times makes a settle at this value.')); }
+        const mg = mgOf(c.a);
+        st_.push(WK.eq('Effective weight mg', '(4/3)πa³(ρ − σ)g', `(4/3) × π × (${S(c.a, 4)})³ × ${rs.toFixed(1)} × ${K.g}`, `${S(mg, 4)} N`));
+        st_.push(r.V.length > 1 ? WK.eq('Mean balancing voltage V̄', `(${r.V.join(' + ')}) / ${r.V.length}`, `${V.toFixed(1)} V`) : WK.eq('Balancing voltage V', `${V.toFixed(1)} V`));
+        st_.push(WK.eq('Charge q', 'mg d / V̄', `${S(mg, 4)} × ${S(K.d, 3)} / ${V.toFixed(1)}`, `${S(c.q, 4)} C`) + WK.why('When the drop is balanced, the electric force qV/d equals its effective weight.'));
+        st_.push(WK.eq('q / (1.602 × 10<sup>−19</sup> C)', `${(c.q / E_CH).toFixed(2)}`) + ` → nearest whole number n = <b>${c.n}</b>`);
+        st_.push(WK.eq('e', 'q / n', `${S(c.q, 4)} / ${c.n}`, `${S(c.e, 4)} C`));
+        es.push(c.e); blocks.push(WK.block(`${r.label}`, st_, first)); first = false;
+      });
+      if (es.length) { const e = mean(es); blocks.push(WK.block('Mean value of e', [es.length > 1 ? WK.eq('e', `(${es.map(x => (x * 1e19).toFixed(3)).join(' + ')}) × 10<sup>−19</sup> / ${es.length}`, `${(e * 1e19).toFixed(3)} × 10<sup>−19</sup> C`) : WK.eq('e', `${(e * 1e19).toFixed(3)} × 10<sup>−19</sup> C`), WK.pct(e * 1e19, 1.602, 3)], false)); }
+      return WK.sec(blocks);
     }
     if (st.cur < 0 || !tbl.rows[st.cur]) { newRow('Drop ' + (tbl.rows.length + 1)); }
     notes.append(card('Lab notebook', 'readings are saved in this browser', h('div', { class: 'stack' }, corr.el, tbl.el)), plot.el, card('Result', '', res.el)); analyse();
@@ -2214,7 +2966,7 @@ EXPS.push({
 <li>Repeat for anode voltages of 8 V and 10 V.</li>
 <li>Plot \(I_a\) against \(I_s\) for each voltage. Find the critical current \(I_c\) at the middle of the steep fall.</li>
 <li>Calculate \(B_c\) and \(e/m\) for each voltage and take the mean.</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> set the anode voltage, then raise the solenoid current with the slider and fine buttons. Press <i>Record</i> to note the meter readings. The cross-section view shows the electron paths bending as the field increases.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> set the anode voltage, then raise the solenoid current with the slider and fine buttons. Press <i>Record</i> to note the meter readings. The cross-section view shows the electron paths bending as the field increases. Press <b>Demo</b> on the bench to watch a complete run before you start.</div>`,
   precautions: String.raw`<li>The valve should be at the centre of the solenoid and coaxial with it.</li><li>Allow the filament to heat up and the anode current to become steady before readings.</li><li>Do not exceed the rated currents; switch off the solenoid current when not in use to avoid heating.</li><li>Take closely spaced readings near the critical current.</li>`,
   errors: String.raw`<li>Thermal velocity spread and non-uniform field make the cut-off gradual.</li><li>The filament may not be exactly on the axis.</li><li>Error in the value of the field from the solenoid formula.</li>`,
   viva: [
@@ -2243,6 +2995,19 @@ EXPS.push({
     const vS = slider({ label: 'Anode voltage V', min: 2, max: 12, step: 0.1, value: st.V, fmt: v => v.toFixed(1) + ' V', fine: [['−1', -1], ['−0.1', -0.1], ['+0.1', 0.1], ['+1', 1]], onInput: v => { st.V = v; changed(); } });
     const iS = slider({ label: 'Solenoid current Iₛ', min: 0, max: 2, step: 0.01, value: st.I, fmt: v => v.toFixed(2) + ' A', fine: [['−0.1', -0.1], ['−0.05', -0.05], ['−0.01', -0.01], ['+0.01', 0.01], ['+0.05', 0.05], ['+0.1', 0.1]], onInput: v => { st.I = v; changed(); } });
     const btn = h('button', { type: 'button', class: 'btn pri' }, 'Record reading'); const sb = statusBox(); sb.say('Set the anode voltage, then record Iₐ for increasing solenoid current.');
+    instr.append(demoBar('Watch how the magnetron characteristic is taken and where the anode current falls.', 'Demo', () => runTour([
+      { title: 'Valve inside the solenoid', el: () => [circ.wrap],
+        text: 'The magnetron valve sits at the middle of the solenoid with its axis along the solenoid axis, so the magnetic field is parallel to the cathode. The filament (heater) is switched on and the cathode allowed to warm up.' },
+      { title: 'Set the anode voltage', el: () => [vS.el],
+        text: 'Set the anode voltage (here 6.0 V) and keep it constant for the whole set of readings. With no current in the solenoid the electrons go straight out to the anode.',
+        run: async T => { await T.slide(iS, 0, 600); await fineTo(T, vS, 6, 1600); } },
+      { title: 'Increase the solenoid current', el: () => [tube.wrap, iS.el],
+        text: 'Increase the solenoid current slowly. The electron paths curve more and more. At the critical field they only just graze the anode and the anode current falls sharply; beyond it the electrons turn back to the cathode.',
+        run: async T => { const Ic = Bc(st.V) / (P.kB * BperA); await T.slide(iS, Math.min(2, +(Ic * 1.5).toFixed(2)), 6500); } },
+      { title: 'Now take the readings', el: () => [iS.el, btn],
+        text: 'Bring the current back to zero. Record Iₐ for currents increasing in steps of 0.05 A, with closer steps where Iₐ falls. Plot Iₐ against Iₛ and find the critical current from the steepest part of the curve.',
+        run: async T => { await T.slide(iS, 0, 1600); } }
+    ], { title: 'Demo · magnetron method', doneText: 'Press Record reading at Iₛ = 0, then raise the current step by step.' })));
     instr.append(card('Magnetron valve in a solenoid', 'a = 4.00 mm; N = 900, L = 15.0 cm, D = 6.0 cm', row, h('div', { class: 'ctls' }, vS.el, iS.el), h('div', { class: 'recrow' }, btn), sb.el));
     function changed() { save(); tube.redraw(); upd(); }
     function upd() { roV.set(st.V.toFixed(1) + ' V'); roIa.set(Ia().toFixed(2) + ' mA'); roIs.set(st.I.toFixed(2) + ' A'); }
@@ -2314,7 +3079,27 @@ EXPS.push({
       if (!out.length) { res.set('<h4>Calculation</h4><p class="small muted">Record Iₐ from Iₛ = 0 up to beyond the sharp fall (about 8–15 readings for one anode voltage). The critical current is found from the middle of the fall.</p>'); return; }
       const em = mean(out.map(o => o.em));
       res.set(`<h4>Calculation</h4><div class="calc-lines"><div>B = µ₀NI/√(L²+D²) = ${(BperA * 1e3).toFixed(3)} mT per ampere</div>${out.map(o => `<div>V = ${o.V.toFixed(1)} V: I꜀ = ${o.c.toFixed(3)} A, B꜀ = ${(o.B * 1e3).toFixed(3)} mT, e/m = 8V/(B꜀²a²) = ${(o.em / 1e11).toFixed(3)} × 10¹¹ C/kg, I꜀²/V = ${(o.c * o.c / o.V).toFixed(4)}</div>`).join('')}</div>
-      <p class="big" style="margin-top:10px">e/m = <b>${(em / 1e11).toFixed(3)} × 10¹¹ C kg⁻¹</b></p><p class="small muted">Standard value 1.759 × 10¹¹ C kg⁻¹; error ${pctErr(em, EM).toFixed(1)}%.</p>`);
+      <p class="big" style="margin-top:10px">e/m = <b>${(em / 1e11).toFixed(3)} × 10¹¹ C kg⁻¹</b></p><p class="small muted">Standard value 1.759 × 10¹¹ C kg⁻¹; error ${pctErr(em, EM).toFixed(1)}%.</p>` + magWork(out, em));
+    }
+    function magWork(out, em) {
+      const S = WK.sig; const den = Math.hypot(P.L, P.D);
+      const blocks = [WK.block('Magnetic field per ampere of the solenoid', [
+        `N = ${P.N} turns, length L = ${P.L} m, diameter D = ${P.D} m, µ₀ = 4π × 10<sup>−7</sup> T m A<sup>−1</sup>.`,
+        WK.eq('√(L² + D²)', `√(${P.L}² + ${P.D}²)`, `${den.toFixed(5)} m`),
+        WK.eq('B / Iₛ', 'µ₀N / √(L² + D²)', `4π × 10<sup>−7</sup> × ${P.N} / ${den.toFixed(5)}`, `${S(BperA, 4)} T A<sup>−1</sup>`)], false)];
+      out.forEach((o, k) => {
+        const rs = groups().find(g => Math.abs(g.V - o.V) < 1e-6).rs; const mx = Math.max(...rs.map(r => r.Ia)), mn = Math.min(...rs.map(r => r.Ia)), half = (mx + mn) / 2;
+        let a = null, b = null; for (let i = 1; i < rs.length; i++) if (rs[i - 1].Ia >= half && rs[i].Ia < half) { a = rs[i - 1]; b = rs[i]; break; }
+        const st = [`Largest anode current = ${mx.toFixed(2)} mA, smallest = ${mn.toFixed(2)} mA.`,
+          WK.eq('Middle of the fall', `(${mx.toFixed(2)} + ${mn.toFixed(2)}) / 2`, `${half.toFixed(2)} mA`) + WK.why('The critical current is taken where the anode current has fallen half-way, i.e. at the steepest part of the curve.')];
+        if (a && b) st.push(`Readings either side: Iₛ = ${a.Is.toFixed(2)} A (Iₐ = ${a.Ia.toFixed(2)} mA) and Iₛ = ${b.Is.toFixed(2)} A (Iₐ = ${b.Ia.toFixed(2)} mA).`,
+          WK.eq('I꜀', `${a.Is.toFixed(2)} + (${a.Ia.toFixed(2)} − ${half.toFixed(2)}) / (${a.Ia.toFixed(2)} − ${b.Ia.toFixed(2)}) × (${b.Is.toFixed(2)} − ${a.Is.toFixed(2)})`, `${o.c.toFixed(3)} A`));
+        st.push(WK.eq('B꜀', '(B / Iₛ) × I꜀', `${S(BperA, 4)} × ${o.c.toFixed(3)}`, `${S(o.B, 4)} T`));
+        st.push(WK.eq('e/m', '8V / (B꜀² a²)', `8 × ${o.V.toFixed(1)} / ((${S(o.B, 4)})² × (${S(P.a, 3)})²)`, `${(o.em / 1e11).toFixed(3)} × 10<sup>11</sup> C kg<sup>−1</sup>`) + WK.why('At the critical field the electrons just graze the anode of radius a, so the radius of their circular path is a/2 (cathode radius neglected).'));
+        blocks.push(WK.block(`Anode voltage V = ${o.V.toFixed(1)} V`, st, k === 0));
+      });
+      if (out.length) blocks.push(WK.block('Mean value', [out.length > 1 ? WK.eq('e/m', `(${out.map(o => (o.em / 1e11).toFixed(3)).join(' + ')}) × 10<sup>11</sup> / ${out.length}`, `${(em / 1e11).toFixed(3)} × 10<sup>11</sup> C kg<sup>−1</sup>`) : WK.eq('e/m', `${(em / 1e11).toFixed(3)} × 10<sup>11</sup> C kg<sup>−1</sup>`), WK.pct(em / 1e11, 1.759, 3)], false));
+      return WK.sec(blocks);
     }
     notes.append(card('Lab notebook', 'readings are saved in this browser', tbl.el), plot.el, card('Result', '', res.el)); analyse();
   }
@@ -2347,7 +3132,7 @@ EXPS.push({
 <li>Switch off and remove the CRT without disturbing the magnets. Place a deflection magnetometer at the position of the plates. Read both ends of the pointer (θ₁, θ₂). Reverse both magnets (keeping distances) and read again (θ₃, θ₄). Find the mean θ.</li>
 <li>Calculate \(B = B_H \tan\theta\) and e/m.</li>
 <li>Repeat for two more plate voltages.</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> Step 1 — set the plate voltage with no magnets and record y. Step 2 — tick “Bar magnets placed” and move them until the spot is back at 0; if the spot moves further away, reverse the magnets. Record the distance. Step 3 — switch the view to the magnetometer, record θ, reverse the magnets and record again.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> Step 1 — set the plate voltage with no magnets and record y. Step 2 — tick “Bar magnets placed” and move them until the spot is back at 0; if the spot moves further away, reverse the magnets. Record the distance. Step 3 — switch the view to the magnetometer, record θ, reverse the magnets and record again. Press <b>Demo</b> on the bench to watch a complete run before you start.</div>`,
   precautions: String.raw`<li>Set the tube along the magnetic meridian; keep other magnetic materials away.</li><li>Use a small, sharp spot; read its position without parallax.</li><li>Keep the magnets symmetric and at the same distance when the magnetometer replaces the tube.</li><li>Read both ends of the pointer and reverse the magnets to remove errors.</li>`,
   errors: String.raw`<li>The magnetic field is not confined to the plate region and is not uniform.</li><li>The small deflection y and the angle θ have relatively large reading errors (B enters as B²).</li><li>Uncertainty in B<sub>H</sub>.</li>`,
   viva: [
@@ -2385,6 +3170,20 @@ EXPS.push({
     const b2 = h('button', { type: 'button', class: 'btn pri' }, '2 · Record magnet distance');
     const b3 = h('button', { type: 'button', class: 'btn pri' }, '3 · Record magnetometer θ');
     const sb = statusBox(); sb.say('Step 1: apply a plate voltage (no magnets) and record the deflection.');
+    instr.append(demoBar('Watch the three steps: electric deflection, magnetic balance, magnetometer reading.', 'Demo', () => runTour([
+      { title: 'Tube along the magnetic meridian', el: () => [side.wrap],
+        text: 'Find the magnetic meridian with a compass and place the tube along it, so the Earth’s field does not deflect the beam sideways. Adjust intensity and focus for a small sharp spot at the centre of the screen.',
+        run: async T => { await pickSeg(T, modeSeg, 'CRT', 'crt'); await pickSeg(T, polSeg, 'Normal', 1); await setCheck(T, magChk, false); await T.slide(vS, 0, 800); } },
+      { title: 'Step 1 · deflect with the plates', el: () => [scr.wrap, vS.el],
+        text: 'Apply a small voltage V between the deflecting plates. The spot moves up the screen by y. Note V and y (Record deflection y).',
+        run: async T => { const V = Math.round(P.d * v * P.K / 0.25 ** 3 / 0.05) * 0.05; await T.slide(vS, clamp(V, 0.5, 4), 1800); } },
+      { title: 'Step 2 · bring the spot back with magnets', el: () => [side.wrap, scr.wrap],
+        text: 'Place the two bar magnets on either side of the tube, at equal distances, with like poles facing each other. If the spot moves further away, reverse both magnets. Then move them in or out together until the spot comes back to the centre: the magnetic force now cancels the electric force.',
+        run: async T => { await setCheck(T, magChk, true); await T.wait(900); if (st.orient !== P.good) { await T.wait(700); await pickSeg(T, oriSeg, P.good === 'N' ? 'N poles in' : 'S poles in', P.good); } const Bt = st.Vp / (P.d * v); const r = Math.cbrt(P.K / Bt) * 100; await fineTo(T, rS, clamp(+r.toFixed(1), 10, 50), 2600); } },
+      { title: 'Step 3 · magnetometer in place of the tube', el: () => [scr.wrap],
+        text: 'Without moving the magnets, take the tube away and put a deflection magnetometer at its centre. Read the deflection θ of the needle, reverse the magnets and read again. The mean θ gives B = B<sub>H</sub> tan θ.',
+        run: async T => { await pickSeg(T, modeSeg, 'Magnetometer', 'mag'); } }
+    ], { title: 'Demo · Thomson’s method', doneText: 'Now do it yourself: record y (step 1), the magnet distance (step 2) and θ (step 3).' })));
     instr.append(card('Thomson’s e/m apparatus', 'l = 4.0 cm, d = 0.40 cm, L = 20.0 cm', side.wrap, row, h('div', { class: 'ctls' }, vS.el, rS.el), h('div', { class: 'recrow' }, b1, b2, b3), sb.el));
     function changed() { save(); side.redraw(); scr.redraw(); upd(); }
     function upd() {
@@ -2468,7 +3267,22 @@ EXPS.push({
       const v = tbl.rows.map(emOf).filter(x => x != null);
       if (!v.length) { res.set('<h4>Calculation</h4><p class="small muted">Complete the three steps for a plate voltage: deflection y, magnet distance for zero deflection, and the four magnetometer readings. e/m = yV/(B² l L d).</p>'); return; }
       const em = mean(v);
-      res.set(`<h4>Calculation</h4><div class="calc-lines"><div>e/m = y V / (B² l L d), &nbsp;B = B<sub>H</sub> tan θ, B<sub>H</sub> = 3.7 × 10⁻⁵ T</div><div>l = 0.040 m, L = 0.200 m, d = 0.0040 m</div><div>Values: ${v.map(x => (x / 1e11).toFixed(3)).join(', ')} × 10¹¹ C/kg</div></div><p class="big" style="margin-top:10px">e/m = <b>${(em / 1e11).toFixed(3)} × 10¹¹ C kg⁻¹</b></p><p class="small muted">Standard value 1.759 × 10¹¹ C kg⁻¹; error ${pctErr(em, EM).toFixed(1)}%. Errors of 5–10% are normal for this method because y and θ are small readings and B enters squared.</p>`);
+      res.set(`<h4>Calculation</h4><div class="calc-lines"><div>e/m = y V / (B² l L d), &nbsp;B = B<sub>H</sub> tan θ, B<sub>H</sub> = 3.7 × 10⁻⁵ T</div><div>l = 0.040 m, L = 0.200 m, d = 0.0040 m</div><div>Values: ${v.map(x => (x / 1e11).toFixed(3)).join(', ')} × 10¹¹ C/kg</div></div><p class="big" style="margin-top:10px">e/m = <b>${(em / 1e11).toFixed(3)} × 10¹¹ C kg⁻¹</b></p><p class="small muted">Standard value 1.759 × 10¹¹ C kg⁻¹; error ${pctErr(em, EM).toFixed(1)}%. Errors of 5–10% are normal for this method because y and θ are small readings and B enters squared.</p>` + thomsonWork(em));
+    }
+    function thomsonWork(em) {
+      const S = WK.sig; const blocks = [WK.block('Constants', [`Length of plates l = ${P.l} m, distance from the plates to the screen L = ${P.L} m, plate separation d = ${P.d} m, horizontal component of the Earth’s field B<sub>H</sub> = ${S(P.BH, 2)} T.`], false)];
+      let first = true; const vals = [];
+      tbl.rows.forEach((r, k) => {
+        const e = emOf(r); if (e == null) return; const t = thm(r), B = P.BH * Math.tan(t * DEG), y = r.y / 100, E = r.Vp / P.d; const th = (r.th || []).filter(x => x != null);
+        const st = [`Plate voltage V = ${r.Vp.toFixed(2)} V, deflection y = ${r.y.toFixed(2)} cm = ${y.toFixed(4)} m, magnets at ${r.r.toFixed(1)} cm.`,
+          WK.eq('E', 'V / d', `${r.Vp.toFixed(2)} / ${P.d}`, `${S(E, 4)} V m<sup>−1</sup>`),
+          th.length > 1 ? WK.eq('θ̄', `(${th.map(x => x + '°').join(' + ')}) / ${th.length}`, `${t.toFixed(2)}°`) + WK.why('Reading both ends of the pointer, before and after reversing the magnets, cancels the errors of a misplaced pointer and unequal magnets.') : WK.eq('θ', `${t.toFixed(2)}°`),
+          WK.eq('B', 'B<sub>H</sub> tan θ̄', `${S(P.BH, 2)} × tan ${t.toFixed(2)}°`, `${S(P.BH, 2)} × ${Math.tan(t * DEG).toFixed(4)}`, `${S(B, 4)} T`) + WK.why('With the tube removed, the magnets’ field B at the tube position deflects the magnetometer needle: tan θ = B / B<sub>H</sub>.'),
+          WK.eq('e/m', 'y E / (B² l L)', `${y.toFixed(4)} × ${S(E, 4)} / ((${S(B, 4)})² × ${P.l} × ${P.L})`, `${(e / 1e11).toFixed(3)} × 10<sup>11</sup> C kg<sup>−1</sup>`) + WK.why('When the spot is back at the centre, eE = evB, so v = E/B; the deflection y = (e/m)(E l L)/v² then gives e/m = yE/(B² l L).')];
+        vals.push(e); blocks.push(WK.block(`Set ${k + 1}: V = ${r.Vp.toFixed(2)} V`, st, first)); first = false;
+      });
+      if (vals.length) blocks.push(WK.block('Mean value', [vals.length > 1 ? WK.eq('e/m', `(${vals.map(x => (x / 1e11).toFixed(3)).join(' + ')}) × 10<sup>11</sup> / ${vals.length}`, `${(em / 1e11).toFixed(3)} × 10<sup>11</sup> C kg<sup>−1</sup>`) : WK.eq('e/m', `${(em / 1e11).toFixed(3)} × 10<sup>11</sup> C kg<sup>−1</sup>`), WK.pct(em / 1e11, 1.759, 3)], false));
+      return WK.sec(blocks);
     }
     notes.append(card('Lab notebook', 'readings are saved in this browser', tbl.el), card('Result', '', res.el)); analyse();
   }
@@ -2523,6 +3337,28 @@ function gmBench(root, which) {
   const bRec = h('button', { type: 'button', class: 'btn pri' }, 'Record count');
   const sb = statusBox();
   sb.say(which === 11 ? 'Raise the voltage until counts begin, then count at steps of 20 V.' : 'Set the voltage to the operating voltage (middle of the plateau), take a background count, then count with increasing absorber thickness.');
+  const waitCount = T => T.until(() => !run.on, 60000);
+  instr.append(demoBar(which === 11 ? 'Watch how the starting voltage and the plateau are found.' : 'Watch how the operating voltage, background and absorber counts are taken.', 'Demo', () => runTour(which === 11 ? [
+    { title: 'Source under the tube window', el: () => [setup.wrap],
+      text: 'With the high voltage at its lowest, place the β source in the holder below the thin end window of the G.M. tube, using tongs. Keep the source in the same position throughout.',
+      run: async T => { if (run.on) bStop.click(); await T.slide(hv, 250, 600); await setCheck(T, srcChk, true); await pickSeg(T, speed, '×20', 20); } },
+    { title: 'Find the starting voltage', el: () => [hv.el, roN.el],
+      text: 'Raise the voltage slowly. Below a certain voltage the scaler shows nothing; the voltage at which counts just begin is the starting (threshold) voltage.',
+      run: async T => { await T.slide(hv, Math.ceil((M.Vs + 15) / 10) * 10, 2600); await pickSeg(T, preset, '10 s', 10); await T.press(bStart); await waitCount(T); } },
+    { title: 'Count at steps of 20 V', el: () => [hv.el, bStart, roN.el],
+      text: 'Now count for a fixed time (60 s) at each voltage, raising it 20 V at a time. The count rate rises quickly, then stays almost constant over the plateau. Stop as soon as the rate starts to rise steeply again, and never go beyond: continuous discharge damages the tube.',
+      run: async T => { await T.slide(hv, Math.round((M.Vt + 60) / 10) * 10, 1600); await pickSeg(T, preset, '60 s', 60); await T.press(bStart); await waitCount(T); await T.reach(tgt.sel); tgt.set('char'); } }
+  ] : [
+    { title: 'Operating voltage', el: () => [hv.el],
+      text: 'Set the high voltage at the operating voltage, near the middle of the plateau (found in experiment 11). It stays fixed for the whole experiment.',
+      run: async T => { if (run.on) bStop.click(); await pickSeg(T, speed, '×20', 20); await T.slide(hv, Math.round((M.Vt + M.Ve) / 2 / 10) * 10, 2000); } },
+    { title: 'Background count', el: () => [srcChk.el, roN.el],
+      text: 'Remove the source to a safe distance and count for a fixed time: this is the background due to cosmic rays and natural radioactivity. It is subtracted from every count.',
+      run: async T => { await setCheck(T, srcChk, false); await pickSeg(T, preset, '60 s', 60); await T.press(bStart); await waitCount(T); await T.reach(tgt.sel); tgt.set('bg'); } },
+    { title: 'Source back; add the absorbers', el: () => [foilBox, roN.el],
+      text: 'Put the source back in exactly the same place. Count with no absorber, then slide aluminium sheets between source and window one by one, increasing the thickness, and count each time for the same time.',
+      run: async T => { await setCheck(T, srcChk, true); const f = foilBox.querySelector('input'); if (f && !f.checked) await T.press(f.closest('label') || f, () => f.click()); await T.press(bStart); await waitCount(T); await T.reach(tgt.sel); tgt.set('abs'); } }
+  ], { title: which === 11 ? 'Demo · G.M. characteristic' : 'Demo · β absorption', doneText: 'The count just finished is on the scaler: press Record count, then continue yourself.' })));
   instr.append(card('G.M. counter and scaler', which === 12 ? 'source: Sr-90 (β), absorbers: aluminium' : 'source: Sr-90 (β)', setup.wrap,
     h('div', { class: 'readouts' }, roN.el, roT.el, roV.el), hv.el, h('div', { class: 'opts' }, preset.el, speed.el), h('div', { class: 'opts' }, srcChk.el, sndChk.el), which === 12 ? foilBox : null,
     h('div', { class: 'recrow' }, bStart, bStop, bReset), h('div', { class: 'recrow' }, h('span', { class: 'small muted' }, 'Record into'), tgt.sel, bRec), sb.el));
@@ -2579,7 +3415,7 @@ function gmBench(root, which) {
     ctx.fillStyle = '#9fb0b8'; ctx.font = `10px ${T.sans}`; ctx.fillText(`scaler · EHT ${st.V} V`, sx + sw / 2, H * 0.62);
     ctx.strokeStyle = T.muted; ctx.beginPath(); ctx.moveTo(cx + 16, 14); ctx.bezierCurveTo(W * 0.5, 4, W * 0.5, H * 0.4, sx, H * 0.45); ctx.stroke();
   }
-  loop(() => setup.now());
+  drawLoop(setup, COARSE ? 20 : 40);
   const rate = r => r.N / r.t * 60;
   const bgRate = () => tBg.rows.length ? mean(tBg.rows.map(rate)) : 0;
   const bgCols = [{ label: 'V (volt)', k: 'V' }, { label: 'Counts N', k: 'N' }, { label: 't (s)', k: 't' }, { label: 'Rate (counts/min)', v: rate, fmt: v => v.toFixed(1), calc: 1 }];
@@ -2634,7 +3470,7 @@ function gmBench(root, which) {
         html += `<p class="big" style="margin-top:8px">${ok ? 'The counter is <b>reliable</b>' : 'The counter is <b>not reliable</b>'}</p><p class="small muted">${ok ? `σ ≈ √N̄ and 0.05 &lt; P &lt; 0.95, so the counts follow Poisson statistics: the counter is working properly.` : 'P lies outside 0.05–0.95; the fluctuations are not consistent with random (Poisson) counting. Check the voltage and take more counts.'}</p>`;
       }
       if (tBg.rows.length) html += `<p class="small muted">Background rate = ${bgRate().toFixed(1)} counts/min.</p>`;
-      res.set(html);
+      res.set(html + gm11Work(pl));
     } else {
       const Rb = bgRate(); const p = tA.rows.filter(r => rate(r) - Rb > 0).map(r => [r.x, Math.log(rate(r) - Rb)]);
       let html = '<h4>Calculation</h4>';
@@ -2643,8 +3479,47 @@ function gmBench(root, which) {
       const f = linreg(p); const muMM = -f.m, muCM = muMM * 10, mum = muCM / 2.70, half = 0.693 / muMM, E = (17 / mum) ** (1 / 1.14);
       html += `<div class="calc-lines"><div>Background R<sub>b</sub> = ${Rb.toFixed(1)} counts/min</div><div>Slope of ln(R − R<sub>b</sub>) vs x = ${f.m.toFixed(3)} mm⁻¹</div><div>µ = − slope = ${muMM.toFixed(3)} mm⁻¹ = <b>${muCM.toFixed(2)} cm⁻¹</b></div><div>Mass absorption coefficient µ/ρ = ${muCM.toFixed(2)}/2.70 = ${mum.toFixed(2)} cm² g⁻¹</div><div>Half-value thickness x½ = 0.693/µ = ${half.toFixed(3)} mm</div><div>Estimated E<sub>max</sub> from µ/ρ = 17 E<sup>−1.14</sup>: ${E.toFixed(2)} MeV</div></div>`;
       html += `<p class="big" style="margin-top:10px">Linear absorption coefficient of β-particles in aluminium µ = <b>${muCM.toFixed(1)} cm⁻¹</b></p><p class="small muted">For Sr-90/Y-90 β-rays (E<sub>max</sub> = 2.28 MeV) the expected µ/ρ in aluminium is about 6.5 cm² g⁻¹, i.e. µ ≈ 17.5 cm⁻¹.</p>`;
-      res.set(html);
+      res.set(html + gm12Work(Rb, p, f, muMM, muCM, mum, half, E));
     }
+  }
+  function rateStep(r, lbl) { return WK.eq(lbl || `R (${r.V} V)`, 'N / t × 60', `${r.N} / ${r.t} × 60`, `${rate(r).toFixed(1)} counts/min`); }
+  function bgBlock() { if (!tBg.rows.length) return ''; const st = tBg.rows.map((r, k) => rateStep(r, `Background ${k + 1}`)); if (tBg.rows.length > 1) st.push(WK.eq('R<sub>b</sub>', `(${tBg.rows.map(r => rate(r).toFixed(1)).join(' + ')}) / ${tBg.rows.length}`, `${bgRate().toFixed(1)} counts/min`)); return WK.block('Background count rate R<sub>b</sub>', st, false); }
+  function gm11Work(pl) {
+    const blocks = []; const rows = tA.rows.slice().sort((a, b) => a.V - b.V);
+    if (rows.length) blocks.push(WK.block('Count rate at each voltage', rows.map(r => rateStep(r)).slice(0, 25).concat([WK.why('Counts are converted to counts per minute so that counts taken for different times can be compared.')]), !pl));
+    if (pl) {
+      const inPl = rows.filter(r => r.V >= pl.V1 - 1e-6 && r.V <= pl.V2 + 1e-6).map(r => [r.V, rate(r)]);
+      const fw = inPl.length >= 3 ? WK.fit(inPl, 'V', 'R', ' V', ' counts/min') : null;
+      const st = [`Plateau chosen from V₁ = ${pl.V1} V to V₂ = ${pl.V2} V (${inPl.length} readings).`];
+      if (fw) st.push(...fw.steps, WK.eq('R₁', 'slope × V₁ + intercept', `${WK.sig(fw.m, 4)} × ${pl.V1} + ${WK.sig(fw.c, 5)}`, `${pl.R1.toFixed(0)} counts/min`), WK.eq('R₂', 'slope × V₂ + intercept', `${WK.sig(fw.m, 4)} × ${pl.V2} + ${WK.sig(fw.c, 5)}`, `${pl.R2.toFixed(0)} counts/min`));
+      st.push(WK.eq('Plateau length', 'V₂ − V₁', `${pl.V2} − ${pl.V1}`, `${pl.V2 - pl.V1} V`));
+      st.push(WK.eq('Slope of plateau', '(R₂ − R₁)/R₁ × 100 / (V₂ − V₁) × 100', `(${pl.R2.toFixed(0)} − ${pl.R1.toFixed(0)}) / ${pl.R1.toFixed(0)} × 100 / ${pl.V2 - pl.V1} × 100`, `${pl.slope.toFixed(2)}% per 100 V`) + WK.why('A good tube has a long plateau with a small slope (a few per cent per 100 V).'));
+      st.push(WK.eq('Operating voltage', '(V₁ + V₂) / 2', `(${pl.V1} + ${pl.V2}) / 2`, `${pl.Vop} V`) + ' (to the nearest 10 V)');
+      blocks.push(WK.block('Plateau length, slope and operating voltage', st, true));
+    }
+    const n = tB.rows.length;
+    if (n >= 5) {
+      const Ns = tB.rows.map(r => r.N), Nb = mean(Ns), ss = Ns.reduce((a, x) => a + (x - Nb) ** 2, 0), sd = Math.sqrt(ss / (n - 1)), chi = ss / Nb, P = chi2P(chi, n - 1);
+      const tb = `<div class="tscroll" style="margin:4px 0"><table class="obs"><thead><tr><th>Trial</th><th>N</th><th>N − N̄</th><th>(N − N̄)²</th></tr></thead><tbody>${Ns.map((x, k) => `<tr><td>${k + 1}</td><td>${x}</td><td>${WK.n(x - Nb, 1)}</td><td>${((x - Nb) ** 2).toFixed(1)}</td></tr>`).join('')}<tr><td colspan="3" class="lbl">Σ(N − N̄)²</td><td><b>${ss.toFixed(1)}</b></td></tr></tbody></table></div>`;
+      blocks.push(WK.block('Statistics of counting (χ² test)', [
+        WK.eq('N̄', `(${Ns.slice(0, 6).join(' + ')}${n > 6 ? ' + …' : ''}) / ${n}`, Nb.toFixed(1)), tb,
+        WK.eq('σ', '√[Σ(N − N̄)² / (n − 1)]', `√(${ss.toFixed(1)} / ${n - 1})`, sd.toFixed(2)) + ' &nbsp; compare ' + WK.eq('√N̄', `√${Nb.toFixed(1)}`, Math.sqrt(Nb).toFixed(2)),
+        WK.eq('χ²', 'Σ(N − N̄)² / N̄', `${ss.toFixed(1)} / ${Nb.toFixed(1)}`, chi.toFixed(2)),
+        `Degrees of freedom = n − 1 = ${n - 1}. From the χ² table (or distribution), P = <b>${P.toFixed(3)}</b>.` + WK.why('If 0.05 < P < 0.95 the spread of the counts is what random (Poisson) counting gives, so the counter is reliable.')], false));
+    }
+    blocks.push(bgBlock());
+    return WK.sec(blocks);
+  }
+  function gm12Work(Rb, p, f, muMM, muCM, mum, half, E) {
+    const rows = tA.rows.slice().sort((a, b) => a.x - b.x);
+    const blocks = [bgBlock(), WK.block('Corrected count rate for each thickness', rows.map(r => { const c = rate(r) - Rb; return `x = ${r.x.toFixed(2)} mm: ` + WK.eq('R', 'N / t × 60', `${r.N} / ${r.t} × 60`, rate(r).toFixed(1)) + '; ' + WK.eq('R − R<sub>b</sub>', `${rate(r).toFixed(1)} − ${Rb.toFixed(1)}`, c.toFixed(1)) + (c > 0 ? '; ' + WK.eq('ln(R − R<sub>b</sub>)', `ln ${c.toFixed(1)}`, Math.log(c).toFixed(4)) : ''); }).concat([WK.why('R = R₀ e<sup>−µx</sup>, so ln(R − R<sub>b</sub>) against x is a straight line of slope −µ.')]), true)];
+    const fw = WK.fit(p, 'x', 'ln R', ' mm', '');
+    blocks.push(WK.block('Absorption coefficient', fw.steps.concat([
+      WK.eq('µ', '− slope', `${muMM.toFixed(4)} mm⁻¹`, `${muCM.toFixed(2)} cm⁻¹`),
+      WK.eq('Mass absorption coefficient µ/ρ', 'µ / ρ<sub>Al</sub>', `${muCM.toFixed(2)} / 2.70`, `${mum.toFixed(2)} cm² g⁻¹`),
+      WK.eq('Half-value thickness x½', '0.693 / µ', `0.693 / ${muMM.toFixed(4)}`, `${half.toFixed(3)} mm`),
+      WK.eq('E<sub>max</sub>', '(17 / (µ/ρ))<sup>1/1.14</sup>', `(17 / ${mum.toFixed(2)})<sup>0.877</sup>`, `${E.toFixed(2)} MeV`) + WK.why('An empirical relation between the mass absorption coefficient in aluminium and the end-point energy of the β spectrum.')]), false));
+    return WK.sec(blocks);
   }
   const tables = h('div', { class: 'stack' }, tA.el, tB ? plIn : null, tB ? tB.el : null, tBg.el);
   if (which === 11) { tables.innerHTML = ''; tables.append(tA.el, tB.el, tBg.el); }
@@ -2692,7 +3567,7 @@ EXPS.push({
 <li>Set the operating voltage. Remove the source and count for 100 s or more to find the background rate.</li>
 <li>Replace the source. Take at least 10 (preferably 20) counts of the same duration (e.g. 30 s).</li>
 <li>Calculate \(\bar N\), the standard deviation, \(\sqrt{\bar N}\) and χ². Find P from the χ² table and decide whether the counter is reliable.</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> set the voltage, press <i>Start count</i>, wait for the preset time, then press <i>Record count</i> after choosing the table. Use the speed setting (×5, ×20) to save time; the counting statistics are the same as in real time.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> set the voltage, press <i>Start count</i>, wait for the preset time, then press <i>Record count</i> after choosing the table. Use the speed setting (×5, ×20) to save time; the counting statistics are the same as in real time. Press <b>Demo</b> on the bench to watch a complete run before you start.</div>`,
   precautions: String.raw`<li>Never exceed the end of the plateau; continuous discharge damages the tube.</li><li>Handle the radioactive source with tongs; keep it in its container when not in use and away from the body.</li><li>Keep the source position fixed throughout part A.</li><li>Raise the voltage slowly and allow the counter to stabilise.</li><li>Do not touch the thin end window.</li>`,
   errors: String.raw`<li>Statistical fluctuation (∝ √N); count long enough for large N.</li><li>Dead time losses at high count rates.</li><li>Background radiation.</li>`,
   viva: [
@@ -2727,7 +3602,7 @@ EXPS.push({
 <li>Place the β-source on a lower shelf. Count for a fixed time without any absorber.</li>
 <li>Measure the thickness of each aluminium sheet with a screw gauge. Place absorbers on the shelf between the source and the window, increasing the total thickness step by step (0.10, 0.20, 0.30 mm …). Count for the same time at each thickness. Do not move the source.</li>
 <li>Correct each count rate for background. Plot ln(R − R<sub>b</sub>) against x and find μ from the slope. Calculate μ/ρ (ρ = 2.70 g cm⁻³ for Al) and the half-value thickness.</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> tick the aluminium sheets to build up a thickness (the total is shown in the drawing). First find the plateau (raise the EHT until the count rate stops increasing); the operating voltage is near the middle of the plateau, about 100–150 V above the voltage where counting starts.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> tick the aluminium sheets to build up a thickness (the total is shown in the drawing). First find the plateau (raise the EHT until the count rate stops increasing); the operating voltage is near the middle of the plateau, about 100–150 V above the voltage where counting starts. Press <b>Demo</b> on the bench to watch a complete run before you start.</div>`,
   precautions: String.raw`<li>Operate the tube at the middle of its plateau.</li><li>Keep the distance between source and window fixed; place absorbers close to the tube window.</li><li>Count for long enough that N is large (statistical error 1/√N).</li><li>Handle the source with tongs.</li>`,
   errors: String.raw`<li>Statistical fluctuations, especially for thick absorbers (small counts).</li><li>Scattering of β-particles into the window from the edges of the absorber.</li><li>Error in the thickness of the sheets.</li>`,
   viva: [
@@ -2770,7 +3645,7 @@ EXPS.push({
 <li>Plot I against f. The frequency of maximum current is \(f_0\).</li>
 <li>Draw a horizontal line at \(I_0/\sqrt2 = 0.707\,I_0\). Its intersections with the curve give \(f_1\) and \(f_2\). Calculate \(Q = f_0/(f_2-f_1)\).</li>
 <li>Repeat with a different value of R and compare the sharpness of the curves.</li></ol>
-<div class="vnote"><b>On the virtual bench:</b> choose L, C and R, then change the frequency with the slider (coarse) and the buttons (fine). Press <i>Record</i> to note the frequency and current. Each combination of components keeps its own table. The phasor diagram shows how V<sub>L</sub> and V<sub>C</sub> cancel at resonance.</div>`,
+<div class="vnote"><b>On the virtual bench:</b> choose L, C and R, then change the frequency with the slider (coarse) and the buttons (fine). Press <i>Record</i> to note the frequency and current. Each combination of components keeps its own table. The phasor diagram shows how V<sub>L</sub> and V<sub>C</sub> cancel at resonance. Press <b>Demo</b> on the bench to watch a complete run before you start.</div>`,
   precautions: String.raw`<li>Keep the source voltage constant at every frequency.</li><li>Take closely spaced readings near the resonant frequency.</li><li>Use an AC meter suitable for the frequency range.</li><li>Include the resistance of the coil in R<sub>T</sub> when calculating the theoretical Q.</li>`,
   errors: String.raw`<li>Tolerance of the marked values of L and C (typically ±5%).</li><li>Output impedance of the generator and variation of its output voltage with frequency.</li><li>Losses in the coil core at higher frequency.</li>`,
   viva: [
@@ -2807,6 +3682,24 @@ EXPS.push({
     const fS = slider({ label: 'Frequency', min: fmin, max: fmax, smin: 0, smax: 1000, sstep: 1, toS, fromS, value: st.f, fmt: v => v.toFixed(0) + ' Hz', fine: [['−100', -100], ['−10', -10], ['−1', -1], ['+1', 1], ['+10', 10], ['+100', 100]], onInput: v => { st.f = Math.round(v); changed(); } });
     const vS = slider({ label: 'Generator output (kept constant)', min: 0.5, max: 5, step: 0.1, value: st.V, fmt: v => v.toFixed(1) + ' V rms', onInput: v => { st.V = v; changed(); } });
     const btn = h('button', { type: 'button', class: 'btn pri' }, 'Record reading'); const sb = statusBox(); sb.say('Record the current at frequencies below, near and above resonance.');
+    const f0 = () => { const c = comp(); return 1 / (2 * Math.PI * Math.sqrt(c.L * c.C)); };
+    instr.append(demoBar('Watch the current rise to a peak at resonance and the voltages across L and C.', 'Demo', () => runTour([
+      { title: 'The series circuit', el: () => [sch.wrap],
+        text: 'The inductor L, capacitor C and resistor R are joined in series with the AC milliammeter and the signal generator. The AC voltmeter is first connected across the generator.',
+        run: async T => { await pickSeg(T, vmSel, 'source', 'S'); } },
+      { title: 'Generator output kept constant', el: () => [vS.el],
+        text: 'Set the generator output to a convenient value (2.0 V) and check it before every reading: it must stay the same for the whole table.',
+        run: async T => { await T.slide(vS, 2.0, 1000); } },
+      { title: 'Sweep through resonance', el: () => [fS.el, roI.el],
+        text: 'Change the frequency from low to high. The current rises, reaches its largest value at the resonant frequency f₀ = 1/(2π√LC), then falls again. Readings close together near the peak give a good curve.',
+        run: async T => { const r = f0(); await T.slide(fS, Math.max(fmin, r * 0.35), 1000); await T.slide(fS, Math.min(fmax, r * 2.2), 5200); await T.slide(fS, r, 2400); } },
+      { title: 'Voltages across L and C at resonance', el: () => [vmSel.el, roVm.el],
+        text: 'At resonance the voltages across L and across C are nearly equal and much larger than the applied voltage. Their ratio to the supply voltage is the quality factor Q.',
+        run: async T => { await pickSeg(T, vmSel, 'L', 'L'); await T.wait(1500); await pickSeg(T, vmSel, 'C', 'C'); await T.wait(1500); await pickSeg(T, vmSel, 'source', 'S'); } },
+      { title: 'Now take the readings', el: () => [fS.el, btn],
+        text: 'Start well below resonance and record the current at each frequency, going up through the peak and well beyond it. Repeat for another R to see how the peak becomes sharper or flatter.',
+        run: async T => { await T.slide(fS, Math.max(fmin, Math.round(f0() * 0.4)), 1800); } }
+    ], { title: 'Demo · series LCR resonance', doneText: 'Press Record reading, then step the frequency up.' })));
     instr.append(card('Series LCR circuit', 'sine-wave signal generator', sch.wrap, row, h('div', { class: 'ctls' }, fS.el, vS.el), h('div', { class: 'recrow' }, btn), sb.el));
     let tbl; const tblHost = h('div'); const res = resultBox();
     function changed(comb) { save(); sch.redraw(); ph.redraw(); upd(); if (comb) buildTable(); }
@@ -2883,7 +3776,26 @@ EXPS.push({
       const Q = r.f0 / (r.f2 - r.f1);
       html += `<div>f₁ = ${r.f1.toFixed(0)} Hz, f₂ = ${r.f2.toFixed(0)} Hz, bandwidth = ${(r.f2 - r.f1).toFixed(0)} Hz</div><div>Q = f₀/(f₂ − f₁) = ${Q.toFixed(2)}</div></div>`;
       html += `<p class="big" style="margin-top:10px">f₀ = <b>${r.f0.toFixed(0)} Hz</b>, &nbsp;Q = <b>${Q.toFixed(2)}</b></p><p class="small muted">Theoretical: f₀ = ${f0t.toFixed(0)} Hz (difference ${pctErr(r.f0, f0t).toFixed(1)}%), Q = ${Qt.toFixed(2)} (difference ${pctErr(Q, Qt).toFixed(1)}%). Differences of a few per cent come from the tolerance of the marked values of L and C.</p>`;
-      res.set(html);
+      res.set(html + lcrWork(r, Q, f0t, Qt));
+    }
+    function lcrWork(r, Q, f0t, Qt) {
+      const c = comp(), RT = c.R + c.r, S = WK.sig;
+      const blocks = [WK.block('Theoretical values from the marked L, C and R', [
+        `L = ${(c.Ln * 1e3).toFixed(0)} mH = ${S(c.Ln, 3)} H, C = ${(c.Cn * 1e6).toFixed(2)} µF = ${S(c.Cn, 3)} F, R = ${c.R} Ω, resistance of the coil r = ${c.r} Ω.`,
+        WK.eq('f₀', '1 / (2π√(LC))', `1 / (2π × √(${S(c.Ln, 3)} × ${S(c.Cn, 3)}))`, `1 / (2π × ${S(Math.sqrt(c.Ln * c.Cn), 4)})`, `${f0t.toFixed(0)} Hz`),
+        WK.eq('R<sub>T</sub>', 'R + r', `${c.R} + ${c.r}`, `${RT} Ω`),
+        WK.eq('Q', '(1/R<sub>T</sub>) √(L/C)', `(1/${RT}) × √(${S(c.Ln, 3)} / ${S(c.Cn, 3)})`, `${(1 / RT).toFixed(5)} × ${Math.sqrt(c.Ln / c.Cn).toFixed(2)}`, Qt.toFixed(2))], false)];
+      const p = r.p; let k = 0; p.forEach((q, i) => { if (q[1] > p[k][1]) k = i; });
+      const st = [`The largest recorded current is ${p[k][1].toFixed(2)} mA at ${p[k][0]} Hz. The peak of the smooth curve through this point and its two neighbours (${p[k - 1][0]} Hz, ${p[k + 1][0]} Hz) gives f₀ = <b>${r.f0.toFixed(0)} Hz</b>, I₀ = <b>${r.I0.toFixed(2)} mA</b>.` + WK.why('On paper, read f₀ at the top of the resonance curve.'),
+        WK.eq('Half-power current', 'I₀ / √2', `${r.I0.toFixed(2)} / 1.4142`, `${r.hp.toFixed(2)} mA`) + WK.why('At the half-power points the power I²R is half its value at resonance.')];
+      const lo = p.findIndex((q, i) => i > 0 && p[i - 1][1] < r.hp && q[1] >= r.hp && i <= k), hi = p.findIndex((q, i) => i >= k && i < p.length - 1 && q[1] >= r.hp && p[i + 1][1] < r.hp);
+      if (lo > 0) { const [a, b] = [p[lo - 1], p[lo]]; st.push(WK.eq('f₁', `${a[0]} + (${r.hp.toFixed(2)} − ${a[1].toFixed(2)}) / (${b[1].toFixed(2)} − ${a[1].toFixed(2)}) × (${b[0]} − ${a[0]})`, `${r.f1.toFixed(0)} Hz`) + WK.why('f₁ lies between the two readings on the rising side where the current crosses I₀/√2 (straight-line interpolation).')); }
+      if (hi >= 0) { const [a, b] = [p[hi], p[hi + 1]]; st.push(WK.eq('f₂', `${a[0]} + (${a[1].toFixed(2)} − ${r.hp.toFixed(2)}) / (${a[1].toFixed(2)} − ${b[1].toFixed(2)}) × (${b[0]} − ${a[0]})`, `${r.f2.toFixed(0)} Hz`)); }
+      st.push(WK.eq('Bandwidth', 'f₂ − f₁', `${r.f2.toFixed(0)} − ${r.f1.toFixed(0)}`, `${(r.f2 - r.f1).toFixed(0)} Hz`));
+      st.push(WK.eq('Q', 'f₀ / (f₂ − f₁)', `${r.f0.toFixed(0)} / ${(r.f2 - r.f1).toFixed(0)}`, Q.toFixed(2)));
+      st.push(WK.eq('Difference in f₀', '|measured − theory| / theory × 100', `|${r.f0.toFixed(0)} − ${f0t.toFixed(0)}| / ${f0t.toFixed(0)} × 100`, `${pctErr(r.f0, f0t).toFixed(1)}%`));
+      blocks.push(WK.block('Resonant frequency, bandwidth and Q from your readings', st, true));
+      return WK.sec(blocks);
     }
     upd(); buildTable();
     notes.append(card('Lab notebook', 'each set of components has its own table', tblHost), plot.el, card('Result', '', res.el));
@@ -3120,6 +4032,7 @@ function circuitBench(root, cfg) {
   svg.innerHTML = `<defs><pattern id="bgrid-${cfg.key}" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" class="cb-gridline"/></pattern></defs><rect class="cb-bench" x="0" y="0" width="${W}" height="${H}" rx="10"/><rect x="0" y="0" width="${W}" height="${H}" fill="url(#bgrid-${cfg.key})"/><g class="cb-parts"></g><g class="cb-wires"></g><g class="cb-terms"></g><path class="cb-temp" d=""/><g class="cb-fx"></g>`;
   const gParts = svg.querySelector('.cb-parts'), gWires = svg.querySelector('.cb-wires'), gTerms = svg.querySelector('.cb-terms'), temp = svg.querySelector('.cb-temp'), gFx = svg.querySelector('.cb-fx');
   const ws = h('div', { class: 'cb-ws' }); ws.append(svg);
+  const phoneTip = h('p', { class: 'cb-phone-tip' }, 'On a phone: tap equipment in the tray to put it on the bench · touch and hold a piece to move it · drag from one terminal to another to connect a wire · tap a wire to remove it · swipe the bench sideways to see all of it.');
   const sb = statusBox();
   const btn = (t, f, cls) => { const b = h('button', { type: 'button', class: 'btn sm ' + (cls || '') }, t); b.addEventListener('click', f); return b; };
   const powerBtn = h('button', { type: 'button', class: 'cb-power', 'aria-pressed': 'false' }, h('span', { class: 'lamp' }), h('span', { class: 'lbl' }, 'Power OFF'));
@@ -3130,7 +4043,7 @@ function circuitBench(root, cfg) {
     powerBtn);
   const schemBox = h('div', { class: 'cb-schem' });
   el.append(stageBar, h('div', { class: 'cb-grid' }, h('div', { class: 'card cb-diag' }, h('div', { class: 'card-h' }, h('h3', null, 'Circuit diagram'), h('span', { class: 'sub' }, 'wire the bench to match this')), schemBox),
-    h('div', { class: 'card cb-main' }, h('div', { class: 'card-h' }, h('h3', null, 'Workbench'), h('span', { class: 'sub' }, 'drag equipment from the tray, then drag from terminal to terminal to connect a wire · tap a wire to remove it')), tray, ws, tools, sb.el)));
+    h('div', { class: 'card cb-main' }, h('div', { class: 'card-h' }, h('h3', null, 'Workbench'), h('span', { class: 'sub' }, 'drag equipment from the tray, then drag from terminal to terminal to connect a wire · tap a wire to remove it')), phoneTip, tray, ws, tools, sb.el)));
   root.append(el);
   sb.el.addEventListener('click', e => { if (e.target.classList.contains('cb-undo')) { e.preventDefault(); if (undo) { S.wires = undo; undo = null; afterWire(); sb.say('Restored.'); } } });
 
@@ -3160,13 +4073,16 @@ function circuitBench(root, cfg) {
     const d = PARTS[p.type]; const sc = Math.min(1, 74 / d.h, 120 / d.w);
     const it = h('button', { type: 'button', class: 'cb-tray-item', title: 'Drag to the bench (or click to place)' });
     it.innerHTML = `<svg viewBox="-4 -4 ${d.w + 8} ${d.h + 8}" width="${(d.w + 8) * sc}" height="${(d.h + 8) * sc}">${partSVG(p)}</svg><span>${subHTML(esc(p.label))}</span>`;
-    let ghost = null, moved = false;
+    let ghost = null, moved = false, ptype = '';
+    it.addEventListener('click', () => { if (ptype !== 'mouse') place(p.id); ptype = ''; }); // tap (phone) or keyboard places it
     it.addEventListener('pointerdown', e => {
+      ptype = e.pointerType; if (e.pointerType !== 'mouse') return; // on touch screens a swipe over the tray scrolls the page
       e.preventDefault(); moved = false; it.setPointerCapture(e.pointerId);
       const mv = ev => { if (!moved && Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) > 6) { moved = true; ghost = it.firstElementChild.cloneNode(true); ghost.classList.add('cb-ghost'); document.body.append(ghost); } if (ghost) { ghost.style.left = ev.clientX - 30 + 'px'; ghost.style.top = ev.clientY - 30 + 'px'; } };
       const up = ev => {
         it.removeEventListener('pointermove', mv); it.removeEventListener('pointerup', up); it.removeEventListener('pointercancel', up);
         if (ghost) { ghost.remove(); ghost = null; }
+        if (ev.type === 'pointercancel') return;
         if (!moved) { place(p.id); return; }
         const r = svg.getBoundingClientRect(); if (ev.clientX < r.left || ev.clientX > r.right || ev.clientY < r.top || ev.clientY > r.bottom) return;
         const pt = toSVG(ev); place(p.id, [clamp(pt.x - d.w / 2, 0, W - d.w), clamp(pt.y - d.h / 2, 0, H - d.h)]);
@@ -3187,20 +4103,30 @@ function circuitBench(root, cfg) {
   }
   /* ---------- pointer interaction ---------- */
   function toSVG(e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
-  let drag = null;
+  let drag = null, tp = null; // tp: a touch waiting to become a tap or a long press
+  const removeWire = i => { undo = S.wires.slice(); const rem = S.wires.splice(i, 1)[0]; if (!rem) return; afterWire(); sfx('unplug'); sb.say(`Wire removed: ${tName(rem[0])} — ${tName(rem[1])}. <a href="#" class="cb-undo">Undo</a>`); };
+  // touch screens: a finger on the empty bench (or on a wire or a part) scrolls the page; terminals and knobs act at once
+  svg.addEventListener('touchstart', e => { const t = e.target; if (t && t.closest && t.closest('[data-t],[data-knob]')) e.preventDefault(); }, { passive: false });
+  svg.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, { passive: false });
   svg.addEventListener('pointerdown', e => {
+    const touch = e.pointerType === 'touch';
     const sw = e.target.closest('[data-sw]');
-    if (sw) { const pid = sw.closest('[data-p]').dataset.p; cfg.onSwitch && cfg.onSwitch(pid, sw.dataset.sw); return; }
+    if (sw) { const pid = sw.closest('[data-p]').dataset.p; if (touch) { tp = { kind: 'sw', pid, sw: sw.dataset.sw, x: e.clientX, y: e.clientY }; return; } cfg.onSwitch && cfg.onSwitch(pid, sw.dataset.sw); return; }
     const kn = e.target.closest('[data-knob]');
     if (kn) { const pid = kn.closest('[data-p]').dataset.p, which = kn.dataset.knob, ctl = knobs[pid] && knobs[pid][which]; if (ctl) { e.preventDefault(); drag = { kind: 'knob', ctl, y0: e.clientY, s0: +ctl.input.value }; svg.setPointerCapture(e.pointerId); return; } }
     const t = e.target.closest('[data-t]');
     if (t) { e.preventDefault(); drag = { kind: 'wire', from: t.dataset.t, x: e.clientX, y: e.clientY }; svg.setPointerCapture(e.pointerId); return; }
     const w = e.target.closest('[data-w]');
-    if (w) { e.preventDefault(); const i = +w.dataset.w; undo = S.wires.slice(); const rem = S.wires.splice(i, 1)[0]; afterWire(); sfx('unplug'); sb.say(`Wire removed: ${tName(rem[0])} — ${tName(rem[1])}. <a href="#" class="cb-undo">Undo</a>`); return; }
+    if (w) { if (touch) { tp = { kind: 'w', i: +w.dataset.w, x: e.clientX, y: e.clientY }; return; } e.preventDefault(); removeWire(+w.dataset.w); return; }
     const p = e.target.closest('[data-p]');
-    if (p) { e.preventDefault(); const pt = toSVG(e); const [x, y] = posOf(p.dataset.p); drag = { kind: 'move', pid: p.dataset.p, dx: pt.x - x, dy: pt.y - y }; svg.setPointerCapture(e.pointerId); }
+    if (p) {
+      const pt = toSVG(e); const [x, y] = posOf(p.dataset.p); const mv = { kind: 'move', pid: p.dataset.p, dx: pt.x - x, dy: pt.y - y };
+      if (touch) { const id = e.pointerId; tp = { kind: 'hold', x: e.clientX, y: e.clientY, timer: setTimeout(() => { if (!tp) return; tp = null; drag = mv; p.classList.add('lifted'); try { svg.setPointerCapture(id); } catch (er) { } try { navigator.vibrate && navigator.vibrate(12); } catch (er) { } sb.say(`Moving ${partDef[mv.pid].label}: slide your finger, then lift it.`); }, 260) }; return; }
+      e.preventDefault(); drag = mv; svg.setPointerCapture(e.pointerId);
+    }
   });
   svg.addEventListener('pointermove', e => {
+    if (tp && Math.hypot(e.clientX - tp.x, e.clientY - tp.y) > 10) { clearTimeout(tp.timer); tp = null; }
     if (!drag) return;
     if (drag.kind === 'knob') { const c = drag.ctl, inp = c.input; const lo = +inp.min, hi = +inp.max; const v = clamp(drag.s0 + (drag.y0 - e.clientY) / 220 * (hi - lo), lo, hi); inp.value = v; inp.dispatchEvent(new Event('input')); return; }
     const pt = toSVG(e);
@@ -3208,14 +4134,15 @@ function circuitBench(root, cfg) {
     else { const d = PARTS[partDef[drag.pid].type]; S.pos[drag.pid] = [Math.round(clamp(pt.x - drag.dx, 0, W - d.w)), Math.round(clamp(pt.y - drag.dy, 14, H - d.h))]; const g = gParts.querySelector(`[data-p="${drag.pid}"]`); g.setAttribute('transform', `translate(${S.pos[drag.pid][0]},${S.pos[drag.pid][1]})`); $$(`[data-t^="${drag.pid}."]`, gTerms).forEach(tg => { const [x, y] = termXY(tg.dataset.t); tg.setAttribute('transform', `translate(${x},${y})`); }); renderWires(); }
   });
   const endDrag = e => {
+    if (tp) { const t = tp; tp = null; clearTimeout(t.timer); if (Math.hypot(e.clientX - t.x, e.clientY - t.y) <= 10) { if (t.kind === 'w') removeWire(t.i); else if (t.kind === 'sw') cfg.onSwitch && cfg.onSwitch(t.pid, t.sw); } return; }
     if (!drag) return; const d = drag; drag = null; temp.setAttribute('d', '');
-    if (d.kind === 'move' || d.kind === 'knob') { if (d.kind === 'move') save(); return; }
+    if (d.kind === 'move' || d.kind === 'knob') { if (d.kind === 'move') { save(); const g = gParts.querySelector(`[data-p="${d.pid}"]`); if (g) g.classList.remove('lifted'); } return; }
     const tgtEl = document.elementFromPoint(e.clientX, e.clientY); const tg = tgtEl && tgtEl.closest && tgtEl.closest('[data-t]');
     const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6;
     if (tg && tg.dataset.t !== d.from) { addWire(d.from, tg.dataset.t); setPending(null); return; }
     if (!moved) { if (pending && pending !== d.from) { addWire(pending, d.from); setPending(null); } else setPending(pending === d.from ? null : d.from); }
   };
-  svg.addEventListener('pointerup', endDrag); svg.addEventListener('pointercancel', () => { drag = null; temp.setAttribute('d', ''); });
+  svg.addEventListener('pointerup', endDrag); svg.addEventListener('pointercancel', () => { if (tp) { clearTimeout(tp.timer); tp = null; } if (drag && drag.kind === 'move') { const g = gParts.querySelector(`[data-p="${drag.pid}"]`); if (g) g.classList.remove('lifted'); save(); } drag = null; temp.setAttribute('d', ''); });
   function setPending(t) { pending = t; $$('.cb-term', gTerms).forEach(g => g.classList.toggle('sel', g.dataset.t === t)); if (t) sb.say(`Selected ${tName(t)}. Now tap the terminal to connect it to.`); }
   function addWire(a, b) {
     if (S.wires.some(w => (w[0] === a && w[1] === b) || (w[0] === b && w[1] === a))) { sb.say('These two terminals are already connected.'); return; }
@@ -3413,7 +4340,7 @@ function croUnit(parent, o) {
   const guide = check({ label: 'Show measuring guides', value: st.guide, onChange: v => { st.guide = v; save(); } });
   panel.append(h('h5', null, 'Oscilloscope controls'), modeSeg.el, h('div', { class: 'opts' }, v1.el, v2.el, td.el), yp.el, xp.el, h('div', { class: 'ctls' }, inten.el, focus.el), h('div', { class: 'opts' }, gnd.el, trig.el)); if (o.guides !== false) panel.append(guide.el);
   wrap.append(scrBox, panel); parent.append(wrap);
-  loop(() => view.now());
+  drawLoop(view);
   const ampDiv = V => V / (VDIV[st.v1] * (1 + e1[st.v1]));
   function draw(ctx, W, H) {
     const T = theme(); ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#2b333a'; ctx.fillRect(0, 0, W, H);
@@ -3578,7 +4505,20 @@ EXPS.push({
       if (kv.length) html += `<p>Voltage: mean calibration factor K<sub>V</sub> = <b>${mean(kv).toFixed(3)}</b> (the CRO reads ${Math.abs((1 / mean(kv) - 1) * 100).toFixed(1)}% ${mean(kv) < 1 ? 'high' : 'low'}).</p>`;
       if (kf.length) html += `<p>Frequency: mean calibration factor K<sub>f</sub> = <b>${mean(kf).toFixed(3)}</b> (time base error ${((mean(kf) - 1) * 100).toFixed(1)}%).</p>`;
       html += '<p class="small muted">Multiply future CRO readings by these factors to correct them. Factors differ slightly between VOLTS/DIV and TIME/DIV ranges because each range has its own small error.</p>';
-      res.set(html);
+      const blocks = [];
+      tA.rows.forEach((r, k) => blocks.push(WK.block(`Voltage reading ${k + 1}: ${r.vm.toFixed(3)} V on the voltmeter`, [
+        `Height of the trace from peak to peak h = ${r.h.toFixed(1)} div on VOLTS/DIV = ${fmtVd(r.vd)}.`,
+        WK.eq('V<sub>pp</sub>', 'h × VOLTS/DIV', `${r.h.toFixed(1)} × ${r.vd} V`, `${(r.h * r.vd).toFixed(3)} V`),
+        WK.eq('V<sub>rms</sub> (CRO)', 'V<sub>pp</sub> / (2√2)', `${(r.h * r.vd).toFixed(3)} / 2.8284`, `${vcro(r).toFixed(3)} V`) + WK.why('The CRO shows peak-to-peak voltage; an AC voltmeter reads the rms value, V<sub>rms</sub> = V<sub>0</sub>/√2 = V<sub>pp</sub>/(2√2).'),
+        WK.eq('K<sub>V</sub>', 'V<sub>rms</sub> (voltmeter) / V<sub>rms</sub> (CRO)', `${r.vm.toFixed(3)} / ${vcro(r).toFixed(3)}`, (r.vm / vcro(r)).toFixed(3))], k === 0)));
+      if (kv.length > 1) blocks.push(WK.block('Mean voltage calibration factor', [WK.eq('K<sub>V</sub>', `(${kv.map(x => x.toFixed(3)).join(' + ')}) / ${kv.length}`, mean(kv).toFixed(3))], false));
+      tB.rows.forEach((r, k) => blocks.push(WK.block(`Frequency reading ${k + 1}: generator at ${r.f} Hz`, [
+        `${r.n} complete wave${r.n > 1 ? 's' : ''} occupy L = ${r.L.toFixed(1)} div on TIME/DIV = ${fmtTd(r.td)}.`,
+        WK.eq('T', 'L × TIME/DIV / n', `${r.L.toFixed(1)} × ${WK.sig(r.td, 3)} s / ${r.n}`, `${WK.sig(r.L * r.td / r.n, 4)} s`),
+        WK.eq('f (CRO)', '1 / T', `1 / ${WK.sig(r.L * r.td / r.n, 4)}`, `${fcro(r).toFixed(1)} Hz`),
+        WK.eq('K<sub>f</sub>', 'f (generator) / f (CRO)', `${r.f} / ${fcro(r).toFixed(1)}`, (r.f / fcro(r)).toFixed(3))], k === 0 && !tA.rows.length)));
+      if (kf.length > 1) blocks.push(WK.block('Mean frequency calibration factor', [WK.eq('K<sub>f</sub>', `(${kf.map(x => x.toFixed(3)).join(' + ')}) / ${kf.length}`, mean(kf).toFixed(3))], false));
+      res.set(html + WK.sec(blocks));
     }
     pg.notes.append(card('Lab notebook', 'readings are saved in this browser', h('div', { class: 'stack' }, tA.el, tB.el)), pV.el, pF.el, card('Result', '', res.el)); analyse();
   }
@@ -3662,7 +4602,11 @@ EXPS.push({
       const v = tbl.rows.map(fy);
       if (!v.length) { res.set('<h4>Result</h4><p class="small muted">Record stationary figures for at least four different ratios.</p>'); return; }
       const m = mean(v), sd = v.length > 1 ? Math.sqrt(v.reduce((s, x) => s + (x - m) ** 2, 0) / (v.length - 1)) : 0;
-      res.set(`<h4>Result</h4><p class="big">Unknown frequency f = <b>${m.toFixed(1)} Hz</b>${v.length > 1 ? ` ± ${sd.toFixed(1)} Hz` : ''}</p><p class="small muted">Mean of ${v.length} figures. ${v.length > 1 ? `Spread ${(sd / m * 100).toFixed(2)}%.` : ''}</p>`);
+      const blocks = tbl.rows.map((r, k) => WK.block(`Figure ${k + 1}: ratio ${r.nh} : ${r.nv}`, [
+        `Points where the figure touches a horizontal line along its top: n<sub>h</sub> = ${r.nh}; points where it touches a vertical line along its side: n<sub>v</sub> = ${r.nv}. Known frequency on the X input: f<sub>x</sub> = ${r.fx.toFixed(1)} Hz.`,
+        WK.eq('f<sub>y</sub>', 'f<sub>x</sub> × n<sub>h</sub> / n<sub>v</sub>', `${r.fx.toFixed(1)} × ${r.nh} / ${r.nv}`, `${fy(r).toFixed(1)} Hz`) + (k === 0 ? WK.why('The spot makes n<sub>h</sub> horizontal swings while it makes n<sub>v</sub> vertical ones, so f<sub>y</sub> : f<sub>x</sub> = n<sub>h</sub> : n<sub>v</sub>.') : '')], k === 0));
+      if (v.length > 1) blocks.push(WK.block('Mean and spread', [WK.eq('f', `(${v.map(x => x.toFixed(1)).join(' + ')}) / ${v.length}`, `${m.toFixed(1)} Hz`), WK.eq('Standard deviation', '√[Σ(f − f̄)² / (n − 1)]', `${sd.toFixed(2)} Hz`)], false));
+      res.set(`<h4>Result</h4><p class="big">Unknown frequency f = <b>${m.toFixed(1)} Hz</b>${v.length > 1 ? ` ± ${sd.toFixed(1)} Hz` : ''}</p><p class="small muted">Mean of ${v.length} figures. ${v.length > 1 ? `Spread ${(sd / m * 100).toFixed(2)}%.` : ''}</p>` + WK.sec(blocks));
     }
     pg.notes.append(card('Lab notebook', '', tbl.el), card('Result', '', res.el)); analyse();
   }
@@ -3754,7 +4698,19 @@ EXPS.push({
       html += '</div>';
       const ok = gs.map(g => ({ g, pk: peak(g.rs) })).filter(x => x.pk && !x.pk.edge);
       if (ok.length) html += `<p class="big" style="margin-top:10px">Maximum power is delivered when R<sub>L</sub> ≈ R<sub>s</sub>: theorem verified.</p><p class="small muted">The peak lies slightly above R<sub>s</sub> because the milliammeter (≈ ${rA.toFixed(1)} Ω) and wires add to the source resistance.</p>`;
-      res.set(html);
+      const blocks = [];
+      gs.forEach((g, gi) => {
+        const st = g.rs.map(r => `R<sub>L</sub> = ${r.RL} Ω: ` + WK.eq('P', 'V × I', `${r.V.toFixed(3)} V × ${r.I.toFixed(2)} mA`, `${P(r).toFixed(2)} mW`) + '; ' + WK.eq('η', 'R<sub>L</sub> / (R<sub>s</sub> + R<sub>L</sub>)', `${r.RL} / (${r.Rs} + ${r.RL})`, `${(r.RL / (r.Rs + r.RL) * 100).toFixed(0)}%`));
+        const pk = peak(g.rs); const E = g.rs[0].E;
+        if (pk && !pk.edge) {
+          let k = 0; g.rs.forEach((r, i) => { if (P(r) > P(g.rs[k])) k = i; });
+          st.push(`The largest power in the table is ${P(g.rs[k]).toFixed(2)} mW at R<sub>L</sub> = ${g.rs[k].RL} Ω. The top of the smooth P–R<sub>L</sub> curve through this point and its neighbours is at R<sub>L</sub> ≈ <b>${pk.RL.toFixed(0)} Ω</b>.` + WK.why('Read this from your graph as the R<sub>L</sub> at the peak.'));
+          st.push(WK.eq('Theoretical P<sub>max</sub>', 'E² / 4R<sub>s</sub>', `${E.toFixed(1)}² / (4 × ${g.Rs})`, `${(E * E / (4 * g.Rs)).toFixed(5)} W`, `${(E * E / (4 * g.Rs) * 1e3).toFixed(2)} mW`) + WK.why('At R<sub>L</sub> = R<sub>s</sub> the current is E/2R<sub>s</sub> and the power in the load (E/2R<sub>s</sub>)² R<sub>s</sub> = E²/4R<sub>s</sub>; the efficiency there is 50%.'));
+          st.push(WK.eq('Measured P<sub>max</sub> compared with theory', `|${pk.P.toFixed(2)} − ${(E * E / (4 * g.Rs) * 1e3).toFixed(2)}| / ${(E * E / (4 * g.Rs) * 1e3).toFixed(2)} × 100`, `${pctErr(pk.P, E * E / (4 * g.Rs) * 1e3).toFixed(1)}%`));
+        }
+        blocks.push(WK.block(`R<sub>s</sub> = ${g.Rs} Ω (E = ${E.toFixed(1)} V)`, st, gi === 0));
+      });
+      res.set(html + WK.sec(blocks));
     }
     pg.notes.append(card('Lab notebook', '', tbl.el), plot.el, card('Result', '', res.el)); analyse();
   }
@@ -3862,7 +4818,17 @@ EXPS.push({
       if (rows.length) { const d = mean(rows.map(r => pctErr(ith(r), r.IL))), d2 = mean(rows.map(r => pctErr(inor(r), r.IL))); html += `<p class="big" style="margin-top:10px">Measured load currents agree with Thevenin’s (mean difference ${d.toFixed(1)}%) and Norton’s (${d2.toFixed(1)}%) equivalent circuits: theorems verified.</p>`; }
       else html += '<p class="small muted" style="margin-top:8px">Complete steps 1–4 to compare the load currents.</p>';
       if ((rec.E2 != null && rec.E2 !== E) || (rec.E4 != null && rec.E4 !== E)) html += '<p class="small" style="color:var(--warn)">E was different in some steps. Keep E the same and repeat those steps.</p>';
-      res.set(html);
+      const blocks = [WK.block('Theoretical values from the marked resistors', [
+        `R₁ = 470 Ω (in series with E), R₂ = 1 kΩ (across the output before R₃), R₃ = 330 Ω (in series with the load).`,
+        WK.eq('V<sub>Th</sub>', 'E R₂ / (R₁ + R₂)', `${E} × 1000 / (470 + 1000)`, `${th.Vth.toFixed(3)} V`) + WK.why('With the load removed, no current flows in R₃, so the open-circuit voltage is the voltage across R₂ (potential divider).'),
+        WK.eq('R<sub>Th</sub>', 'R₃ + R₁R₂/(R₁ + R₂)', `330 + 470 × 1000 / 1470`, `330 + ${par(470, 1000).toFixed(1)}`, `${th.Rth.toFixed(1)} Ω`) + WK.why('Replace the source by its internal resistance (short it) and look back from the load terminals.'),
+        WK.eq('I<sub>N</sub>', 'V<sub>Th</sub> / R<sub>Th</sub>', `${th.Vth.toFixed(3)} / ${th.Rth.toFixed(1)}`, `${(th.Vth / th.Rth * 1e3).toFixed(2)} mA`)], false)];
+      if (rec.Vth != null && rec.Rth != null && rec.IN != null) blocks.push(WK.block('Your measured equivalent circuit', [WK.eq('V<sub>Th</sub>', `${rec.Vth} V`) + ' (open-circuit voltage), ' + WK.eq('R<sub>Th</sub>', `${rec.Rth} Ω`) + ', ' + WK.eq('I<sub>N</sub>', `${rec.IN} mA`) + ' (short-circuit current)', WK.eq('Check V<sub>Th</sub>/R<sub>Th</sub>', `${rec.Vth} / ${rec.Rth}`, `${(rec.Vth / rec.Rth * 1e3).toFixed(2)} mA`) + ` compared with I<sub>N</sub> = ${rec.IN} mA`], true));
+      rows.forEach((r, k) => blocks.push(WK.block(`R<sub>L</sub> = ${r.RL} Ω (measured I<sub>L</sub> = ${r.IL.toFixed(2)} mA)`, [
+        WK.eq('Thevenin: I<sub>L</sub>', 'V<sub>Th</sub> / (R<sub>Th</sub> + R<sub>L</sub>)', `${rec.Vth} / (${rec.Rth} + ${r.RL})`, `${ith(r).toFixed(2)} mA`),
+        WK.eq('Norton: I<sub>L</sub>', 'I<sub>N</sub> R<sub>N</sub> / (R<sub>N</sub> + R<sub>L</sub>)', `${rec.IN} × ${rec.Rth} / (${rec.Rth} + ${r.RL})`, `${inor(r).toFixed(2)} mA`) + WK.why('R<sub>N</sub> = R<sub>Th</sub>; the Norton current divides between R<sub>N</sub> and the load.'),
+        WK.eq('Difference (Thevenin)', `|${ith(r).toFixed(2)} − ${r.IL.toFixed(2)}| / ${r.IL.toFixed(2)} × 100`, `${pctErr(ith(r), r.IL).toFixed(1)}%`)], k === 0 && rec.Vth == null)));
+      res.set(html + WK.sec(blocks));
     }
     pg.notes.append(card('Lab notebook', '', tL.el), card('Result', '', res.el)); analyse();
   }
@@ -4031,7 +4997,48 @@ function bjtBench(root, cfg, id) {
     }
     html += '</div>';
     if (!any) html = '<h4>Calculation</h4><p class="small muted">Record an input curve (8–10 readings) and output curves for two or three values of ' + I.inCur + ' (8–10 readings each).</p>';
-    res.set(html);
+    res.set(subHTML(html) + (any ? bjtWork() : ''));
+  }
+  function bjtWork() {
+    const sh = subHTML, iu = I.inUnit, iScale = iu === 'µA' ? 1e-6 : 1e-3, blocks = [];
+    const gi = groupBy(tIn.rows, grpIn).filter(g => g.rows.length >= 3);
+    if (gi.length) {
+      const g = gi[gi.length - 1]; const rows = g.rows.slice().sort((a, b) => a.iin - b.iin); const mx = rows[rows.length - 1].iin; let top = rows.filter(r => r.iin >= 0.15 * mx && r.iin <= 0.7 * mx); if (top.length < 2) top = rows.slice(-2);
+      if (top.length >= 2) {
+        const fw = WK.fit(top.map(r => [r.iin, r.vin]), 'I', 'V', ' ' + iu, ' V'); const ri = Math.abs(fw.m) / iScale;
+        const a = top[0], b = top[top.length - 1];
+        blocks.push(WK.block(sh(`Input resistance r_i (at ${I.outName} = ${g.k} V)`), [
+          sh(`Use the straight, steep part of the input curve: ${top.length} readings with ${I.inCur} between ${a.iin} and ${b.iin} ${iu}.`) + WK.why('Below the knee the curve is not straight; r<sub>i</sub> is the inverse slope of the straight part.'),
+          WK.eq(sh('Two-point estimate r_i'), sh(`Δ${I.inName} / Δ${I.inCur}`), `(${b.vin} − ${a.vin}) V / (${b.iin} − ${a.iin}) ${iu}`, `${WK.sig((b.vin - a.vin) / ((b.iin - a.iin) * iScale), 4)} Ω`),
+          ...fw.steps, WK.eq(sh('r_i'), `slope (V per ${iu})`, `${WK.sig(Math.abs(fw.m), 4)} V / ${iu}`, ri >= 1000 ? `${(ri / 1000).toFixed(2)} kΩ` : `${ri.toFixed(1)} Ω`)], true));
+      }
+    }
+    const go = groupBy(tOut.rows, grpOut).filter(g => g.rows.length >= 3);
+    if (go.length) {
+      const g = go[go.length - 1]; const act = g.rows.filter(r => r.vout >= (cfg === 'CB' ? 0.5 : 1.5)).sort((a, b) => a.vout - b.vout);
+      if (act.length >= 2) {
+        const fw = WK.fit(act.map(r => [r.vout, r.iout]), 'V', 'I', ' V', ' mA'); const ro = fw.m > 0 ? 1 / fw.m : Infinity;
+        blocks.push(WK.block(sh(`Output resistance r_o (at ${I.inCur} = ${g.k} ${iu})`), [
+          sh(`Use the flat (active) part of the output curve: ${act.length} readings with ${I.outName} from ${act[0].vout} V to ${act[act.length - 1].vout} V.`),
+          ...fw.steps, WK.eq(sh('r_o'), sh(`Δ${I.outName} / Δ${I.outCur}`), `1 / slope`, `1 / (${WK.sig(fw.m, 4)} mA/V)`, isFinite(ro) ? (ro > 1000 ? `${(ro / 1000).toFixed(2)} MΩ` : `${ro.toFixed(1)} kΩ`) : 'very large') + WK.why('mA/V inverted gives kΩ. The output curve is nearly flat, so r<sub>o</sub> is large.')], false));
+      }
+      if (go.length >= 2) {
+        const V0 = 5, a = go[0], b = go[go.length - 1]; const ia = interpAt(a.rows, V0, 'vout', 'iout'), ib = interpAt(b.rows, V0, 'vout', 'iout'), xa = mean(a.rows.map(r => r.iin)), xb = mean(b.rows.map(r => r.iin));
+        if (ia != null && ib != null && xb !== xa) {
+          const dIn = (xb - xa) * (iu === 'µA' ? 1e-3 : 1); const gain = (ib - ia) / dIn; const sym = cfg === 'CB' ? 'α' : cfg === 'CE' ? 'β' : 'γ'; const dp = cfg === 'CB' ? 3 : 2;
+          const st = [sh(`Read ${I.outCur} at ${I.outName} = ${V0} V on two output curves (between the readings on either side of ${V0} V):`),
+            sh(`curve ${I.inCur} = ${xa.toFixed(cfg === 'CB' ? 2 : 0)} ${iu}: ${I.outCur} = ${ia.toFixed(dp)} mA; curve ${I.inCur} = ${xb.toFixed(cfg === 'CB' ? 2 : 0)} ${iu}: ${I.outCur} = ${ib.toFixed(dp)} mA.`),
+            WK.eq(sh(`Δ${I.outCur}`), `${ib.toFixed(dp)} − ${ia.toFixed(dp)}`, `${(ib - ia).toFixed(dp)} mA`),
+            WK.eq(sh(`Δ${I.inCur}`), `${xb.toFixed(cfg === 'CB' ? 2 : 0)} − ${xa.toFixed(cfg === 'CB' ? 2 : 0)}`, iu === 'µA' ? `${(xb - xa).toFixed(0)} µA = ${dIn.toFixed(3)} mA` : `${dIn.toFixed(2)} mA`),
+            WK.eq(sym, sh(`Δ${I.outCur} / Δ${I.inCur}`), `${(ib - ia).toFixed(dp)} / ${dIn.toFixed(3)}`, gain.toFixed(cfg === 'CB' ? 3 : 0))];
+          if (cfg === 'CB') st.push(WK.eq('β', 'α / (1 − α)', `${gain.toFixed(3)} / (1 − ${gain.toFixed(3)})`, (gain / (1 - gain)).toFixed(0)));
+          if (cfg === 'CE') st.push(WK.eq('α', 'β / (1 + β)', `${gain.toFixed(0)} / (1 + ${gain.toFixed(0)})`, (gain / (1 + gain)).toFixed(4)));
+          if (cfg === 'CC') st.push(WK.why('γ = ΔI<sub>E</sub>/ΔI<sub>B</sub> = β + 1, so the emitter follower has a large current gain but a voltage gain of about one.'));
+          blocks.push(WK.block(`Current gain ${sym}`, st, false));
+        }
+      }
+    }
+    return WK.sec(blocks);
   }
   buildTables();
   pg.notes.append(card('Lab notebook', 'NPN and PNP keep separate tables', tHost), inPlot.el, outPlot.el, card('Result', '', res.el)); analyse();
@@ -4230,7 +5237,33 @@ function regBench(root, kind, id) {
     html += '</div>';
     if (!any) html = '<h4>Calculation</h4><p class="small muted">Record the line-regulation table (V<sub>in</sub> from 0 to 20 V) and the load-regulation table (no load to the smallest R<sub>L</sub>).</p>';
     else html += `<p class="small muted" style="margin-top:8px">Smaller percentages mean better regulation. ${zen ? 'A Zener regulator holds V_out near V_Z only while the Zener current stays above its knee current.' : 'An IC regulator gives much better line and load regulation than a simple Zener circuit.'}</p>`;
-    res.set(html);
+    res.set(subHTML(html) + (any ? regWork() : ''));
+  }
+  function regWork() {
+    const blocks = []; const L = tLine.rows.slice().sort((a, b) => a.vin - b.vin);
+    if (L.length >= 4) {
+      let k0 = -1; for (let i = 0; i < L.length - 1; i++) { const ok = L.slice(i).every((r, j, a) => j === 0 || (a[j].vout - a[j - 1].vout) / Math.max(1e-6, a[j].vin - a[j - 1].vin) < 0.15); if (ok && L[i].vout > 1) { k0 = i; break; } }
+      const reg = k0 >= 0 ? L.slice(k0) : [];
+      if (reg.length >= 2) {
+        const a = reg[0], b = reg[reg.length - 1];
+        const st = [`Below V<sub>in</sub> ≈ ${a.vin} V the output rises almost as fast as the input. From ${a.vin} V upwards it hardly changes: this is the regulated region.` + WK.why('Read this from the graph of V<sub>out</sub> against V<sub>in</sub>: the point where the line bends and becomes nearly flat.'),
+          WK.eq('ΔV<sub>out</sub>', `${b.vout.toFixed(3)} − ${a.vout.toFixed(3)}`, `${(b.vout - a.vout).toFixed(3)} V`) + ' &nbsp; ' + WK.eq('ΔV<sub>in</sub>', `${b.vin} − ${a.vin}`, `${(b.vin - a.vin).toFixed(2)} V`),
+          WK.eq('Line regulation', 'ΔV<sub>out</sub> / ΔV<sub>in</sub> × 100', `${(b.vout - a.vout).toFixed(3)} / ${(b.vin - a.vin).toFixed(2)} × 100`, `${((b.vout - a.vout) / (b.vin - a.vin) * 100).toFixed(2)}%`)];
+        if (!zen) st.push(WK.eq('Dropout voltage', 'V<sub>in</sub> − V<sub>out</sub> where regulation starts', `${a.vin} − ${a.vout.toFixed(3)}`, `${(a.vin - a.vout).toFixed(2)} V`));
+        else st.push(`Zener (breakdown) voltage V<sub>Z</sub> ≈ output at the start of regulation = <b>${a.vout.toFixed(2)} V</b>.`);
+        blocks.push(WK.block('Line regulation', st, true));
+      }
+    }
+    const D = tLoad.rows.slice().sort((a, b) => a.IL - b.IL);
+    if (D.length >= 3) {
+      const nl = D.find(r => r.RL === 'open') || D[0]; const inReg = D.filter(r => r.vout >= nl.vout * 0.95); const fl = inReg[inReg.length - 1];
+      const st = [];
+      if (zen) st.push(...D.slice(0, 8).map(r => { const Is = (r.vin - r.vout) / 220 * 1000; return `R<sub>L</sub> = ${r.RL === 'open' ? 'open' : r.RL + ' Ω'}: ` + WK.eq('I<sub>s</sub>', '(V<sub>in</sub> − V<sub>out</sub>) / R<sub>s</sub>', `(${r.vin.toFixed(2)} − ${r.vout.toFixed(3)}) / 220`, `${Is.toFixed(2)} mA`) + '; ' + WK.eq('I<sub>Z</sub>', 'I<sub>s</sub> − I<sub>L</sub>', `${Is.toFixed(2)} − ${r.IL.toFixed(2)}`, `${(Is - r.IL).toFixed(2)} mA`); }), WK.why('The series resistor carries the Zener current plus the load current. When I<sub>Z</sub> falls towards zero the Zener stops regulating.'));
+      st.push(WK.eq('Load regulation', '(V<sub>NL</sub> − V<sub>FL</sub>) / V<sub>FL</sub> × 100', `(${nl.vout.toFixed(3)} − ${fl.vout.toFixed(3)}) / ${fl.vout.toFixed(3)} × 100`, `${((nl.vout - fl.vout) / fl.vout * 100).toFixed(2)}%`) + WK.why(`V<sub>FL</sub> is taken at the largest load current that is still regulated (I<sub>L</sub> = ${fl.IL} mA).`));
+      if (inReg.length >= 2) { const fw = WK.fit(inReg.map(r => [r.IL / 1000, r.vout]), 'I', 'V', ' A', ' V'); st.push(...fw.steps, WK.eq('R<sub>o</sub>', '−slope', `${(-fw.m).toFixed(3)} Ω`) + WK.why('The output resistance tells how much the output voltage drops for each ampere drawn by the load.')); }
+      blocks.push(WK.block('Load regulation', st, false));
+    }
+    return WK.sec(blocks);
   }
   pg.notes.append(card('Lab notebook', '', h('div', { class: 'stack' }, tLine.el, tLoad.el)), p1.el, p2.el, card('Result', '', res.el)); analyse();
 }
@@ -4447,7 +5480,33 @@ function logicBench(root, id, stageDefs) {
   function analyse() {
     const done = stages.map(s => { const rows = LS.get('tbl.' + id + '.' + s.id, null); if (!rows || rows.some(r => r.led == null)) return { s, st: rows && rows.some(r => r.led != null) ? 'partial' : 'todo' }; return { s, st: rows.every(r => r.led === LOGIC[s.target](r.A, r.B)) ? 'ok' : 'bad' }; });
     const n = done.filter(d => d.st === 'ok').length;
-    res.set(`<h4>Result</h4><table class="truth"><thead><tr><th>Circuit</th><th>Status</th></tr></thead><tbody>${done.map(d => `<tr><td style="text-align:left">${d.s.name}</td><td>${d.st === 'ok' ? '<span class="badge-ok">verified ✓</span>' : d.st === 'bad' ? '<span class="badge-no">does not match</span>' : d.st === 'partial' ? 'in progress' : '—'}</td></tr>`).join('')}</tbody></table><p class="small muted" style="margin-top:8px">${n} of ${stages.length} truth tables verified. Logic 1 ≈ ${stages.some(s => s.spec.nets) ? '4.3–5 V (DTL) / ' : ''}3.4 V (TTL), logic 0 ≈ 0–0.7 V.</p>`);
+    res.set(`<h4>Result</h4><table class="truth"><thead><tr><th>Circuit</th><th>Status</th></tr></thead><tbody>${done.map(d => `<tr><td style="text-align:left">${d.s.name}</td><td>${d.st === 'ok' ? '<span class="badge-ok">verified ✓</span>' : d.st === 'bad' ? '<span class="badge-no">does not match</span>' : d.st === 'partial' ? 'in progress' : '—'}</td></tr>`).join('')}</tbody></table><p class="small muted" style="margin-top:8px">${n} of ${stages.length} truth tables verified. Logic 1 ≈ ${stages.some(s => s.spec.nets) ? '4.3–5 V (DTL) / ' : ''}3.4 V (TTL), logic 0 ≈ 0–0.7 V.</p>` + logicWork(done));
+  }
+  function logicWork(done) {
+    const ov = t => `<span style="text-decoration:overline">${t}</span>`;
+    const EXPR = { AND: 'A · B', OR: 'A + B', NOT: ov('A'), NAND: ov('A · B'), NOR: ov('A + B') };
+    const DERIV = {
+      'u-nand-not': `Both inputs of one NAND gate are joined to A: Y = ${ov('A · A')} = ${ov('A')} (since A · A = A).`,
+      'u-nand-and': `The first NAND gives ${ov('A · B')}; the second NAND, used as an inverter, gives Y = ${ov(ov('A · B'))} = A · B.`,
+      'u-nand-or': `Two NANDs used as inverters give ${ov('A')} and ${ov('B')}; the third NAND gives Y = ${ov(ov('A') + ' · ' + ov('B'))} = A + B (De Morgan’s theorem).`,
+      'u-nor-not': `Both inputs of one NOR gate are joined to A: Y = ${ov('A + A')} = ${ov('A')} (since A + A = A).`,
+      'u-nor-or': `The first NOR gives ${ov('A + B')}; the second NOR, used as an inverter, gives Y = ${ov(ov('A + B'))} = A + B.`,
+      'u-nor-and': `Two NORs used as inverters give ${ov('A')} and ${ov('B')}; the third NOR gives Y = ${ov(ov('A') + ' + ' + ov('B'))} = A · B (De Morgan’s theorem).`
+    };
+    const blocks = [];
+    done.forEach(d => {
+      const rows = LS.get('tbl.' + id + '.' + d.s.id, null); if (!rows || !rows.some(r => r.led != null)) return;
+      const not = d.s.target === 'NOT'; const f = LOGIC[d.s.target];
+      const st = [];
+      if (DERIV[d.s.id]) st.push(DERIV[d.s.id]);
+      st.push(`Boolean expression: Y = ${EXPR[d.s.target]}`);
+      rows.forEach(r => {
+        const y = f(r.A, r.B); const sub = not ? `${ov(String(r.A))}` : d.s.target === 'AND' ? `${r.A} · ${r.B}` : d.s.target === 'OR' ? `${r.A} + ${r.B}` : d.s.target === 'NAND' ? ov(`${r.A} · ${r.B}`) : ov(`${r.A} + ${r.B}`);
+        st.push(`${not ? `A = ${r.A}` : `A = ${r.A}, B = ${r.B}`}: ` + WK.eq('Y', sub, String(y)) + (r.led == null ? ' — not yet recorded' : ` — LED ${r.led ? 'ON' : 'OFF'}${r.v != null ? `, V<sub>out</sub> = ${r.v.toFixed(2)} V` : ''} ${r.led === y ? '✓' : '✗ does not match'}`));
+      });
+      blocks.push(WK.block(d.s.name, st, d === done.find(x => x.st !== 'todo')));
+    });
+    return WK.sec(blocks, 'For each row, put the inputs into the Boolean expression and compare with the LED.');
   }
   buildTable(); upd();
   pg.notes.append(card('Lab notebook', 'each circuit has its own truth table', host), card('Result', '', res.el));
@@ -4615,7 +5674,7 @@ const REC = {
   exp24: { theory: String.raw`NOR = OR followed by NOT; NAND = AND followed by NOT. DTL versions use a diode gate driving a transistor inverter; TTL ICs are 7402 and 7400.`, formula: String.raw`\[Y_{NOR} = \overline{A+B},\qquad Y_{NAND} = \overline{A\cdot B}\]`, diagram: () => ['dtl-nor', 'dtl-nand', 'ttl-nor', 'ttl-nand'].map(gateSchem).join(''), calc: 'Record the truth tables (LED and V_out) and compare with theory.', result: 'The truth tables of NOR and NAND gates are verified using DTL and TTL.', error: 'Compare the logic levels with the TTL standard levels; note the DTL levels.' },
   exp25: { theory: String.raw`NAND and NOR are universal: NOT, AND and OR can each be built using only NAND gates or only NOR gates (De Morgan’s theorems).`, formula: String.raw`\[\bar A = \overline{A\cdot A},\ \ A\cdot B = \overline{\overline{A\cdot B}},\ \ A+B = \overline{\bar A\cdot\bar B};\qquad \bar A = \overline{A+A},\ \ A+B = \overline{\overline{A+B}},\ \ A\cdot B = \overline{\bar A+\bar B}\]`, diagram: () => ['u-nand-not', 'u-nand-and', 'u-nand-or', 'u-nor-not', 'u-nor-or', 'u-nor-and'].map(gateSchem).join(''), calc: 'Record the truth table of each circuit built from NAND (7400) and NOR (7402) gates.', result: 'NOT, AND and OR gates were realised using only NAND gates and only NOR gates; hence NAND and NOR are universal gates.', error: 'Not applicable (digital): verify every row of each truth table.' }
 };
-function htmlToText(s) { return String(s).replace(/<br\s*\/?>/g, '\n').replace(/<\/(p|div|h4|tr|li)>/g, '\n').replace(/<\/t[dh]>/g, '\t').replace(/<sup>(.*?)<\/sup>/g, '^$1').replace(/<sub>(.*?)<\/sub>/g, '_$1').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim(); }
+function htmlToText(s) { return String(s).replace(/<br\s*\/?>/g, '\n').replace(/<\/(p|div|h4|tr|li|summary|details)>/g, '\n').replace(/<\/t[dh]>/g, '\t').replace(/<sup>(.*?)<\/sup>/g, '^$1').replace(/<sub>(.*?)<\/sub>/g, '_$1').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim(); }
 function snapshots(id) {
   const out = []; try { Object.keys(localStorage).filter(k => k.startsWith(LSP + 'snap.' + id + '.')).sort().forEach(k => { const v = JSON.parse(localStorage.getItem(k)); if (v && v.tsv && v.tsv.split('\n').length > 1) out.push(v); }); } catch (e) { }
   return out;
@@ -4783,10 +5842,10 @@ function sideSound(side) {
   inp.addEventListener('change', () => { LS.set('sound', inp.checked); const t = $('#soundSw'); if (t) t.checked = inp.checked; if (inp.checked) sfx('on'); });
   side.append(h('label', { class: 'sw snd-side' }, inp, h('span', null, 'Bench sounds')));
 }
-function closeMenu() { $('#side').classList.remove('open'); const s = $('.scrim'); if (s) s.remove(); }
+function closeMenu() { $('#side').classList.remove('open'); document.body.classList.remove('menu-open'); const s = $('.scrim'); if (s) s.remove(); }
 $('#menuBtn').addEventListener('click', () => {
   const side = $('#side'); if (side.classList.contains('open')) return closeMenu();
-  side.classList.add('open'); const scrim = h('div', { class: 'scrim', onclick: closeMenu }); document.body.append(scrim);
+  side.classList.add('open'); document.body.classList.add('menu-open'); const scrim = h('div', { class: 'scrim', onclick: closeMenu }); document.body.append(scrim);
 });
 const psw = $('#practiceSw'); psw.checked = Practice.on;
 psw.addEventListener('change', () => { Practice.set(psw.checked); redrawAll(); });
@@ -4804,6 +5863,7 @@ function home() {
   v.append(hero);
   canvasView(strip, { aspect: 0.09, minH: 54, maxH: 90, draw: drawSpectrum, alt: 'Emission spectrum of mercury with the sodium D lines' });
   hero.append(h('div', { class: 'spec-cap' }, h('span', null, 'Mercury lines (experiments 2, 5, 6) and the sodium D lines (experiments 1, 3, 4, 7)'), h('span', null, '400 nm → 650 nm')));
+  v.append(tourVideo());
   v.append(h('div', { class: 'howgrid' },
     h('div', null, h('b', null, 'Read the theory'), 'Principle, derivation of the working formula and the apparatus for each experiment.'),
     h('div', null, h('b', null, 'Set up and wire'), 'Drag the equipment on to the bench and connect the wires terminal to terminal. Check circuit tells you exactly what is wrong; Show me wires it as a demo.'),
@@ -4817,6 +5877,23 @@ function home() {
   });
   v.append(footer());
 }
+/* a short screen recording of the lab in use, for first-time visitors */
+function tourVideo() {
+  const dur = h('span', null, 'about 1 min 45 s');
+  const vid = h('video', { controls: true, preload: 'metadata', playsinline: true, muted: true, poster: 'assets/video/lab-tour-poster.jpg', 'aria-label': 'Video tour of the Virtual Physics Lab (silent, with captions)' });
+  vid.append(h('source', { src: 'assets/video/lab-tour.mp4', type: 'video/mp4' }), h('source', { src: 'assets/video/lab-tour.webm', type: 'video/webm' }));
+  const box = h('div', { class: 'tv-frame' }, vid);
+  const fail = () => { box.innerHTML = ''; box.append(h('div', { class: 'tv-missing' }, 'The tour video could not be loaded here. Open any experiment below to start.')); };
+  [...vid.querySelectorAll('source')].pop().addEventListener('error', fail); // fires only when no source could be played
+  vid.addEventListener('loadedmetadata', () => { const t = Math.round(vid.duration); if (isFinite(t) && t > 0) dur.textContent = `${Math.floor(t / 60)} min ${t % 60} s`; });
+  return h('section', { class: 'tv' },
+    h('div', { class: 'tv-text' },
+      h('div', { class: 'eyebrow' }, h('span', { class: 'no' }, 'New here?')),
+      h('h2', null, 'Watch a quick tour'),
+      h('p', null, 'See the lab in use from start to finish: choosing an experiment, the theory and procedure, the spectrometer being set up by “Demo setup”, taking readings, the step-by-step calculation, wiring a circuit, the record file and the viva quiz.'),
+      h('p', { class: 'small muted' }, dur, ' · silent, with captions · use full screen for the best view')),
+    box);
+}
 function footer() {
   return h('footer', { class: 'foot' }, h('div', null, 'Department of Physics, Kamala Science Campus, Dhungrebas, Sindhuli · prepared by Mr. Manoj Devkota for B.Sc. second-year practical classes.'),
     h('div', { class: 'small', style: 'margin-top:4px' }, 'A virtual experiment is a preparation for, and a supplement to, work with real apparatus. Your readings are stored only in this browser.'));
@@ -4828,7 +5905,13 @@ function drawSpectrum(ctx, W, H) {
   lines.forEach(L => { const [r, g, b] = wl2rgb(L.l); const xx = x(L.l); const gr = ctx.createLinearGradient(xx - 4, 0, xx + 4, 0); const c = a => `rgba(${r * 255 | 0},${g * 255 | 0},${b * 255 | 0},${a})`; gr.addColorStop(0, c(0)); gr.addColorStop(.5, c(Math.min(1, .35 + L.I))); gr.addColorStop(1, c(0)); ctx.fillStyle = gr; ctx.fillRect(xx - 4, 4, 8, H - 8); });
   ctx.fillStyle = 'rgba(200,210,215,.75)'; ctx.font = `10px "IBM Plex Mono", monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
   ctx.textAlign = 'left';
-  [[404.7, '404.7'], [435.8, '435.8'], [491.6, '491.6'], [546.1, '546.1'], [579.1, '577·579'], [589.6, 'Na D'], [623.4, '623.4']].forEach(([l, t], i) => { if (W > 560 || i % 2 === 0) ctx.fillText(t, x(l) + 7, H - 4); });
+  let lastRight = -1e9;
+  [[404.7, '404.7'], [435.8, '435.8'], [491.6, '491.6'], [546.1, '546.1'], [579.1, '577·579'], [589.6, 'Na D'], [623.4, '623.4']].forEach(([l, t], i) => {
+    if (W <= 560 && i % 2) return;
+    const xx = x(l) + 7, w = ctx.measureText(t).width;
+    if (xx < lastRight + 6) { ctx.textBaseline = 'top'; ctx.fillText(t, xx, 5); ctx.textBaseline = 'bottom'; return; } // no room below: put it at the top
+    ctx.fillText(t, xx, H - 4); lastRight = xx + w;
+  });
 }
 function expPage(e, tab) {
   const v = $('#view'); v.innerHTML = '';

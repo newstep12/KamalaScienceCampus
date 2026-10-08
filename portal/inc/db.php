@@ -225,15 +225,31 @@ function db(): PDO
     if ($pdo === null) {
         $c = config()['db'];
         $dsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', $c['host'], $c['name'], $c['charset'] ?? 'utf8mb4');
-        try {
-            $pdo = new PDO($dsn, $c['user'], $c['password'], [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-            ]);
-        } catch (PDOException $e) {
-            error_log('DB connection failed: ' . $e->getMessage());
-            throw new DatabaseUnavailable('Database connection failed', 0, $e);
+        // Shared hosting allows one account only so many connections at once,
+        // and a class signing in together — seventy students opening the
+        // virtual lab — asks for more than that for a moment. MySQL then
+        // refuses the rest outright (1040, 1203, 1226), and each of them got
+        // the outage page although every connection is held for milliseconds.
+        // A refusal for that reason is waited out instead: up to about three
+        // seconds, in short random steps so the waiting requests do not all
+        // come back at the same instant. Any other failure is reported at once.
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                $pdo = new PDO($dsn, $c['user'], $c['password'], [
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES   => false,
+                ]);
+                break;
+            } catch (PDOException $e) {
+                $busy = preg_match('/\[(1040|1203|1226)\]/', $e->getMessage()) === 1;
+                if ($busy && $attempt < 15) {
+                    usleep(mt_rand(100000, 300000));
+                    continue;
+                }
+                error_log('DB connection failed' . ($busy ? ' after ' . $attempt . ' attempts' : '') . ': ' . $e->getMessage());
+                throw new DatabaseUnavailable('Database connection failed', 0, $e);
+            }
         }
         // The live MariaDB ignores the character set a client asks for
         // (skip-character-set-client-handshake), and then hands a bound

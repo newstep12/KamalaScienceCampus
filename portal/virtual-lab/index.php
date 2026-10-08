@@ -17,5 +17,10 @@ $VPL_INJECT = '<script>window.VPL_USER=' . json_encode($user, $flags) . ';window
 
 vpl_headers();
 header('Content-Type: text/html; charset=utf-8');
+// The lab is one 640 KB page, under 200 KB compressed, and a class opening it
+// together shares the campus's one connection. So it is sent compressed even
+// where the server would not compress PHP's output itself; ob_gzhandler sends
+// it plain to a browser that does not ask for gzip.
+if (!ini_get('zlib.output_compression') && function_exists('ob_gzhandler')) ob_start('ob_gzhandler');
 define('VPL_LAB', 1);
 require __DIR__ . '/inc/lab.php';

@@ -844,15 +844,45 @@ files there (it is how the +2 portal lost its uploads).
 The lab arrived as a stand-alone package with its own settings file, login
 handling and data folder. Here the portal provides all three, so those parts
 were left out; what came from the package unchanged is the lab itself
-(`inc/lab.php`, one 500 KB page), the experiment list (`inc/exps.php`) and
-`assets/` (MathJax and the IBM Plex fonts, so it needs no CDN). One line of
-`inc/lab.php` was changed, so the left column can say *B.Sc. 3rd year* or
-*Administrator* instead of always *B.Sc. second year*. **To update the lab
-from a newer package**, replace `inc/lab.php`, `inc/exps.php` and `assets/`
-only; a newer `lab.php` without that line still works and just shows the old
-wording. The package's `offline/` copy is for laboratory computers without
-internet, has no login and no submission, and is deliberately not in this
-repository, which deploys straight to the public web.
+(`inc/lab.php`, one 640 KB page), the experiment list (`inc/exps.php`) and
+`assets/` (MathJax, the IBM Plex fonts and a 1 min 47 s tour video in MP4 and
+WebM, so it needs no CDN). One line of `inc/lab.php` was changed, so the left
+column can say *B.Sc. 3rd year* or *Administrator* instead of always *B.Sc.
+second year*. **To update the lab from a newer package**, replace
+`inc/lab.php`, `inc/exps.php` and `assets/` only, then put that one line back
+(search `lab.php` for `'B.Sc. second year'` and wrap it as
+`VPL_USER.label || (…)`); a `lab.php` without it still works and just shows
+the old wording. The package's `config.php` and `data/` are never needed
+here, whatever its own instructions say: the portal provides both. Its
+`offline/` copy is for laboratory computers without internet, has no login and
+no submission, and is deliberately not in this repository, which deploys
+straight to the public web.
+
+#### A whole class at once
+
+The lab is built for a class of seventy working together, and was tested that
+way: seventy students signing in, opening the lab and submitting a record in
+the same few seconds.
+
+- **The database.** Shared hosting lets one account hold only so many
+  database connections at a time, and a class signing in together asks for
+  more than that for a moment. MySQL refused the rest outright, and in a test
+  capped at 15 connections 18 of 70 students got *The portal is temporarily
+  unavailable*. `db()` now waits such a refusal out, for up to about three
+  seconds, and the same test lets all seventy in. Any other database fault is
+  still reported at once.
+- **The campus connection.** Everyone shares it, so the lab page is always
+  sent compressed (640 KB becomes 190 KB). MathJax and the fonts, about 1 MB
+  compressed, are downloaded once and kept by the browser for a month. The
+  tour video is not downloaded until somebody presses play, and is then kept
+  for a week.
+- **Readings** stay in each student's browser while they work. Only pressing
+  *Submit to my lecturer* reaches the server, and one record is one row.
+
+For the first class, have every student open the lab once beforehand (at
+home, or a day early), so the class itself downloads only the page. Show the
+tour video once on the projector rather than on seventy screens: seventy
+copies is about 600 MB through the campus connection.
 
 ### Database updates
 
