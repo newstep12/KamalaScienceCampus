@@ -62,7 +62,7 @@ layout_head(['title' => t('admin_home'), 'active' => 'home', 'wide' => true]);
     <?php if (!$byYear): ?>
       <p style="color:var(--ink-soft);margin:0;"><?= te('none_yet') ?></p>
     <?php else: ?>
-      <table class="p-table" style="border:0;">
+      <table class="p-table p-table-compact" style="border:0;">
         <tbody>
           <?php foreach ($byYear as $r): ?>
             <tr>

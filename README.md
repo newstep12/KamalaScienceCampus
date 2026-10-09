@@ -846,14 +846,29 @@ handling and data folder. Here the portal provides all three, so those parts
 were left out; what came from the package unchanged is the lab itself
 (`inc/lab.php`, one 640 KB page), the experiment list (`inc/exps.php`) and
 `assets/` (MathJax, the IBM Plex fonts and a 1 min 47 s tour video in MP4 and
-WebM, so it needs no CDN). One line of `inc/lab.php` was changed, so the left
-column can say *B.Sc. 3rd year* or *Administrator* instead of always *B.Sc.
-second year*. **To update the lab from a newer package**, replace
-`inc/lab.php`, `inc/exps.php` and `assets/` only, then put that one line back
-(search `lab.php` for `'B.Sc. second year'` and wrap it as
-`VPL_USER.label || (…)`); a `lab.php` without it still works and just shows
-the old wording. The package's `config.php` and `data/` are never needed
-here, whatever its own instructions say: the portal provides both. Its
+WebM, so it needs no CDN). Two things in `inc/lab.php` were changed:
+
+1. The left column can say *B.Sc. 3rd year* or *Administrator* instead of
+   always *B.Sc. second year* (`'B.Sc. second year'` is wrapped as
+   `VPL_USER.label || (…)`).
+2. **On a phone or tablet the experiment menu scrolls.** Below 980 px the list
+   becomes a drawer (`position: fixed; top: 0; bottom: 0`), but it kept the
+   desktop column's `align-self: start`, and current browsers apply that to a
+   fixed box: the drawer grew to the full height of its list, ran off the
+   bottom of the screen and could not scroll, so only the first 15 of the 25
+   experiments could be opened from it on a phone held upright, and 6 held
+   sideways. The drawer's rule in `@media (max-width: 979px)` now has
+   `align-self: stretch`, and room at the bottom for an iPhone's home bar; it
+   is marked `portal:`.
+
+**To update the lab from a newer package**, replace `inc/lab.php`,
+`inc/exps.php` and `assets/` only, then make both changes again unless the
+package already has them; it is worth asking for them in the lab's own copy,
+offline one included, so that they come with every package. A `lab.php`
+without the first still works and just shows the old wording; without the
+second, phones cannot reach the lower experiments. The package's
+`config.php` and `data/` are never needed here, whatever its own instructions
+say: the portal provides both. Its
 `offline/` copy is for laboratory computers without internet, has no login and
 no submission, and is deliberately not in this repository, which deploys
 straight to the public web.
