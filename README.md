@@ -1375,9 +1375,17 @@ reference on that page lists both places the portal looked.
 - **A password change or reset signs out every other session** of that
   account, so resetting a password actually shuts out whoever had the old
   one. Somebody changing their own password stays signed in where they are.
-- **Registration is limited to 60 successful sign-ups an hour from one
-  network address** — two whole classes on the school's connection fit; a
-  script filling the server with photographs does not.
+- **Registration is limited to 300 successful sign-ups an hour from one
+  network address** — a whole registration drive on the school's connection
+  fits; a script filling the server with photographs does not.
+- **A class signing in at once is waited for, not turned away.** Shared
+  hosting allows the portal only so many database connections at a time, and
+  when a class or a registration drive arrives in the same second MySQL
+  refuses the extra ones; those students got *The portal is temporarily
+  unavailable*. `db()` now waits such a refusal out for up to about three
+  seconds. In a test of 70 students signing in together with 15 connections
+  allowed, 36 got in before and all 70 after. Any other database fault is
+  still reported at once. The campus portal does the same.
 - **Signing out needs the portal's own link** (it carries a token), so another
   page cannot sign people out.
 - The portal keeps its user under session keys of its own (`sks_uid`), so a
