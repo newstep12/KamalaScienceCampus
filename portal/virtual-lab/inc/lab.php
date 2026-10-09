@@ -110,7 +110,9 @@ main { padding: 22px 16px 70px; min-width: 0; }
 @media (max-width: 979px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   .menu-btn { display: inline-block; }
-  .side { position: fixed; z-index: 40; top: 0; bottom: 0; left: 0; width: min(300px, 86vw); max-height: none; background: var(--panel); transform: translateX(-102%); transition: transform .2s; box-shadow: var(--shadow); padding-top: calc(env(safe-area-inset-top, 0px) + 18px); }
+  /* portal: align-self: stretch so the drawer is the screen's height and scrolls. The desktop rule's align-self: start
+     otherwise sizes this fixed box to its whole list in current browsers, and the lower experiments fall off the screen. */
+  .side { position: fixed; z-index: 40; top: 0; bottom: 0; left: 0; align-self: stretch; width: min(300px, 86vw); max-height: none; background: var(--panel); transform: translateX(-102%); transition: transform .2s; box-shadow: var(--shadow); padding-top: calc(env(safe-area-inset-top, 0px) + 18px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 30px); }
   .side.open { transform: none; }
   .scrim { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 35; }
   .sw span.long { display: none; }

@@ -955,7 +955,10 @@ body.lang-ne .idc-controls legend { text-transform: none; letter-spacing: 0; fon
 
 .idc-design { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
 .idc-design-fields { flex: 1 1 340px; min-width: 0; }
-.idc-design-preview { flex: 0 0 auto; }
+/* Allowed to shrink: on a phone the front and back then wrap onto two rows.
+   It would not (0 0 auto), and a preview wider than the screen made the
+   phone zoom the whole System page out. */
+.idc-design-preview { flex: 0 1 auto; min-width: 0; }
 .idc-design-preview .idc-sheet { --card-w: 62mm; gap: 14px; }
 .idc-design-preview > span {
   display: block; margin-bottom: 10px; font-size: .78rem; font-weight: 700;
